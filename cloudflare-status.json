@@ -1,0 +1,1 @@
+{"status":"awaiting-secrets","version":"v7.7-fullstack","required":["CLOUDFLARE_API_TOKEN","CLOUDFLARE_ACCOUNT_ID"],"repository":"suzywang168-oss/octopus-release-admin","source_commit":"ce1b6d14f50c91ff080a46893f220ee88b13ae9d","reported_at":"2026-07-31T08:45:12Z"}
