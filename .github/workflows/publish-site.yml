@@ -25,18 +25,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Octopus Admin V7
+      - name: Prepare Octopus Admin V7 site
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p _site
-          cat .site-v7/part-*.txt | base64 --decode | gunzip > _site/index.html
+          mkdir -p _site/site-v7
+          cp index.html _site/index.html
+          cp .site-v7/part-*.txt _site/site-v7/
           touch _site/.nojekyll
           test -s _site/index.html
+          for f in part-00.txt part-01.txt part-02.txt part-03.txt part-04.txt part-05.txt; do
+            test -s "_site/site-v7/$f"
+          done
           grep -q "Octopus Admin V7" _site/index.html
-          grep -q "workspace.overview" _site/index.html
-          grep -q "合作方成员审计" _site/index.html
-          grep -q "渠道联通性监控" _site/index.html
+          grep -q "site-v7/" _site/index.html
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -71,5 +73,3 @@ jobs:
           git add site-status.json
           git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7 deployment"
           git push
-
-# Deployment trigger: 2026-07-31 Octopus Admin V7
