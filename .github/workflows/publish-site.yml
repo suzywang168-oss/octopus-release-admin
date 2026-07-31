@@ -4,12 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - ".site-source/**"
+      - "index.html"
+      - "payload-lite/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -24,28 +25,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Reconstruct Octopus V6 site
+      - name: Prepare static site
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site
-          cat .site-source/part-*.txt | base64 --decode | gunzip > _site/index.html
+          cp index.html _site/index.html
+          cp -R payload-lite _site/payload-lite
           touch _site/.nojekyll
-          grep -q "Octopus" _site/index.html
           test -s _site/index.html
+          test -s _site/payload-lite/part-00.txt
+          test -s _site/payload-lite/part-01.txt
+          test -s _site/payload-lite/part-02a.txt
+          test -s _site/payload-lite/part-02b.txt
+          test -s _site/payload-lite/part-02c.txt
 
-      - name: Enable GitHub Pages workflow publishing
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages" -f build_type=workflow >/dev/null 2>&1 || \
-          gh api --method PUT "repos/${GITHUB_REPOSITORY}/pages" -f build_type=workflow >/dev/null 2>&1 || true
-
-      - name: Configure Pages
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload site artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
@@ -60,18 +58,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Checkout repository for status update
-        uses: actions/checkout@v4
-
-      - name: Record successful site deployment
-        shell: bash
-        env:
-          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-        run: |
-          printf '{"status":"deployed","url":"%s","commit":"%s","deployed_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record Octopus site deployment"
-          git push
