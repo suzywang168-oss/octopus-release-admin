@@ -1,10 +1,10 @@
-name: Publish Octopus Admin V7.2
+name: Publish Octopus Admin V7.3
 
 on:
   push:
     branches: [main]
     paths:
-      - "index.html"
+      - ".site-v73/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
@@ -24,17 +24,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare standalone site
+      - name: Build Octopus Admin V7.3
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html _site/index.html
+          cat \
+            .site-v73/part-00.txt \
+            .site-v73/part-01.txt \
+            .site-v73/part-02.txt \
+            .site-v73/part-03.txt \
+            | base64 --decode | gunzip > _site/index.html
           touch _site/.nojekyll
           test -s _site/index.html
-          grep -q "Octopus Admin V7.2" _site/index.html
-          grep -q "工作台首页" _site/index.html
-          grep -q "运维监控中心" _site/index.html
+          grep -q "Octopus Admin V7.3" _site/index.html
+          grep -q "API 与字段映射" _site/index.html
+          grep -q "事件与 SLA" _site/index.html
+          grep -q "activeTab" _site/index.html
           if grep -q "DecompressionStream" _site/index.html; then
             echo "Browser-side loader must not be deployed"
             exit 1
@@ -55,21 +61,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Octopus Admin V7.2
+      - name: Deploy Octopus Admin V7.3
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record V7.2 deployment
+      - name: Record V7.3 deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          printf '{"status":"success","version":"v7.2-integrated","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"single-html","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          printf '{"status":"success","version":"v7.3-dense","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"single-html","tabs":"independent-data-views","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7.2 deployment"
+          git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7.3 deployment"
           git push
