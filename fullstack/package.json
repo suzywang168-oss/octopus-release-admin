@@ -1,0 +1,18 @@
+{
+  "name": "octopus-release-admin",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Octopus Admin V7.7 full-stack site powered by Cloudflare Workers, D1 and GitHub Actions.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create octopus-release-db --location=apac",
+    "db:migrate:local": "wrangler d1 migrations apply octopus-release-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply octopus-release-db --remote",
+    "check": "node --check src/index.js && node --check public/auth-db.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
