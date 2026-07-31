@@ -71,3 +71,5 @@ jobs:
           git add site-status.json
           git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7 deployment"
           git push
+
+# Deployment trigger: 2026-07-31 Octopus Admin V7
