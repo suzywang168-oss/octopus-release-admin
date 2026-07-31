@@ -1,0 +1,12 @@
+  const initIndex = lines.findIndex((line) => line.startsWith("form.addEventListener('submit'"));
+  if (initIndex < 0) throw new Error('Unable to find application initializer');
+  lines[initIndex] = lines[initIndex].replace('initializeStore();render();', 'initializeStore();render();window.OCTOPUS_APP={STORE,currentModule,currentTab,render,notify,refreshCurrentData,serverRecord};');
+
+  html = lines.join('\n').replace('</body>', '<script src="/auth-db.js"></script>\n</body>');
+  await mkdir('public', { recursive: true });
+  await writeFile('public/index.html', html, 'utf8');
+}
+
+await assembleWorker();
+await assembleFrontend();
+console.log('Octopus V7.7 full-stack sources assembled.');
