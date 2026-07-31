@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${GITHUB_WORKSPACE:-$(cd .. && pwd)}"
+STATUS_FILE="$ROOT/cloudflare-status.json"
+
+record_status() {
+  local payload="$1"
+  printf '%s\n' "$payload" > "$STATUS_FILE"
+  cd "$ROOT"
+  git config user.name "github-actions[bot]"
+  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+  git add cloudflare-status.json
+  git diff --cached --quiet || git commit -m "chore: record Octopus Cloudflare deployment"
+  git push
+  cd "$ROOT/fullstack"
+}
+
+if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+  record_status "{\"status\":\"awaiting-secrets\",\"version\":\"v7.7-fullstack\",\"required\":[\"CLOUDFLARE_API_TOKEN\",\"CLOUDFLARE_ACCOUNT_ID\"],\"repository\":\"${GITHUB_REPOSITORY:-suzywang168-oss/octopus-release-admin}\",\"source_commit\":\"${GITHUB_SHA:-unknown}\",\"reported_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
+  exit 0
+fi
+
+npx wrangler d1 list --json > d1-list.json
+DB_ID=$(python3 - <<'PY'
+import json
+from pathlib import Path
+data=json.loads(Path('d1-list.json').read_text())
+items=data if isinstance(data,list) else data.get('result',data.get('databases',[]))
+for item in items:
+    if isinstance(item,dict) and item.get('name')=='octopus-release-db':
+        value=item.get('uuid') or item.get('id') or item.get('database_id')
+        if value:
+            print(value)
+            break
+PY
+)
+
+if [ -z "$DB_ID" ]; then
+  npx wrangler d1 create octopus-release-db --location=apac --json > d1-create.json
+  DB_ID=$(python3 - <<'PY'
+import json,re
+from pathlib import Path
+data=json.loads(Path('d1-create.json').read_text())
+def walk(value):
+    if isinstance(value,dict):
+        for key in ('uuid','database_id','id'):
+            item=value.get(key)
+            if isinstance(item,str) and re.fullmatch(r'[0-9a-fA-F-]{36}',item): return item
+        for item in value.values():
+            found=walk(item)
+            if found:return found
+    elif isinstance(value,list):
+        for item in value:
+            found=walk(item)
+            if found:return found
+print(walk(data) or '')
+PY
+  )
+fi
+
+test -n "$DB_ID"
+python3 - <<PY
+from pathlib import Path
+path=Path('wrangler.jsonc')
+text=path.read_text().replace('00000000-0000-0000-0000-000000000000', '$DB_ID')
+path.write_text(text)
+PY
+
+npx wrangler d1 migrations apply octopus-release-db --remote
+
+if [ -n "${RESEND_API_KEY:-}" ]; then
+  printf '%s' "$RESEND_API_KEY" | npx wrangler secret put RESEND_API_KEY
+  python3 - <<'PY'
+from pathlib import Path
+path=Path('wrangler.jsonc')
+path.write_text(path.read_text().replace('"ALLOW_DEV_CODES": "true"','"ALLOW_DEV_CODES": "false"'))
+PY
+fi
+
+export WRANGLER_OUTPUT_FILE_PATH="$ROOT/wrangler-output.ndjson"
+npx wrangler deploy
+SITE_URL=$(python3 - <<'PY'
+import json
+from pathlib import Path
+target=''
+path=Path('../wrangler-output.ndjson')
+if path.exists():
+    for line in path.read_text().splitlines():
+        try:item=json.loads(line)
+        except:continue
