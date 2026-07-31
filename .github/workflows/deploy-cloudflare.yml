@@ -1,0 +1,47 @@
+name: Deploy Octopus Full Stack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "fullstack/**"
+      - ".github/workflows/deploy-cloudflare.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: octopus-cloudflare-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: fullstack
+        run: npm install --no-audit --no-fund
+
+      - name: Assemble and validate application
+        working-directory: fullstack
+        run: |
+          cat deploy-script-parts/part-*.txt > scripts/deploy-cloudflare.sh
+          npm run check
+          bash -n scripts/deploy-cloudflare.sh
+
+      - name: Create database and deploy site
+        working-directory: fullstack
+        run: bash scripts/deploy-cloudflare.sh
