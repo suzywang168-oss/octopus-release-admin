@@ -1,0 +1,28 @@
+name: Report Octopus Site Status
+
+on:
+  workflow_run:
+    workflows: ["Publish Octopus Site"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write workflow result
+        shell: bash
+        env:
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          printf '{"status":"%s","site_url":"https://suzywang168-oss.github.io/octopus-release-admin/","run_url":"%s","commit":"%s","reported_at":"%s"}\n' "$CONCLUSION" "$RUN_URL" "$HEAD_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site-status.json
+          git diff --cached --quiet || git commit -m "chore: report Octopus site workflow status"
+          git push
