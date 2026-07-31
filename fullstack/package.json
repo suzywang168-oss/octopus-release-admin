@@ -5,12 +5,13 @@
   "type": "module",
   "description": "Octopus Admin V7.7 full-stack site powered by Cloudflare Workers, D1 and GitHub Actions.",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "assemble": "node scripts/assemble.mjs",
+    "dev": "npm run assemble && wrangler dev",
+    "deploy": "npm run assemble && wrangler deploy",
     "db:create": "wrangler d1 create octopus-release-db --location=apac",
     "db:migrate:local": "wrangler d1 migrations apply octopus-release-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply octopus-release-db --remote",
-    "check": "node --check src/index.js && node --check public/auth-db.js"
+    "check": "npm run assemble && node --check src/index.js && node --check public/auth-db.js"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
