@@ -1,10 +1,10 @@
-name: Publish Octopus Site
+name: Publish Octopus Admin V7
 
 on:
   push:
     branches: [main]
     paths:
-      - "payload-lite/**"
+      - ".site-v7/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: octopus-pages
+  group: octopus-admin-pages
   cancel-in-progress: true
 
 jobs:
@@ -24,64 +24,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Reconstruct and patch Octopus site
+      - name: Build Octopus Admin V7
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site
-          cat \
-            payload-lite/part-00.txt \
-            payload-lite/part-01.txt \
-            payload-lite/part-02a.txt \
-            payload-lite/part-02b.txt \
-            payload-lite/part-02c.txt \
-            | base64 --decode | gunzip > _site/index.html
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('_site/index.html')
-          s = path.read_text(encoding='utf-8')
-
-          replacements = [
-              (
-                  ".pipeline{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.pipe-step{min-height:130px;padding:13px;position:relative}",
-                  ".pipeline{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.pipe-step{min-height:130px;padding:13px;position:relative;cursor:pointer;transition:.18s}.pipe-step:hover{transform:translateY(-2px);border-color:#5f79ee;box-shadow:0 14px 34px rgba(53,83,180,.18)}.pipe-step:focus-visible{outline:2px solid #7890ff;outline-offset:2px}"
-              ),
-              (
-                  "const state={route:'overview',contractStep:0,contractCombo:'B',filmTab:'qa',selectedFilm:0,clipTab:'studio',withdrawStep:0,distSigned:false,prodSigned:false};",
-                  "const state={route:'overview',contractStep:0,contractCombo:'B',selectedScript:0,filmTab:'qa',selectedFilm:0,clipTab:'studio',withdrawStep:0,distSigned:false,prodSigned:false};"
-              ),
-              (
-                  '${pipeline.map((x,i)=>`<article class="card pipe-step"><div class="num">${String(i+1).padStart(2,\'0\')}</div><h4>${x[0]}</h4><p>${x[1]}</p><button class="btn small" data-route="${x[2]}">进入模块</button></article>`).join(\'\')}',
-                  '${pipeline.map((x,i)=>`<article class="card pipe-step" data-route="${x[2]}" role="button" tabindex="0" aria-label="进入${x[0]}模块"><div class="num">${String(i+1).padStart(2,\'0\')}</div><h4>${x[0]}</h4><p>${x[1]}</p><button class="btn small" data-route="${x[2]}">进入模块</button></article>`).join(\'\')}'
-              ),
-              (
-                  '${[[\'雾港旧约\',\'87\',\'24 集\'],[\'光之笺\',\'92\',\'18 集\'],[\'长夏\',\'84\',\'24 集\']].map((x,i)=>`<button class="option-card ${i===0?\'selected\':\'\'}" data-act="select-option"><h3>${x[0]}</h3><p>${x[2]} · AI 评分</p><strong>${x[1]}</strong></button>`).join(\'\')}',
-                  '${[[\'雾港旧约\',\'87\',\'24 集\'],[\'光之笺\',\'92\',\'18 集\'],[\'长夏\',\'84\',\'24 集\']].map((x,i)=>`<button class="option-card ${state.selectedScript===i?\'selected\':\'\'}" data-script="${i}" data-act="select-option" aria-pressed="${state.selectedScript===i}"><h3>${x[0]}</h3><p>${x[2]} · AI 评分</p><strong>${x[1]}</strong>${state.selectedScript===i?\'<span class="pill info recommended">已选择</span>\':\'\'}</button>`).join(\'\')}'
-              ),
-              (
-                  " if(b.dataset.combo){state.contractCombo=b.dataset.combo;render();return}",
-                  " if(b.dataset.combo){state.contractCombo=b.dataset.combo;render();toast(`已选择合同组合 ${b.dataset.combo}`);return}\n if(b.dataset.script!==undefined){state.selectedScript=Number(b.dataset.script);render();toast('已选择制作合同剧本');return}"
-              ),
-              (
-                  "document.addEventListener('click',e=>{",
-                  "document.addEventListener('keydown',e=>{const el=e.target.closest('[data-route][role=\\\"button\\\"]');if(el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();routeTo(el.dataset.route)}});\ndocument.addEventListener('click',e=>{"
-              )
-          ]
-
-          for old, new in replacements:
-              if old not in s:
-                  raise SystemExit(f'Expected source block not found: {old[:80]}')
-              s = s.replace(old, new, 1)
-
-          path.write_text(s, encoding='utf-8')
-          PY
-
+          cat .site-v7/part-*.txt | base64 --decode | gunzip > _site/index.html
           touch _site/.nojekyll
-          grep -Fq "selectedScript" _site/index.html
-          grep -Fq 'data-route="${x[2]}" role="button"' _site/index.html
           test -s _site/index.html
+          grep -q "Octopus Admin V7" _site/index.html
+          grep -q "workspace.overview" _site/index.html
+          grep -q "合作方成员审计" _site/index.html
+          grep -q "渠道联通性监控" _site/index.html
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -98,21 +52,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy Octopus Admin V7
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record successful deployment
+      - name: Record V7 deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          printf '{"status":"success","site_url":"%s","source_commit":"%s","feature":"production-contract-card-click","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          printf '{"status":"success","version":"v7","site_url":"%s","source_commit":"%s","architecture":"platform-admin","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: report contract card deployment"
+          git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7 deployment"
           git push
