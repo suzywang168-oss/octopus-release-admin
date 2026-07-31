@@ -1,4 +1,4 @@
-name: Publish Octopus Admin V7.8 Bilingual
+name: Publish Octopus Admin V7.9 Admin Login
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - ".site-v76/**"
       - ".site-v77/**"
       - ".site-v78/**"
+      - ".site-v79/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
@@ -28,7 +29,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Octopus Admin V7.8
+      - name: Build Octopus Admin V7.9
         shell: bash
         run: |
           set -euo pipefail
@@ -37,17 +38,19 @@ jobs:
           cp .site-v76/auth-v76.js _site/auth-v76.js
           cp .site-v77/account-settings-v77.js _site/account-settings-v77.js
           cp .site-v78/ux-i18n-v78.js _site/ux-i18n-v78.js
+          cp .site-v79/admin-login-v79.js _site/admin-login-v79.js
 
           python3 - <<'PY'
           from pathlib import Path
           path = Path('_site/index.html')
           html = path.read_text(encoding='utf-8')
-          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.8 · Auth + CRUD · 中文 / EN')
-          html = html.replace('Platform Console · V7.5', 'Platform Console · V7.8')
+          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.9 · Admin Login · 中文 / EN')
+          html = html.replace('Platform Console · V7.5', 'Platform Console · V7.9')
           scripts = (
-              '<script src="auth-v76.js?v=20260731-1738"></script>'
-              '<script src="account-settings-v77.js?v=20260731-1738"></script>'
-              '<script src="ux-i18n-v78.js?v=20260731-1738"></script>'
+              '<script src="auth-v76.js?v=20260731-1749"></script>'
+              '<script src="account-settings-v77.js?v=20260731-1749"></script>'
+              '<script src="ux-i18n-v78.js?v=20260731-1749"></script>'
+              '<script src="admin-login-v79.js?v=20260731-1749"></script>'
           )
           html = html.replace('</body>', scripts + '</body>', 1)
           path.write_text(html, encoding='utf-8')
@@ -58,13 +61,16 @@ jobs:
           test -s _site/auth-v76.js
           test -s _site/account-settings-v77.js
           test -s _site/ux-i18n-v78.js
-          grep -q "Octopus Admin V7.8" _site/index.html
+          test -s _site/admin-login-v79.js
+          grep -q "Octopus Admin V7.9" _site/index.html
           grep -q "auth-v76.js" _site/index.html
           grep -q "account-settings-v77.js" _site/index.html
           grep -q "ux-i18n-v78.js" _site/index.html
-          grep -q "注册管理员账号" _site/ux-i18n-v78.js
-          grep -q "auth-switch" _site/ux-i18n-v78.js
-          grep -q "octopus-ui-language-v78" _site/ux-i18n-v78.js
+          grep -q "admin-login-v79.js" _site/index.html
+          grep -q "ADMIN ACCESS ONLY" _site/admin-login-v79.js
+          grep -q "管理员登录" _site/admin-login-v79.js
+          grep -q "Admin Sign-in" _site/admin-login-v79.js
+          grep -q "octopus-ui-language-v78" _site/admin-login-v79.js
           grep -q "Partner Management" _site/ux-i18n-v78.js
           grep -q "退出账号" _site/account-settings-v77.js
           if grep -q "DecompressionStream" _site/index.html; then
@@ -87,21 +93,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Octopus Admin V7.8
+      - name: Deploy Octopus Admin V7.9
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record V7.8 deployment
+      - name: Record V7.9 deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          printf '{"status":"success","version":"v7.8-static-auth-bilingual","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-static","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"login-first-register-reset-logout-session","account_settings":"profile-security-session-data","i18n":"zh-CN-en-US","storage":"browser-local","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          printf '{"status":"success","version":"v7.9-admin-login-bilingual","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-static","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"admin-login-only-logout-session","account_settings":"profile-security-session-data","i18n":"zh-CN-en-US","storage":"browser-local","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record V7.8 bilingual deployment"
+          git diff --cached --quiet || git commit -m "chore: record V7.9 admin login deployment"
           git push
