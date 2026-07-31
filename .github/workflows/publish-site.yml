@@ -1,10 +1,11 @@
-name: Publish Octopus Admin V7.5
+name: Publish Octopus Admin V7.6
 
 on:
   push:
     branches: [main]
     paths:
       - ".site-v75b/**"
+      - ".site-v76/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
@@ -24,19 +25,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Octopus Admin V7.5 CRUD
+      - name: Build Octopus Admin V7.6 Auth + CRUD
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site
           cat .site-v75b/part-*.txt | base64 --decode | gunzip > _site/index.html
+          cp .site-v76/auth-v76.js _site/auth-v76.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('_site/index.html')
+          html = path.read_text(encoding='utf-8')
+          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.6 · Auth + CRUD')
+          html = html.replace('Platform Console · V7.5', 'Platform Console · V7.6')
+          html = html.replace('</body>', '<script src="auth-v76.js?v=20260731"></script></body>', 1)
+          path.write_text(html, encoding='utf-8')
+          PY
+
           touch _site/.nojekyll
           test -s _site/index.html
-          grep -q "Octopus Admin V7.5" _site/index.html
+          test -s _site/auth-v76.js
+          grep -q "Octopus Admin V7.6" _site/index.html
           grep -q "data-bulk-delete" _site/index.html
-          grep -q "openForm('edit'" _site/index.html
-          grep -q "localStorage" _site/index.html
-          grep -q "批量删除" _site/index.html
+          grep -q "auth-v76.js" _site/index.html
+          grep -q "authLogin" _site/auth-v76.js
+          grep -q "authRegister" _site/auth-v76.js
+          grep -q "data-account=\"logout\"" _site/auth-v76.js
+          grep -q "SESSION_KEY" _site/auth-v76.js
           if grep -q "DecompressionStream" _site/index.html; then
             echo "Browser-side loader must not be deployed"
             exit 1
@@ -57,21 +73,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Octopus Admin V7.5
+      - name: Deploy Octopus Admin V7.6
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record V7.5 CRUD deployment
+      - name: Record V7.6 authentication deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          printf '{"status":"success","version":"v7.5-crud","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"single-html","tabs":"independent-data-views","visual_style":"original-navy","crud":"create-read-update-delete-bulk","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          printf '{"status":"success","version":"v7.6-auth-crud","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"html-plus-auth-script","tabs":"independent-data-views","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"login-register-reset-logout-session","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7.5 CRUD deployment"
+          git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7.6 authentication deployment"
           git push
