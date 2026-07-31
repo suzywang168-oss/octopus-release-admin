@@ -1,0 +1,6 @@
+        if item.get('type')=='deploy' and item.get('targets'): target=item['targets'][0]
+print(target)
+PY
+)
+
+record_status "{\"status\":\"success\",\"version\":\"v7.7-fullstack\",\"site_url\":\"$SITE_URL\",\"database\":\"D1\",\"database_id\":\"$DB_ID\",\"repository\":\"${GITHUB_REPOSITORY:-suzywang168-oss/octopus-release-admin}\",\"auth\":\"server-session\",\"crud\":\"database-backed\",\"source_commit\":\"${GITHUB_SHA:-unknown}\",\"reported_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
