@@ -1,0 +1,257 @@
+  const session = await getSession(env, request);
+  if (session) {
+    await env.DB.prepare("DELETE FROM sessions WHERE id = ?").bind(session.sessionId).run();
+  }
+  return json({ ok: true }, 200, { "set-cookie": clearSessionCookie() });
+}
+
+async function handlePasswordReset(env, request) {
+  await rateLimit(env, `reset:${clientIp(request)}`, 10, 3600);
+  const body = await readBody(request);
+  const contact = String(body.contact || "").trim().toLowerCase();
+  const code = String(body.code || "");
+  const password = String(body.password || "");
+  if (password.length < 8) throw httpError(400, "新密码至少需要 8 位");
+  await consumeVerification(env, contact, "reset", code);
+  const user = await env.DB.prepare(
+    "SELECT id FROM users WHERE lower(email)=? OR phone=?",
+  ).bind(contact, contact).first();
+  if (!user) throw httpError(404, "账号不存在");
+  const passwordData = await createPassword(password);
+  await env.DB.batch([
+    env.DB.prepare(
+      "UPDATE users SET password_hash=?,password_salt=?,password_iterations=?,updated_at=? WHERE id=?",
+    ).bind(passwordData.hash, passwordData.salt, passwordData.iterations, nowIso(), user.id),
+    env.DB.prepare("DELETE FROM sessions WHERE user_id=?").bind(user.id),
+  ]);
+  return json({ ok: true });
+}
+
+async function bootstrap(env, session) {
+  const workspaceId = session.workspace.id;
+  const queries = [
+    env.DB.prepare("SELECT * FROM contents WHERE workspace_id=? ORDER BY updated_at DESC LIMIT 200").bind(workspaceId).all(),
+    env.DB.prepare("SELECT * FROM release_tasks WHERE workspace_id=? ORDER BY updated_at DESC LIMIT 200").bind(workspaceId).all(),
+    env.DB.prepare("SELECT * FROM channels WHERE workspace_id=? ORDER BY updated_at DESC LIMIT 200").bind(workspaceId).all(),
+    env.DB.prepare("SELECT * FROM partners WHERE workspace_id=? ORDER BY updated_at DESC LIMIT 200").bind(workspaceId).all(),
+    env.DB.prepare("SELECT * FROM risk_cases WHERE workspace_id=? ORDER BY updated_at DESC LIMIT 200").bind(workspaceId).all(),
+    env.DB.prepare("SELECT * FROM settlements WHERE workspace_id=? ORDER BY updated_at DESC LIMIT 200").bind(workspaceId).all(),
+  ];
+  const [contents, tasks, channels, partners, riskCases, settlements] = await Promise.all(queries);
+  return json({
+    user: session.user,
+    workspace: session.workspace,
+    role: session.role,
+    contents: contents.results,
+    tasks: tasks.results,
+    channels: channels.results,
+    partners: partners.results,
+    risk_cases: riskCases.results,
+    settlements: settlements.results,
+  });
+}
+
+function normalizeValue(field, value) {
+  if (["progress", "projects", "copyright_score", "violence_score", "sensitive_score"].includes(field)) {
+    return Number.isFinite(Number(value)) ? Number(value) : 0;
+  }
+  if (["tags", "api_config", "contact_json"].includes(field) && typeof value !== "string") {
+    return JSON.stringify(value ?? (field === "tags" ? [] : {}));
+  }
+  return value === undefined ? null : value;
+}
+
+function generatedCode(config) {
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  return `${config.prefix || "OCT"}-${date}-${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
+async function listResource(env, session, config, url) {
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 500);
+  const query = String(url.searchParams.get("q") || "").trim();
+  const queryFields = config.fields.filter((field) => !["progress", "projects", "copyright_score", "violence_score", "sensitive_score"].includes(field));
+  let sql = `SELECT * FROM ${config.table} WHERE workspace_id = ?`;
+  const params = [session.workspace.id];
+  if (query && queryFields.length) {
+    sql += ` AND (${queryFields.map((field) => `CAST(${field} AS TEXT) LIKE ?`).join(" OR ")})`;
+    params.push(...queryFields.map(() => `%${query}%`));
+  }
+  sql += " ORDER BY updated_at DESC LIMIT ?";
+  params.push(limit);
+  const result = await env.DB.prepare(sql).bind(...params).all();
+  return json({ items: result.results });
+}
+
+async function createResource(env, request, session, resourceName, config) {
+  const body = await readBody(request);
+  for (const required of config.required) {
+    if (!String(body[required] || "").trim()) throw httpError(400, `缺少必填字段：${required}`);
+  }
+  const id = randomId(config.prefix?.toLowerCase() || config.table.slice(0, 3));
+  const values = {};
+  for (const field of config.fields) {
+    if (body[field] !== undefined) values[field] = normalizeValue(field, body[field]);
+  }
+  if (config.prefix && !values.code && config.fields.includes("code")) values.code = generatedCode(config);
+  if (resourceName === "settlements" && !values.bill_no) values.bill_no = generatedCode(config);
+  const columns = ["id", "workspace_id", ...Object.keys(values), "created_at", "updated_at"];
+  const params = [id, session.workspace.id, ...Object.values(values), nowIso(), nowIso()];
+  const placeholders = columns.map(() => "?").join(",");
+  await env.DB.prepare(
+    `INSERT INTO ${config.table}(${columns.join(",")}) VALUES(${placeholders})`,
+  ).bind(...params).run();
+  await audit(env, request, session, resourceName, "create", config.table, id, values);
+  const item = await env.DB.prepare(`SELECT * FROM ${config.table} WHERE id=? AND workspace_id=?`)
+    .bind(id, session.workspace.id).first();
+  return json({ item }, 201);
+}
+
+async function updateResource(env, request, session, resourceName, config, id) {
+  const body = await readBody(request);
+  const values = {};
+  for (const field of config.fields) {
+    if (body[field] !== undefined) values[field] = normalizeValue(field, body[field]);
+  }
+  if (!Object.keys(values).length) throw httpError(400, "没有可更新字段");
+  const assignments = [...Object.keys(values).map((field) => `${field}=?`), "updated_at=?"];
+  const params = [...Object.values(values), nowIso(), id, session.workspace.id];
+  const result = await env.DB.prepare(
+    `UPDATE ${config.table} SET ${assignments.join(",")} WHERE id=? AND workspace_id=?`,
+  ).bind(...params).run();
+  if (!result.meta.changes) throw httpError(404, "记录不存在");
+  await audit(env, request, session, resourceName, "update", config.table, id, values);
+  const item = await env.DB.prepare(`SELECT * FROM ${config.table} WHERE id=? AND workspace_id=?`)
+    .bind(id, session.workspace.id).first();
+  return json({ item });
+}
+
+async function deleteResource(env, request, session, resourceName, config, id) {
+  const result = await env.DB.prepare(
+    `DELETE FROM ${config.table} WHERE id=? AND workspace_id=?`,
+  ).bind(id, session.workspace.id).run();
+  if (!result.meta.changes) throw httpError(404, "记录不存在");
+  await audit(env, request, session, resourceName, "delete", config.table, id);
+  return json({ ok: true });
+}
+
+
+
+function parseJsonArray(value) {
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function publicUiRecord(row) {
+  return {
+    id: row.id,
+    module_key: row.module_key,
+    tab_key: row.tab_key,
+    values: parseJsonArray(row.values_json),
+    sort_order: Number(row.sort_order || 0),
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+async function listUiRecords(env, session, url) {
+  const moduleKey = String(url.searchParams.get("module_key") || "").trim();
+  const tabKey = String(url.searchParams.get("tab_key") || "").trim();
+  let sql = "SELECT * FROM admin_records WHERE workspace_id=?";
+  const params = [session.workspace.id];
+  if (moduleKey) {
+    sql += " AND module_key=?";
+    params.push(moduleKey);
+  }
+  if (tabKey) {
+    sql += " AND tab_key=?";
+    params.push(tabKey);
+  }
+  sql += " ORDER BY module_key,tab_key,sort_order,updated_at DESC";
+  const result = await env.DB.prepare(sql).bind(...params).all();
+  return json({ items: result.results.map(publicUiRecord) });
+}
+
+async function bootstrapUiRecords(env, request, session) {
+  const body = await readBody(request);
+  const records = Array.isArray(body.records) ? body.records.slice(0, 2000) : [];
+  if (!records.length) return json({ inserted: 0 });
+  const existing = await env.DB.prepare(
+    "SELECT COUNT(*) AS count FROM admin_records WHERE workspace_id=?",
+  ).bind(session.workspace.id).first();
+  if (Number(existing?.count || 0) > 0) return json({ inserted: 0, skipped: true });
+
+  const timestamp = nowIso();
+  const statements = records.map((record, index) => {
+    const id = String(record.id || randomId("rec")).slice(0, 160);
+    const moduleKey = String(record.module_key || "workspace").slice(0, 80);
+    const tabKey = String(record.tab_key || "overview").slice(0, 80);
+    const values = Array.isArray(record.values) ? record.values.slice(0, 32) : [];
+    return env.DB.prepare(
+      `INSERT OR IGNORE INTO admin_records(
+         id,workspace_id,module_key,tab_key,values_json,sort_order,created_by,updated_by,created_at,updated_at
+       ) VALUES(?,?,?,?,?,?,?,?,?,?)`,
+    ).bind(
+      id,
+      session.workspace.id,
+      moduleKey,
+      tabKey,
+      JSON.stringify(values),
+      Number.isFinite(Number(record.sort_order)) ? Number(record.sort_order) : index,
+      session.user.id,
+      session.user.id,
+      timestamp,
+      timestamp,
+    );
+  });
+
+  for (let index = 0; index < statements.length; index += 75) {
+    await env.DB.batch(statements.slice(index, index + 75));
+  }
+  await audit(env, request, session, "database", "bootstrap", "admin_records", "workspace", {
+    inserted: statements.length,
+  });
+  return json({ inserted: statements.length }, 201);
+}
+
+async function createUiRecord(env, request, session) {
+  const body = await readBody(request);
+  const id = String(body.id || randomId("rec")).trim().slice(0, 160);
+  const moduleKey = String(body.module_key || "").trim().slice(0, 80);
+  const tabKey = String(body.tab_key || "").trim().slice(0, 80);
+  const values = Array.isArray(body.values) ? body.values.slice(0, 32) : [];
+  if (!id || !moduleKey || !tabKey || !values.length) {
+    throw httpError(400, "记录字段不完整");
+  }
+  const timestamp = nowIso();
+  try {
+    await env.DB.prepare(
+      `INSERT INTO admin_records(
+         id,workspace_id,module_key,tab_key,values_json,sort_order,created_by,updated_by,created_at,updated_at
+       ) VALUES(?,?,?,?,?,?,?,?,?,?)`,
+    ).bind(
+      id,
+      session.workspace.id,
+      moduleKey,
+      tabKey,
+      JSON.stringify(values),
+      Number.isFinite(Number(body.sort_order)) ? Number(body.sort_order) : 0,
+      session.user.id,
+      session.user.id,
+      timestamp,
+      timestamp,
+    ).run();
+  } catch (error) {
+    if (String(error?.message || "").toLowerCase().includes("unique")) {
+      throw httpError(409, "记录编号已经存在");
+    }
+    throw error;
+  }
+  await audit(env, request, session, `${moduleKey}/${tabKey}`, "create", "admin_record", id, { values });
+  const row = await env.DB.prepare(
+    "SELECT * FROM admin_records WHERE workspace_id=? AND id=?",
+  ).bind(session.workspace.id, id).first();
