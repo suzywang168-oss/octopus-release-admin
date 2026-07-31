@@ -1,0 +1,176 @@
+  return json({ item: publicUiRecord(row) }, 201);
+}
+
+async function updateUiRecord(env, request, session, id) {
+  const body = await readBody(request);
+  const values = Array.isArray(body.values) ? body.values.slice(0, 32) : null;
+  if (!values?.length) throw httpError(400, "没有可更新字段");
+  const timestamp = nowIso();
+  const result = await env.DB.prepare(
+    `UPDATE admin_records
+     SET values_json=?,updated_by=?,updated_at=?
+     WHERE workspace_id=? AND id=?`,
+  ).bind(JSON.stringify(values), session.user.id, timestamp, session.workspace.id, id).run();
+  if (!result.meta.changes) throw httpError(404, "记录不存在");
+  await audit(env, request, session, `${body.module_key || "admin"}/${body.tab_key || "records"}`, "update", "admin_record", id, { values });
+  const row = await env.DB.prepare(
+    "SELECT * FROM admin_records WHERE workspace_id=? AND id=?",
+  ).bind(session.workspace.id, id).first();
+  return json({ item: publicUiRecord(row) });
+}
+
+async function deleteUiRecord(env, request, session, id) {
+  const row = await env.DB.prepare(
+    "SELECT module_key,tab_key FROM admin_records WHERE workspace_id=? AND id=?",
+  ).bind(session.workspace.id, id).first();
+  if (!row) throw httpError(404, "记录不存在");
+  await env.DB.prepare(
+    "DELETE FROM admin_records WHERE workspace_id=? AND id=?",
+  ).bind(session.workspace.id, id).run();
+  await audit(env, request, session, `${row.module_key}/${row.tab_key}`, "delete", "admin_record", id);
+  return json({ ok: true });
+}
+
+async function bulkDeleteUiRecords(env, request, session) {
+  const body = await readBody(request);
+  const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(String).filter(Boolean))].slice(0, 500);
+  if (!ids.length) throw httpError(400, "请选择需要删除的记录");
+  const placeholders = ids.map(() => "?").join(",");
+  const result = await env.DB.prepare(
+    `DELETE FROM admin_records WHERE workspace_id=? AND id IN (${placeholders})`,
+  ).bind(session.workspace.id, ...ids).run();
+  await audit(env, request, session, "database", "bulk-delete", "admin_record", "multiple", {
+    ids,
+    changes: result.meta.changes,
+  });
+  return json({ ok: true, deleted: Number(result.meta.changes || 0) });
+}
+
+async function bulkCopyUiRecords(env, request, session) {
+  const body = await readBody(request);
+  const ids = [...new Set((Array.isArray(body.ids) ? body.ids : []).map(String).filter(Boolean))].slice(0, 200);
+  if (!ids.length) throw httpError(400, "请选择需要复制的记录");
+  const placeholders = ids.map(() => "?").join(",");
+  const rows = await env.DB.prepare(
+    `SELECT * FROM admin_records WHERE workspace_id=? AND id IN (${placeholders}) ORDER BY updated_at DESC`,
+  ).bind(session.workspace.id, ...ids).all();
+  const timestamp = nowIso();
+  const created = [];
+  const statements = rows.results.map((row, index) => {
+    const values = parseJsonArray(row.values_json);
+    if (values.length) values[0] = `${values[0]}（副本）`;
+    const id = randomId("rec");
+    created.push({
+      id,
+      module_key: row.module_key,
+      tab_key: row.tab_key,
+      values,
+      sort_order: Number(row.sort_order || 0) + index + 1,
+      created_at: timestamp,
+      updated_at: timestamp,
+    });
+    return env.DB.prepare(
+      `INSERT INTO admin_records(
+         id,workspace_id,module_key,tab_key,values_json,sort_order,created_by,updated_by,created_at,updated_at
+       ) VALUES(?,?,?,?,?,?,?,?,?,?)`,
+    ).bind(
+      id,
+      session.workspace.id,
+      row.module_key,
+      row.tab_key,
+      JSON.stringify(values),
+      Number(row.sort_order || 0) + index + 1,
+      session.user.id,
+      session.user.id,
+      timestamp,
+      timestamp,
+    );
+  });
+  if (statements.length) await env.DB.batch(statements);
+  await audit(env, request, session, "database", "bulk-copy", "admin_record", "multiple", {
+    source_ids: ids,
+    created_ids: created.map((item) => item.id),
+  });
+  return json({ items: created }, 201);
+}
+
+async function apiRouter(request, env) {
+  await ensureSeed(env);
+  const url = new URL(request.url);
+  const path = url.pathname;
+  const method = request.method.toUpperCase();
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) assertSameOrigin(request);
+
+  if (path === "/api/health") {
+    const check = await env.DB.prepare("SELECT 1 AS ok").first();
+    return json({ ok: check?.ok === 1, service: "octopus-release-admin", time: nowIso() });
+  }
+  if (path === "/api/auth/verification/request" && method === "POST") return requestVerification(env, request);
+  if (path === "/api/auth/register" && method === "POST") return handleRegister(env, request);
+  if (path === "/api/auth/login" && method === "POST") return handleLogin(env, request);
+  if (path === "/api/auth/logout" && method === "POST") return handleLogout(env, request);
+  if (path === "/api/auth/password/reset" && method === "POST") return handlePasswordReset(env, request);
+  if (path === "/api/auth/me" && method === "GET") {
+    const session = await requireSession(env, request);
+    return json({ user: session.user, workspace: session.workspace, role: session.role });
+  }
+
+  const session = await requireSession(env, request);
+  if (path === "/api/bootstrap" && method === "GET") return bootstrap(env, session);
+
+  if (path === "/api/ui-records" && method === "GET") return listUiRecords(env, session, url);
+  if (path === "/api/ui-records/bootstrap" && method === "POST") return bootstrapUiRecords(env, request, session);
+  if (path === "/api/ui-records" && method === "POST") return createUiRecord(env, request, session);
+  if (path === "/api/ui-records/bulk-delete" && method === "POST") return bulkDeleteUiRecords(env, request, session);
+  if (path === "/api/ui-records/bulk-copy" && method === "POST") return bulkCopyUiRecords(env, request, session);
+  const uiRecordMatch = path.match(/^\/api\/ui-records\/([^/]+)$/);
+  if (uiRecordMatch && method === "PATCH") return updateUiRecord(env, request, session, decodeURIComponent(uiRecordMatch[1]));
+  if (uiRecordMatch && method === "DELETE") return deleteUiRecord(env, request, session, decodeURIComponent(uiRecordMatch[1]));
+
+  if (path === "/api/audit-logs" && method === "GET") {
+    const result = await env.DB.prepare(
+      "SELECT * FROM audit_logs WHERE workspace_id=? ORDER BY created_at DESC LIMIT 200",
+    ).bind(session.workspace.id).all();
+    return json({ items: result.results });
+  }
+
+  const match = path.match(/^\/api\/([^/]+)(?:\/([^/]+))?$/);
+  if (!match) throw httpError(404, "API 路径不存在");
+  const [, resourceName, id] = match;
+  const config = RESOURCE_CONFIG[resourceName];
+  if (!config) throw httpError(404, "资源不存在");
+  if (!id && method === "GET") return listResource(env, session, config, url);
+  if (!id && method === "POST") return createResource(env, request, session, resourceName, config);
+  if (id && method === "PATCH") return updateResource(env, request, session, resourceName, config, id);
+  if (id && method === "DELETE") return deleteResource(env, request, session, resourceName, config, id);
+  throw httpError(405, "不支持的请求方法");
+}
+
+export default {
+  async fetch(request, env) {
+    try {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith("/api/")) return await apiRouter(request, env);
+      const assetResponse = await env.ASSETS.fetch(request);
+      const headers = new Headers(assetResponse.headers);
+      headers.set("x-content-type-options", "nosniff");
+      headers.set("x-frame-options", "DENY");
+      headers.set("referrer-policy", "strict-origin-when-cross-origin");
+      headers.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
+      headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
+      headers.set(
+        "content-security-policy",
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+      );
+      return new Response(assetResponse.body, {
+        status: assetResponse.status,
+        statusText: assetResponse.statusText,
+        headers,
+      });
+    } catch (error) {
+      console.error(error);
+      if (error?.status) return json({ error: error.message }, error.status);
+      return json({ error: "服务器内部错误" }, 500);
+    }
+  },
+};
