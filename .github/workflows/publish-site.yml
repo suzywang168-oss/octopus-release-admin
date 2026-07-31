@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "index.html"
       - ".site-v7/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
