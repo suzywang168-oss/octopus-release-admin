@@ -1,0 +1,263 @@
+    ["risk_1","星海漫游 德语版 EP03","Amazon · 欧洲 · 视频 11:26","音乐版权相似度 72%，建议替换 07:12–07:28 音轨。",48,0,0,"中风险","待审核"],
+    ["risk_2","古城谜案 泰语版 EP02","TikTok · 东南亚 · 视频 02:18","暴力镜头需要人工确认。",6,18,8,"中风险","待审核"],
+    ["risk_3","月下书店 法语版 EP01","Netflix · 欧洲 · 视频 09:40","音乐版权相似度 92%，建议立即替换。",72,0,0,"高风险","待审核"],
+  ];
+  for (const item of risks) {
+    statements.push(
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO risk_cases(id,workspace_id,title,meta,description,copyright_score,violence_score,sensitive_score,overall,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+      ).bind(item[0], workspaceId, ...item.slice(1), timestamp, timestamp),
+    );
+  }
+
+  const settlements = [
+    ["st_1","BILL-202607-098","pt_aurora","Aurora Studio","2026-07","¥680,400","¥102,060","待确认"],
+    ["st_2","BILL-202607-091","pt_north","Northlight Media","2026-07","¥1,240,600","¥186,090","待确认"],
+    ["st_3","BILL-202607-074","pt_mosaic","Mosaic Films","2026-07","¥328,800","¥49,320","资料待补"],
+    ["st_4","BILL-202606-188","pt_tokyo","Tokyo Link","2026-06","¥596,200","¥89,430","处理中"],
+  ];
+  for (const item of settlements) {
+    statements.push(
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO settlements(id,workspace_id,bill_no,partner_id,partner_name,period,amount,platform_share,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+      ).bind(item[0], workspaceId, ...item.slice(1), timestamp, timestamp),
+    );
+  }
+
+  statements.push(
+    env.DB.prepare(
+      "INSERT OR REPLACE INTO app_settings(key,value,updated_at) VALUES('seed_v1','complete',?)",
+    ).bind(timestamp),
+  );
+  await env.DB.batch(statements);
+}
+
+async function createSession(env, request, userId, workspaceId, remember = true) {
+  const token = randomToken();
+  const tokenHash = await sha256(token);
+  const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+  const expiresAt = new Date(Date.now() + maxAge * 1000).toISOString();
+  await env.DB.prepare(
+    "INSERT INTO sessions(id,user_id,workspace_id,token_hash,user_agent,ip,expires_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?)",
+  ).bind(
+    randomId("ses"),
+    userId,
+    workspaceId,
+    tokenHash,
+    request.headers.get("user-agent") || "",
+    clientIp(request),
+    expiresAt,
+    nowIso(),
+    nowIso(),
+  ).run();
+  return { token, maxAge };
+}
+
+async function getSession(env, request) {
+  const token = parseCookies(request).octopus_session;
+  if (!token) return null;
+  const tokenHash = await sha256(token);
+  const row = await env.DB.prepare(
+    `SELECT
+       s.id AS session_id, s.expires_at,
+       u.id AS user_id, u.name, u.email, u.phone, u.status AS user_status,
+       w.id AS workspace_id, w.name AS workspace_name, w.slug, w.region,
+       w.size, w.type, w.markets, m.role
+     FROM sessions s
+     JOIN users u ON u.id = s.user_id
+     JOIN workspaces w ON w.id = s.workspace_id
+     JOIN memberships m ON m.user_id = u.id AND m.workspace_id = w.id
+     WHERE s.token_hash = ? AND s.expires_at > ? AND u.status = 'active' AND m.status = 'active'`,
+  ).bind(tokenHash, nowIso()).first();
+  if (!row) return null;
+  await env.DB.prepare("UPDATE sessions SET last_seen_at = ? WHERE id = ?")
+    .bind(nowIso(), row.session_id).run();
+  return {
+    sessionId: row.session_id,
+    user: { id: row.user_id, name: row.name, email: row.email, phone: row.phone },
+    workspace: {
+      id: row.workspace_id,
+      name: row.workspace_name,
+      slug: row.slug,
+      region: row.region,
+      size: row.size,
+      type: row.type,
+      markets: row.markets,
+    },
+    role: row.role,
+  };
+}
+
+async function requireSession(env, request) {
+  const session = await getSession(env, request);
+  if (!session) throw httpError(401, "请先登录");
+  return session;
+}
+
+async function audit(env, request, session, module, action, objectType, objectId, detail = {}) {
+  await env.DB.prepare(
+    "INSERT INTO audit_logs(id,workspace_id,user_id,module,action,object_type,object_id,detail,ip,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+  ).bind(
+    randomId("aud"),
+    session.workspace.id,
+    session.user.id,
+    module,
+    action,
+    objectType,
+    objectId,
+    JSON.stringify(detail),
+    clientIp(request),
+    nowIso(),
+  ).run();
+}
+
+async function sendVerification(env, contact, code, purpose) {
+  if (!env.RESEND_API_KEY || !contact.includes("@")) return false;
+  const subject = purpose === "reset" ? "Octopus 密码重置验证码" : "Octopus 注册验证码";
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      from: env.MAIL_FROM || "Octopus <noreply@example.com>",
+      to: [contact],
+      subject,
+      html: `<div style="font-family:Arial,sans-serif"><h2>${subject}</h2><p>验证码：</p><p style="font-size:30px;font-weight:700;letter-spacing:6px">${code}</p><p>10 分钟内有效。如非本人操作，请忽略本邮件。</p></div>`,
+    }),
+  });
+  return response.ok;
+}
+
+async function requestVerification(env, request) {
+  await rateLimit(env, `verify:${clientIp(request)}`, 8, 3600);
+  const body = await readBody(request);
+  const contact = String(body.contact || "").trim().toLowerCase();
+  const purpose = body.purpose === "reset" ? "reset" : "register";
+  if (!contact) throw httpError(400, "请输入邮箱或手机号");
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const codeHash = await sha256(`${contact}:${purpose}:${code}`);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  await env.DB.prepare(
+    "INSERT INTO verification_codes(id,contact,purpose,code_hash,expires_at,created_at) VALUES(?,?,?,?,?,?)",
+  ).bind(randomId("ver"), contact, purpose, codeHash, expiresAt, nowIso()).run();
+  const delivered = await sendVerification(env, contact, code, purpose);
+  const isDevelopment =
+    env.ALLOW_DEV_CODES === "true" ||
+    ["localhost", "127.0.0.1"].includes(new URL(request.url).hostname);
+  return json({
+    ok: true,
+    delivered,
+    ...(isDevelopment ? { development_code: code } : {}),
+  });
+}
+
+async function consumeVerification(env, contact, purpose, code) {
+  const rows = await env.DB.prepare(
+    "SELECT id,code_hash FROM verification_codes WHERE contact = ? AND purpose = ? AND consumed_at IS NULL AND expires_at > ? ORDER BY created_at DESC LIMIT 5",
+  ).bind(contact, purpose, nowIso()).all();
+  const expected = await sha256(`${contact}:${purpose}:${code}`);
+  const match = rows.results.find((row) => timingSafeEqual(row.code_hash, expected));
+  if (!match) throw httpError(400, "验证码无效或已过期");
+  await env.DB.prepare("UPDATE verification_codes SET consumed_at = ? WHERE id = ?")
+    .bind(nowIso(), match.id).run();
+}
+
+async function handleRegister(env, request) {
+  await rateLimit(env, `register:${clientIp(request)}`, 10, 3600);
+  const body = await readBody(request);
+  const name = String(body.name || "").trim();
+  const contact = String(body.contact || "").trim().toLowerCase();
+  const password = String(body.password || "");
+  const code = String(body.code || "");
+  const org = String(body.org || "").trim();
+  if (!name || !contact || !org) throw httpError(400, "请完整填写账号与企业信息");
+  if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    throw httpError(400, "密码至少 8 位，并同时包含字母与数字");
+  }
+  await consumeVerification(env, contact, "register", code);
+  const existing = await env.DB.prepare(
+    "SELECT id FROM users WHERE lower(email) = ? OR phone = ?",
+  ).bind(contact, contact).first();
+  if (existing) throw httpError(409, "该账号已经注册");
+
+  const userId = randomId("usr");
+  const workspaceId = randomId("ws");
+  const membershipId = randomId("mem");
+  const slugBase = org.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-").replace(/^-|-$/g, "") || "workspace";
+  const slug = `${slugBase}-${crypto.randomUUID().slice(0, 6)}`;
+  const passwordData = await createPassword(password);
+  const isEmail = contact.includes("@");
+  const timestamp = nowIso();
+
+  await env.DB.batch([
+    env.DB.prepare(
+      "INSERT INTO workspaces(id,name,slug,region,size,type,markets,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+    ).bind(workspaceId, org, slug, body.region || "", body.size || "", body.type || "", body.markets || "", "active", timestamp, timestamp),
+    env.DB.prepare(
+      `INSERT INTO users(id,email,phone,name,password_hash,password_salt,password_iterations,status,created_at,updated_at)
+       VALUES(?,?,?,?,?,?,?,?,?,?)`,
+    ).bind(
+      userId,
+      isEmail ? contact : null,
+      isEmail ? null : contact,
+      name,
+      passwordData.hash,
+      passwordData.salt,
+      passwordData.iterations,
+      "active",
+      timestamp,
+      timestamp,
+    ),
+    env.DB.prepare(
+      "INSERT INTO memberships(id,workspace_id,user_id,role,status,created_at) VALUES(?,?,?,?,?,?)",
+    ).bind(membershipId, workspaceId, userId, "owner", "active", timestamp),
+  ]);
+
+  const session = await createSession(env, request, userId, workspaceId, true);
+  const payload = {
+    user: { id: userId, name, email: isEmail ? contact : null, phone: isEmail ? null : contact },
+    workspace: { id: workspaceId, name: org, slug, region: body.region || "", size: body.size || "", type: body.type || "", markets: body.markets || "" },
+    role: "owner",
+  };
+  return json(payload, 201, { "set-cookie": sessionCookie(session.token, session.maxAge) });
+}
+
+async function handleLogin(env, request) {
+  await rateLimit(env, `login:${clientIp(request)}`, 20, 900);
+  const body = await readBody(request);
+  const contact = String(body.contact || "").trim().toLowerCase();
+  const password = String(body.password || "");
+  const user = await env.DB.prepare(
+    "SELECT * FROM users WHERE lower(email) = ? OR phone = ? LIMIT 1",
+  ).bind(contact, contact).first();
+  if (!user || !(await verifyPassword(password, user))) {
+    throw httpError(401, "账号或密码错误");
+  }
+  const membership = await env.DB.prepare(
+    `SELECT m.workspace_id,m.role,w.name,w.slug,w.region,w.size,w.type,w.markets
+     FROM memberships m JOIN workspaces w ON w.id=m.workspace_id
+     WHERE m.user_id=? AND m.status='active' AND w.status='active'
+     ORDER BY m.created_at LIMIT 1`,
+  ).bind(user.id).first();
+  if (!membership) throw httpError(403, "账号未加入可用工作空间");
+  await env.DB.prepare("UPDATE users SET last_login_at=?,updated_at=? WHERE id=?")
+    .bind(nowIso(), nowIso(), user.id).run();
+  const session = await createSession(env, request, user.id, membership.workspace_id, body.remember !== false);
+  return json({
+    user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
+    workspace: {
+      id: membership.workspace_id,
+      name: membership.name,
+      slug: membership.slug,
+      region: membership.region,
+      size: membership.size,
+      type: membership.type,
+      markets: membership.markets,
+    },
+    role: membership.role,
+  }, 200, { "set-cookie": sessionCookie(session.token, session.maxAge) });
+}
+
+async function handleLogout(env, request) {
