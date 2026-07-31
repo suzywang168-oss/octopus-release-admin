@@ -1,4 +1,4 @@
-name: Publish Octopus Admin V7.7 Account
+name: Publish Octopus Admin V7.8 Bilingual
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - ".site-v75b/**"
       - ".site-v76/**"
       - ".site-v77/**"
+      - ".site-v78/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
@@ -27,7 +28,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build static Octopus Admin with account settings
+      - name: Build Octopus Admin V7.8
         shell: bash
         run: |
           set -euo pipefail
@@ -35,16 +36,20 @@ jobs:
           cat .site-v75b/part-*.txt | base64 --decode | gunzip > _site/index.html
           cp .site-v76/auth-v76.js _site/auth-v76.js
           cp .site-v77/account-settings-v77.js _site/account-settings-v77.js
+          cp .site-v78/ux-i18n-v78.js _site/ux-i18n-v78.js
 
           python3 - <<'PY'
           from pathlib import Path
           path = Path('_site/index.html')
           html = path.read_text(encoding='utf-8')
-          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.7 · Account + Auth + CRUD')
-          html = html.replace('Platform Console · V7.5', 'Platform Console · V7.7')
-          scripts = '<script src="auth-v76.js?v=20260731-1724"></script><script src="account-settings-v77.js?v=20260731-1724"></script>'
-          if 'account-settings-v77.js' not in html:
-              html = html.replace('</body>', scripts + '</body>', 1)
+          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.8 · Auth + CRUD · 中文 / EN')
+          html = html.replace('Platform Console · V7.5', 'Platform Console · V7.8')
+          scripts = (
+              '<script src="auth-v76.js?v=20260731-1738"></script>'
+              '<script src="account-settings-v77.js?v=20260731-1738"></script>'
+              '<script src="ux-i18n-v78.js?v=20260731-1738"></script>'
+          )
+          html = html.replace('</body>', scripts + '</body>', 1)
           path.write_text(html, encoding='utf-8')
           PY
 
@@ -52,13 +57,16 @@ jobs:
           test -s _site/index.html
           test -s _site/auth-v76.js
           test -s _site/account-settings-v77.js
-          grep -q "Octopus Admin V7.7" _site/index.html
+          test -s _site/ux-i18n-v78.js
+          grep -q "Octopus Admin V7.8" _site/index.html
           grep -q "auth-v76.js" _site/index.html
           grep -q "account-settings-v77.js" _site/index.html
-          grep -q "个人账户设置" _site/account-settings-v77.js
+          grep -q "ux-i18n-v78.js" _site/index.html
+          grep -q "注册管理员账号" _site/ux-i18n-v78.js
+          grep -q "auth-switch" _site/ux-i18n-v78.js
+          grep -q "octopus-ui-language-v78" _site/ux-i18n-v78.js
+          grep -q "Partner Management" _site/ux-i18n-v78.js
           grep -q "退出账号" _site/account-settings-v77.js
-          grep -q "data-a=\"profile\"" _site/account-settings-v77.js
-          grep -q "localStorage.removeItem(S)" _site/account-settings-v77.js
           if grep -q "DecompressionStream" _site/index.html; then
             echo "Browser-side loader must not be deployed"
             exit 1
@@ -79,21 +87,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Octopus Admin static site
+      - name: Deploy Octopus Admin V7.8
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record account settings deployment
+      - name: Record V7.8 deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          printf '{"status":"success","version":"v7.7-account-settings","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-static","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"login-register-reset-logout-session","account_settings":"profile-security-session-data","storage":"browser-local","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          printf '{"status":"success","version":"v7.8-static-auth-bilingual","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-static","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"login-first-register-reset-logout-session","account_settings":"profile-security-session-data","i18n":"zh-CN-en-US","storage":"browser-local","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record V7.7 account settings deployment"
+          git diff --cached --quiet || git commit -m "chore: record V7.8 bilingual deployment"
           git push
