@@ -1,4 +1,4 @@
-name: Publish Octopus Admin V7.9 Cache Safe
+name: Publish Octopus Admin V7.9 Single File
 
 on:
   push:
@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_DIR: admin-v79-20260731-1755
+  FINAL_FILE: octopus-admin-v79-final.html
 
 jobs:
   build:
@@ -32,69 +32,51 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build cache-safe Octopus Admin V7.9
+      - name: Build self-contained Octopus Admin V7.9
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "_site/${RELEASE_DIR}"
-
-          cat .site-v75b/part-*.txt | base64 --decode | gunzip > "_site/${RELEASE_DIR}/index.html"
-          cp .site-v76/auth-v76.js "_site/${RELEASE_DIR}/auth-v76.js"
-          cp .site-v77/account-settings-v77.js "_site/${RELEASE_DIR}/account-settings-v77.js"
-          cp .site-v78/ux-i18n-v78.js "_site/${RELEASE_DIR}/ux-i18n-v78.js"
-          cp .site-v79/admin-login-v79.js "_site/${RELEASE_DIR}/admin-login-v79.js"
+          mkdir -p _site
+          cat .site-v75b/part-*.txt | base64 --decode | gunzip > /tmp/octopus-base.html
 
           python3 - <<'PY'
           from pathlib import Path
           import os
 
-          release_dir = os.environ['RELEASE_DIR']
-          app_path = Path('_site') / release_dir / 'index.html'
-          html = app_path.read_text(encoding='utf-8')
-          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.9 · Admin Login · 中文 / EN')
+          base = Path('/tmp/octopus-base.html').read_text(encoding='utf-8')
+          scripts = [
+              Path('.site-v76/auth-v76.js').read_text(encoding='utf-8'),
+              Path('.site-v77/account-settings-v77.js').read_text(encoding='utf-8'),
+              Path('.site-v78/ux-i18n-v78.js').read_text(encoding='utf-8'),
+              Path('.site-v79/admin-login-v79.js').read_text(encoding='utf-8'),
+          ]
+          html = base.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.9 · Admin Login · 中文 / EN')
           html = html.replace('Platform Console · V7.5', 'Platform Console · V7.9')
-          no_cache = (
+          cache = (
               '<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">'
               '<meta http-equiv="Pragma" content="no-cache">'
               '<meta http-equiv="Expires" content="0">'
           )
-          html = html.replace('</head>', no_cache + '</head>', 1)
-          scripts = (
-              '<script src="auth-v76.js?v=20260731-1755"></script>'
-              '<script src="account-settings-v77.js?v=20260731-1755"></script>'
-              '<script src="ux-i18n-v78.js?v=20260731-1755"></script>'
-              '<script src="admin-login-v79.js?v=20260731-1755"></script>'
-          )
-          html = html.replace('</body>', scripts + '</body>', 1)
-          app_path.write_text(html, encoding='utf-8')
-
-          redirect = f'''<!doctype html>
-          <html lang="zh-CN"><head><meta charset="utf-8">
-          <meta name="viewport" content="width=device-width,initial-scale=1">
-          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-          <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-          <title>Octopus Admin V7.9</title>
-          <meta http-equiv="refresh" content="0;url=./{release_dir}/?v=20260731-1755">
-          <script>location.replace('./{release_dir}/?v=20260731-1755')</script>
-          </head><body><a href="./{release_dir}/?v=20260731-1755">打开 Octopus Admin V7.9</a></body></html>'''
-          Path('_site/index.html').write_text(redirect, encoding='utf-8')
+          html = html.replace('</head>', cache + '</head>', 1)
+          inline = ''.join('<script>\n' + source + '\n</script>' for source in scripts)
+          html = html.replace('</body>', inline + '</body>', 1)
+          final_file = os.environ['FINAL_FILE']
+          Path('_site', final_file).write_text(html, encoding='utf-8')
+          Path('_site/index.html').write_text(html, encoding='utf-8')
           PY
 
           touch _site/.nojekyll
+          test -s "_site/${FINAL_FILE}"
           test -s _site/index.html
-          test -s "_site/${RELEASE_DIR}/index.html"
-          test -s "_site/${RELEASE_DIR}/auth-v76.js"
-          test -s "_site/${RELEASE_DIR}/account-settings-v77.js"
-          test -s "_site/${RELEASE_DIR}/ux-i18n-v78.js"
-          test -s "_site/${RELEASE_DIR}/admin-login-v79.js"
-          grep -q "${RELEASE_DIR}" _site/index.html
-          grep -q "Octopus Admin V7.9" "_site/${RELEASE_DIR}/index.html"
-          grep -q "admin-login-v79.js?v=20260731-1755" "_site/${RELEASE_DIR}/index.html"
-          grep -q "ADMIN ACCESS ONLY" "_site/${RELEASE_DIR}/admin-login-v79.js"
-          grep -q "管理员登录" "_site/${RELEASE_DIR}/admin-login-v79.js"
-          grep -q "Admin Sign-in" "_site/${RELEASE_DIR}/admin-login-v79.js"
-          grep -q "Partner Management" "_site/${RELEASE_DIR}/ux-i18n-v78.js"
-          grep -q "退出账号" "_site/${RELEASE_DIR}/account-settings-v77.js"
+          cmp "_site/${FINAL_FILE}" _site/index.html
+          grep -q "Octopus Admin V7.9" "_site/${FINAL_FILE}"
+          grep -q "ADMIN ACCESS ONLY" "_site/${FINAL_FILE}"
+          grep -q "管理员登录" "_site/${FINAL_FILE}"
+          grep -q "Admin Sign-in" "_site/${FINAL_FILE}"
+          grep -q "Partner Management" "_site/${FINAL_FILE}"
+          grep -q "个人账户设置" "_site/${FINAL_FILE}"
+          grep -q "退出账号" "_site/${FINAL_FILE}"
+          grep -q "octopus-ui-language-v78" "_site/${FINAL_FILE}"
           if grep -R -q "DecompressionStream" _site; then
             echo "Browser-side loader must not be deployed"
             exit 1
@@ -115,22 +97,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy cache-safe Octopus Admin V7.9
+      - name: Deploy Octopus Admin V7.9 single file
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record cache-safe V7.9 deployment
+      - name: Record single-file deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          RELEASE_URL="${PAGE_URL}${RELEASE_DIR}/?v=20260731-1755"
-          printf '{"status":"success","version":"v7.9-cache-safe","site_url":"%s","root_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-versioned-path","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"admin-login-only-logout-session","account_settings":"profile-security-session-data","i18n":"zh-CN-en-US","storage":"browser-local","reported_at":"%s"}\n' "$RELEASE_URL" "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          FINAL_URL="${PAGE_URL}${FINAL_FILE}?release=20260731-1802"
+          printf '{"status":"success","version":"v7.9-single-file","site_url":"%s","root_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-self-contained-html","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"admin-login-only-logout-session","account_settings":"profile-security-session-data","i18n":"zh-CN-en-US","storage":"browser-local","reported_at":"%s"}\n' "$FINAL_URL" "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record cache-safe V7.9 deployment"
+          git diff --cached --quiet || git commit -m "chore: record V7.9 single-file deployment"
           git push
