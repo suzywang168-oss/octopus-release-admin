@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".site-v75/**"
+      - ".site-v75b/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
@@ -24,24 +24,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Octopus Admin V7.5
+      - name: Build Octopus Admin V7.5 CRUD
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site
-          cat \
-            .site-v75/part-00.txt \
-            .site-v75/part-01.txt \
-            .site-v75/part-02.txt \
-            .site-v75/part-03.txt \
-            | base64 --decode | gunzip > _site/index.html
+          cat .site-v75b/part-*.txt | base64 --decode | gunzip > _site/index.html
           touch _site/.nojekyll
           test -s _site/index.html
           grep -q "Octopus Admin V7.5" _site/index.html
           grep -q "data-bulk-delete" _site/index.html
           grep -q "openForm('edit'" _site/index.html
           grep -q "localStorage" _site/index.html
-          grep -q "original navy" _site/index.html || true
+          grep -q "批量删除" _site/index.html
           if grep -q "DecompressionStream" _site/index.html; then
             echo "Browser-side loader must not be deployed"
             exit 1
