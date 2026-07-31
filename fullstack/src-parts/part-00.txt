@@ -1,0 +1,292 @@
+const encoder = new TextEncoder();
+
+const JSON_HEADERS = {
+  "content-type": "application/json; charset=utf-8",
+  "cache-control": "no-store",
+  "x-content-type-options": "nosniff",
+};
+
+const RESOURCE_CONFIG = {
+  "contents": {
+    table: "contents",
+    fields: ["code", "name", "owner", "region", "languages", "status", "views", "description", "tags", "cover_url"],
+    required: ["name"],
+    prefix: "OC",
+  },
+  "tasks": {
+    table: "release_tasks",
+    fields: ["code", "name", "content_id", "content_name", "channel", "owner", "progress", "status", "deadline", "priority"],
+    required: ["name"],
+    prefix: "REL",
+  },
+  "channels": {
+    table: "channels",
+    fields: ["name", "abbr", "region", "status", "income", "views", "roi", "sync_rate", "api_config"],
+    required: ["name"],
+  },
+  "partners": {
+    table: "partners",
+    fields: ["name", "type", "level", "region", "projects", "income", "contract_status", "contact_json"],
+    required: ["name"],
+  },
+  "risk-cases": {
+    table: "risk_cases",
+    fields: ["title", "meta", "description", "copyright_score", "violence_score", "sensitive_score", "overall", "status", "reviewer_id"],
+    required: ["title"],
+  },
+  "settlements": {
+    table: "settlements",
+    fields: ["bill_no", "partner_id", "partner_name", "period", "amount", "platform_share", "status"],
+    required: ["partner_name"],
+    prefix: "BILL",
+  },
+};
+
+function json(data, status = 200, headers = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...JSON_HEADERS, ...headers },
+  });
+}
+
+function httpError(status, message) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function randomId(prefix = "") {
+  return `${prefix}${prefix ? "_" : ""}${crypto.randomUUID().replaceAll("-", "")}`;
+}
+
+function base64Url(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+function fromBase64Url(value) {
+  const normalized = value.replaceAll("-", "+").replaceAll("_", "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function randomToken(size = 32) {
+  const bytes = new Uint8Array(size);
+  crypto.getRandomValues(bytes);
+  return base64Url(bytes);
+}
+
+async function sha256(value) {
+  const data = typeof value === "string" ? encoder.encode(value) : value;
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return base64Url(new Uint8Array(digest));
+}
+
+async function derivePassword(password, salt, iterations = 210000) {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt, iterations },
+    keyMaterial,
+    256,
+  );
+  return base64Url(new Uint8Array(bits));
+}
+
+async function createPassword(password, iterations = 210000) {
+  const salt = new Uint8Array(16);
+  crypto.getRandomValues(salt);
+  return {
+    hash: await derivePassword(password, salt, iterations),
+    salt: base64Url(salt),
+    iterations,
+  };
+}
+
+async function verifyPassword(password, user) {
+  const calculated = await derivePassword(
+    password,
+    fromBase64Url(user.password_salt),
+    Number(user.password_iterations),
+  );
+  return timingSafeEqual(calculated, user.password_hash);
+}
+
+function timingSafeEqual(left, right) {
+  if (left.length !== right.length) return false;
+  let mismatch = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+  return mismatch === 0;
+}
+
+function parseCookies(request) {
+  const raw = request.headers.get("cookie") || "";
+  return Object.fromEntries(
+    raw
+      .split(";")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const index = part.indexOf("=");
+        return index < 0
+          ? [decodeURIComponent(part), ""]
+          : [decodeURIComponent(part.slice(0, index)), decodeURIComponent(part.slice(index + 1))];
+      }),
+  );
+}
+
+function sessionCookie(token, maxAgeSeconds) {
+  return [
+    `octopus_session=${encodeURIComponent(token)}`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Lax",
+    `Max-Age=${maxAgeSeconds}`,
+  ].join("; ");
+}
+
+function clearSessionCookie() {
+  return "octopus_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+}
+
+async function readBody(request) {
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > 1_000_000) throw httpError(413, "请求数据过大");
+  const text = await request.text();
+  if (text.length > 1_000_000) throw httpError(413, "请求数据过大");
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw httpError(400, "JSON 格式无效");
+  }
+}
+
+function clientIp(request) {
+  return request.headers.get("cf-connecting-ip") || "unknown";
+}
+
+function assertSameOrigin(request) {
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) {
+    throw httpError(403, "跨站请求已被阻止");
+  }
+}
+
+async function rateLimit(env, key, limit, windowSeconds) {
+  const windowStart = Math.floor(Date.now() / 1000 / windowSeconds) * windowSeconds;
+  const current = await env.DB.prepare(
+    "SELECT count, window_start FROM rate_limits WHERE key = ?",
+  ).bind(key).first();
+  if (!current || Number(current.window_start) !== windowStart) {
+    await env.DB.prepare(
+      "INSERT INTO rate_limits(key, count, window_start) VALUES(?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = 1, window_start = excluded.window_start",
+    ).bind(key, windowStart).run();
+    return;
+  }
+  if (Number(current.count) >= limit) throw httpError(429, "请求过于频繁，请稍后再试");
+  await env.DB.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").bind(key).run();
+}
+
+async function ensureSeed(env) {
+  const seeded = await env.DB.prepare(
+    "SELECT value FROM app_settings WHERE key = 'seed_v1'",
+  ).first();
+  if (seeded) return;
+
+  const workspaceId = "ws_octopus_demo";
+  const userId = "usr_octopus_demo";
+  const password = await createPassword("Octopus2026!");
+  const timestamp = nowIso();
+
+  const statements = [
+    env.DB.prepare(
+      "INSERT OR IGNORE INTO workspaces(id,name,slug,region,size,type,markets,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+    ).bind(workspaceId, "Octopus Global Workspace", "octopus-global", "美国", "51–200 人", "发行方", "北美、欧洲、东南亚、日本", "active", timestamp, timestamp),
+    env.DB.prepare(
+      "INSERT OR IGNORE INTO users(id,email,name,password_hash,password_salt,password_iterations,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+    ).bind(userId, "suzy@octopus.cloud", "Suzy Wang", password.hash, password.salt, password.iterations, "active", timestamp, timestamp),
+    env.DB.prepare(
+      "INSERT OR IGNORE INTO memberships(id,workspace_id,user_id,role,status,created_at) VALUES(?,?,?,?,?,?)",
+    ).bind("mem_octopus_demo", workspaceId, userId, "owner", "active", timestamp),
+  ];
+
+  const contents = [
+    ["ct_neon","OC-10086","霓虹追踪","Aurora Studio","北美","EN / ES / JP","发行中","8,420万","赛博朋克 AI 漫剧，已上线多个全球渠道。"],
+    ["ct_star","OC-10079","星海漫游","Northlight","欧洲","EN / DE / FR","审核中","4,160万","科幻冒险动态漫，正在完成德语配音与版权复核。"],
+    ["ct_city","OC-10072","古城谜案","Mosaic Films","东南亚","ZH / TH / ID","待上线","2,680万","东方悬疑短剧，渠道素材预检已完成。"],
+    ["ct_paper","OC-10065","纸上王国","Inkverse","日本","JP / EN","已完成","6,880万","奇幻条漫改编项目，第一季发行结束。"],
+    ["ct_mecha","OC-10058","机甲黎明","Ironframe","北美","EN / KR","发行中","5,240万","机甲题材工业追更漫，已发布 42 集。"],
+    ["ct_book","OC-10051","月下书店","Bluebird","欧洲","EN / FR","审核中","1,920万","治愈系轻剧情动画，等待音乐版权确认。"],
+    ["ct_train","OC-10044","荒原列车","DustLab","东南亚","EN / TH","待上线","3,110万","末日冒险短剧，等待渠道上线。"],
+    ["ct_signal","OC-10037","夜航信号","Signal Works","日本","JP / EN / KR","发行中","7,360万","都市幻想 AI 动画，日韩市场表现突出。"],
+  ];
+  for (const item of contents) {
+    statements.push(
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO contents(id,workspace_id,code,name,owner,region,languages,status,views,description,tags,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      ).bind(item[0], workspaceId, ...item.slice(1), JSON.stringify(["多语言","版权已签"]), userId, timestamp, timestamp),
+    );
+  }
+
+  const tasks = [
+    ["task_1","REL-240730-01","霓虹追踪 EP06 北美发行","ct_neon","霓虹追踪","YouTube","Mia",78,"发行中","2026-08-01T18:00:00Z","high"],
+    ["task_2","REL-240730-02","星海漫游德语版上线","ct_star","星海漫游","Amazon","Leo",52,"审核中","2026-08-03T12:00:00Z","high"],
+    ["task_3","REL-240730-03","古城谜案东南亚投放","ct_city","古城谜案","TikTok","Nora",38,"制作中","2026-08-02T20:00:00Z","normal"],
+    ["task_4","REL-240729-12","机甲黎明 EP42 多渠道同步","ct_mecha","机甲黎明","YouTube","Yuki",91,"发行中","2026-07-31T16:00:00Z","high"],
+    ["task_5","REL-240728-05","纸上王国第一季归档","ct_paper","纸上王国","Amazon","Leo",100,"已完成","2026-07-28T18:00:00Z","normal"],
+  ];
+  for (const item of tasks) {
+    statements.push(
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO release_tasks(id,workspace_id,code,name,content_id,content_name,channel,owner,progress,status,deadline,priority,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      ).bind(item[0], workspaceId, ...item.slice(1), userId, timestamp, timestamp),
+    );
+  }
+
+  const channels = [
+    ["ch_youtube","YouTube","YT","全球","已连接","¥3.28M","8,420万","3.8","99.9%"],
+    ["ch_tiktok","TikTok","TT","全球","已连接","¥2.42M","6,860万","3.2","99.7%"],
+    ["ch_amazon","Amazon","AZ","北美 / 欧洲","已连接","¥1.46M","3,120万","2.9","99.4%"],
+    ["ch_netflix","Netflix","NF","全球","待续期","¥980K","1,860万","2.4","96.8%"],
+    ["ch_line","LINE TV","LT","东南亚","已连接","¥328K","920万","2.6","99.2%"],
+    ["ch_abema","ABEMA","AB","日本","已连接","¥186K","640万","2.2","98.9%"],
+  ];
+  for (const item of channels) {
+    statements.push(
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO channels(id,workspace_id,name,abbr,region,status,income,views,roi,sync_rate,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+      ).bind(item[0], workspaceId, ...item.slice(1), timestamp, timestamp),
+    );
+  }
+
+  const partners = [
+    ["pt_aurora","Aurora Studio","内容方","A","北美",18,"¥8.6M","正常"],
+    ["pt_north","Northlight Media","发行方","S","欧洲",26,"¥12.4M","正常"],
+    ["pt_mosaic","Mosaic Films","内容方","B","东南亚",9,"¥3.2M","待续签"],
+    ["pt_tokyo","Tokyo Link","渠道方","A","日本",14,"¥6.8M","正常"],
+    ["pt_wave","Wave MCN","MCN","B","全球",11,"¥2.9M","审核中"],
+  ];
+  for (const item of partners) {
+    statements.push(
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO partners(id,workspace_id,name,type,level,region,projects,income,contract_status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+      ).bind(item[0], workspaceId, ...item.slice(1), timestamp, timestamp),
+    );
+  }
+
+  const risks = [
