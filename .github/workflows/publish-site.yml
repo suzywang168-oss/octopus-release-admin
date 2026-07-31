@@ -35,12 +35,49 @@ jobs:
             .site-v73/part-02.txt \
             .site-v73/part-03.txt \
             | base64 --decode | gunzip > _site/index.html
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('_site/index.html')
+          html = path.read_text(encoding='utf-8')
+          preserved_theme = r'''
+          :root{--bg:#07111f!important;--panel:#0f1e33!important;--panel-2:#13243b!important;--line:#223a5c!important;--line-strong:#355078!important;--text:#f4f8ff!important;--sub:#b7c4d7!important;--muted:#7e91aa!important;--nav:#081526!important;--nav-hover:rgba(91,124,255,.13)!important;--nav-text:#8799b1!important;--accent:#5b7cff!important;--danger:#ff6f84!important;--warning:#ffae68!important;--success:#47d397!important;--shadow:0 16px 46px rgba(0,0,0,.22)!important}
+          body.light{--bg:#eef3f8!important;--panel:#fff!important;--panel-2:#f5f8fb!important;--line:#d9e2ee!important;--line-strong:#c6d2e1!important;--text:#15243a!important;--sub:#42536a!important;--muted:#76859a!important;--accent:#5b7cff!important;--danger:#d9415a!important;--warning:#b96f1e!important;--success:#188a59!important;--shadow:0 14px 36px rgba(28,53,82,.09)!important}
+          html,body{background:radial-gradient(circle at 88% -8%,rgba(91,124,255,.15),transparent 30%),var(--bg)!important;font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif!important}
+          .app{grid-template-columns:248px minmax(0,1fr)!important}
+          aside{background:linear-gradient(180deg,#081526,#07111f)!important;border-right:1px solid #1a304d!important;padding:18px 12px 82px!important}
+          .brand{gap:10px!important;padding:0 8px 16px!important;border-bottom:1px solid rgba(255,255,255,.08)!important;margin-bottom:14px!important}
+          .mark{width:38px!important;height:38px!important;border:0!important;border-radius:13px!important;background:linear-gradient(145deg,#5b7cff,#31c6dc)!important;color:#fff!important;font-size:18px!important;font-weight:900!important}
+          .brand b{color:#fff!important;font-size:15px!important}.brand small{color:#7e91aa!important;font-size:8px!important}
+          .nav{gap:5px!important;margin-top:0!important}.nav button{grid-template-columns:25px 1fr!important;gap:8px!important;border-radius:10px!important;color:#8799b1!important;padding:11px 12px!important;font-size:9px!important}.nav button:hover,.nav button.active{background:rgba(91,124,255,.13)!important;color:#fff!important}.nav button.active{box-shadow:inset 2px 0 #5b7cff!important}.nav-code,.nav button.active .nav-code{color:#9eb0ff!important;font-size:8px!important}
+          .profile{left:12px!important;right:auto!important;bottom:14px!important;width:224px!important;padding:10px 12px!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:12px!important;background:rgba(10,27,47,.96)!important;color:#fff!important}.profile b{font-size:9px!important}.profile small{color:#7e91aa!important;font-size:7px!important}
+          .topbar{height:64px!important;padding:0 28px!important;background:color-mix(in srgb,var(--bg) 88%,transparent)!important;border-bottom:1px solid var(--line)!important;backdrop-filter:blur(16px)!important}.workspace-title b{font-size:10px!important}.workspace-title small{font-size:7px!important;color:var(--muted)!important}.top-actions{gap:7px!important}.search,.icon-btn,.btn{height:34px!important;border:1px solid var(--line)!important;border-radius:9px!important;background:var(--panel-2)!important;color:var(--sub)!important;font-size:8px!important}.search{width:260px!important}.btn.primary{background:linear-gradient(135deg,#5b7cff,#7964e9)!important;border-color:#6f7ff0!important;color:#fff!important;font-weight:760!important}
+          .content{padding:22px 28px 50px!important}.page-head{margin-bottom:14px!important}.page-head h1{font-size:22px!important;font-weight:760!important}.page-head p{font-size:9px!important;color:var(--muted)!important}.head-actions{gap:7px!important}
+          .kpis{grid-template-columns:repeat(6,minmax(120px,1fr))!important;gap:9px!important;border:0!important;background:transparent!important;border-radius:0!important;overflow:visible!important;margin-bottom:10px!important}.kpi{padding:14px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:linear-gradient(145deg,var(--panel),color-mix(in srgb,var(--panel) 85%,#08111e))!important;box-shadow:var(--shadow)!important}.kpi span{font-size:7px!important}.kpi strong{margin-top:10px!important;font-size:19px!important}.kpi small{font-size:7px!important;color:var(--muted)!important}
+          body.light .kpi,body.light .table-card,body.light .side-card,body.light .activity{background:linear-gradient(145deg,#fff,#f8fafc)!important}
+          .tabs{display:flex!important;gap:6px!important;padding:7px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--panel-2)!important;margin-bottom:10px!important;overflow:auto!important}.tabs button{height:31px!important;border:0!important;border-radius:8px!important;color:var(--muted)!important;padding:0 13px!important;font-size:8px!important}.tabs button.active{background:var(--panel)!important;color:var(--text)!important;font-weight:700!important;box-shadow:0 5px 16px rgba(0,0,0,.15)!important}.tabs button.active:after{display:none!important}
+          .toolbar{align-items:center!important;padding:8px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--panel-2)!important;margin-bottom:10px!important}.filters{gap:7px!important}.filters input,.filters select{height:33px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--panel)!important;color:var(--sub)!important;font-size:8px!important}.filters input{width:230px!important}
+          .workgrid{grid-template-columns:minmax(0,1fr) 295px!important;gap:10px!important}.table-card,.side-card,.activity{border:1px solid var(--line)!important;border-radius:14px!important;background:linear-gradient(145deg,var(--panel),color-mix(in srgb,var(--panel) 85%,#08111e))!important;box-shadow:var(--shadow)!important}.table-card{overflow:hidden!important}.table-wrap{max-height:560px!important}table{min-width:850px!important}th,td{padding:12px 13px!important;font-size:8px!important}th{background:var(--panel-2)!important;color:var(--muted)!important}td{color:var(--sub)!important}tbody tr:hover td{background:rgba(91,124,255,.035)!important}.row-action{height:27px!important;border:1px solid var(--line)!important;border-radius:7px!important;background:var(--panel-2)!important;color:#9eb0ff!important;font-size:8px!important}.side{gap:10px!important}.side-card{padding:14px!important}.side-card h3{font-size:10px!important}.side-row{font-size:8px!important}.note{font-size:7px!important;color:var(--muted)!important}.activity{margin-top:10px!important;padding:14px!important}.activity-head b{font-size:10px!important}.activity-head span{font-size:7px!important;color:var(--muted)!important}.activity-list{gap:8px!important}.activity-item{padding:11px!important;border:1px solid var(--line)!important;border-radius:10px!important;background:var(--panel-2)!important}.activity-item b{font-size:8px!important}.activity-item small{font-size:7px!important;color:var(--muted)!important}
+          .drawer{background:var(--panel)!important;border-left:1px solid var(--line)!important;box-shadow:-18px 0 46px rgba(0,0,0,.28)!important}.modal-backdrop{background:rgba(3,8,15,.72)!important;backdrop-filter:blur(6px)!important}.modal{border:1px solid var(--line)!important;border-radius:17px!important;background:var(--panel)!important;box-shadow:var(--shadow)!important}.toast{border:1px solid var(--line)!important;border-radius:9px!important;background:var(--panel-2)!important;color:var(--text)!important;font-size:8px!important}
+          @media(max-width:1200px){.kpis{grid-template-columns:repeat(3,1fr)!important}}@media(max-width:900px){.app{grid-template-columns:76px 1fr!important}.workgrid{grid-template-columns:1fr!important}.side{grid-template-columns:repeat(2,1fr)!important}.activity-list{grid-template-columns:1fr 1fr!important}}@media(max-width:650px){.app{display:block!important}.content{padding:18px 13px 35px!important}.kpis{grid-template-columns:1fr 1fr!important}.workgrid,.side,.activity-list{grid-template-columns:1fr!important}}
+          '''
+
+          html = html.replace('</head>', f'<style id="octopus-preserved-theme">{preserved_theme}</style></head>', 1)
+          html = html.replace("document.body.classList.toggle('dark')", "document.body.classList.toggle('light')")
+          html = html.replace('>明暗</button>', ' title="切换明暗模式">◐</button>')
+          html = html.replace('<title>Octopus Admin V7.3</title>', '<title>Octopus Admin V7.3 · Preserved Style</title>')
+          path.write_text(html, encoding='utf-8')
+          PY
+
           touch _site/.nojekyll
           test -s _site/index.html
           grep -q "Octopus Admin V7.3" _site/index.html
           grep -q "API 与字段映射" _site/index.html
           grep -q "事件与 SLA" _site/index.html
           grep -q "activeTab" _site/index.html
+          grep -q "octopus-preserved-theme" _site/index.html
+          grep -q "body.classList.toggle('light')" _site/index.html
           if grep -q "DecompressionStream" _site/index.html; then
             echo "Browser-side loader must not be deployed"
             exit 1
@@ -68,14 +105,14 @@ jobs:
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record V7.3 deployment
+      - name: Record V7.3 preserved-style deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          printf '{"status":"success","version":"v7.3-dense","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"single-html","tabs":"independent-data-views","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          printf '{"status":"success","version":"v7.3-style-preserved","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"single-html","tabs":"independent-data-views","visual_style":"original-navy","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record Octopus Admin V7.3 deployment"
+          git diff --cached --quiet || git commit -m "chore: record preserved-style Octopus deployment"
           git push
