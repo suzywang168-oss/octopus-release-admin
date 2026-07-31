@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - "index.html"
       - "payload-lite/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
@@ -25,20 +24,64 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare static site
+      - name: Reconstruct and patch Octopus site
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html _site/index.html
-          cp -R payload-lite _site/payload-lite
+          cat \
+            payload-lite/part-00.txt \
+            payload-lite/part-01.txt \
+            payload-lite/part-02a.txt \
+            payload-lite/part-02b.txt \
+            payload-lite/part-02c.txt \
+            | base64 --decode | gunzip > _site/index.html
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('_site/index.html')
+          s = path.read_text(encoding='utf-8')
+
+          replacements = [
+              (
+                  ".pipeline{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.pipe-step{min-height:130px;padding:13px;position:relative}",
+                  ".pipeline{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.pipe-step{min-height:130px;padding:13px;position:relative;cursor:pointer;transition:.18s}.pipe-step:hover{transform:translateY(-2px);border-color:#5f79ee;box-shadow:0 14px 34px rgba(53,83,180,.18)}.pipe-step:focus-visible{outline:2px solid #7890ff;outline-offset:2px}"
+              ),
+              (
+                  "const state={route:'overview',contractStep:0,contractCombo:'B',filmTab:'qa',selectedFilm:0,clipTab:'studio',withdrawStep:0,distSigned:false,prodSigned:false};",
+                  "const state={route:'overview',contractStep:0,contractCombo:'B',selectedScript:0,filmTab:'qa',selectedFilm:0,clipTab:'studio',withdrawStep:0,distSigned:false,prodSigned:false};"
+              ),
+              (
+                  '${pipeline.map((x,i)=>`<article class="card pipe-step"><div class="num">${String(i+1).padStart(2,\'0\')}</div><h4>${x[0]}</h4><p>${x[1]}</p><button class="btn small" data-route="${x[2]}">进入模块</button></article>`).join(\'\')}',
+                  '${pipeline.map((x,i)=>`<article class="card pipe-step" data-route="${x[2]}" role="button" tabindex="0" aria-label="进入${x[0]}模块"><div class="num">${String(i+1).padStart(2,\'0\')}</div><h4>${x[0]}</h4><p>${x[1]}</p><button class="btn small" data-route="${x[2]}">进入模块</button></article>`).join(\'\')}'
+              ),
+              (
+                  '${[[\'雾港旧约\',\'87\',\'24 集\'],[\'光之笺\',\'92\',\'18 集\'],[\'长夏\',\'84\',\'24 集\']].map((x,i)=>`<button class="option-card ${i===0?\'selected\':\'\'}" data-act="select-option"><h3>${x[0]}</h3><p>${x[2]} · AI 评分</p><strong>${x[1]}</strong></button>`).join(\'\')}',
+                  '${[[\'雾港旧约\',\'87\',\'24 集\'],[\'光之笺\',\'92\',\'18 集\'],[\'长夏\',\'84\',\'24 集\']].map((x,i)=>`<button class="option-card ${state.selectedScript===i?\'selected\':\'\'}" data-script="${i}" data-act="select-option" aria-pressed="${state.selectedScript===i}"><h3>${x[0]}</h3><p>${x[2]} · AI 评分</p><strong>${x[1]}</strong>${state.selectedScript===i?\'<span class="pill info recommended">已选择</span>\':\'\'}</button>`).join(\'\')}'
+              ),
+              (
+                  " if(b.dataset.combo){state.contractCombo=b.dataset.combo;render();return}",
+                  " if(b.dataset.combo){state.contractCombo=b.dataset.combo;render();toast(`已选择合同组合 ${b.dataset.combo}`);return}\n if(b.dataset.script!==undefined){state.selectedScript=Number(b.dataset.script);render();toast('已选择制作合同剧本');return}"
+              ),
+              (
+                  "document.addEventListener('click',e=>{",
+                  "document.addEventListener('keydown',e=>{const el=e.target.closest('[data-route][role=\\\"button\\\"]');if(el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();routeTo(el.dataset.route)}});\ndocument.addEventListener('click',e=>{"
+              )
+          ]
+
+          for old, new in replacements:
+              if old not in s:
+                  raise SystemExit(f'Expected source block not found: {old[:80]}')
+              s = s.replace(old, new, 1)
+
+          path.write_text(s, encoding='utf-8')
+          PY
+
           touch _site/.nojekyll
+          grep -q "selectedScript" _site/index.html
+          grep -q 'data-route="${x\[2\]}" role="button"' _site/index.html
           test -s _site/index.html
-          test -s _site/payload-lite/part-00.txt
-          test -s _site/payload-lite/part-01.txt
-          test -s _site/payload-lite/part-02a.txt
-          test -s _site/payload-lite/part-02b.txt
-          test -s _site/payload-lite/part-02c.txt
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
