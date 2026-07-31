@@ -97,3 +97,4 @@ const timer=setInterval(()=>{
 window.addEventListener('storage',e=>{if(e.key===LANG_KEY)apply()});
 document.addEventListener('click',()=>setTimeout(()=>{if(currentLang()!==last)apply()},30),true);
 })();
+// redeploy trigger 2026-07-31T18:15+08:00
