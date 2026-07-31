@@ -1,4 +1,4 @@
-name: Publish Octopus Admin Static Auth
+name: Publish Octopus Admin V7.7 Account
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
       - "index.html"
       - ".site-v75b/**"
       - ".site-v76/**"
+      - ".site-v77/**"
       - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
@@ -26,35 +27,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build static Octopus Admin with authentication
+      - name: Build static Octopus Admin with account settings
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site
           cat .site-v75b/part-*.txt | base64 --decode | gunzip > _site/index.html
           cp .site-v76/auth-v76.js _site/auth-v76.js
+          cp .site-v77/account-settings-v77.js _site/account-settings-v77.js
 
           python3 - <<'PY'
           from pathlib import Path
           path = Path('_site/index.html')
           html = path.read_text(encoding='utf-8')
-          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.6 · 登录注册 + CRUD')
-          html = html.replace('Platform Console · V7.5', 'Platform Console · V7.6')
-          if 'auth-v76.js' not in html:
-              html = html.replace('</body>', '<script src="auth-v76.js?v=20260731-auth"></script></body>', 1)
+          html = html.replace('Octopus Admin V7.5 · CRUD', 'Octopus Admin V7.7 · Account + Auth + CRUD')
+          html = html.replace('Platform Console · V7.5', 'Platform Console · V7.7')
+          scripts = '<script src="auth-v76.js?v=20260731-1724"></script><script src="account-settings-v77.js?v=20260731-1724"></script>'
+          if 'account-settings-v77.js' not in html:
+              html = html.replace('</body>', scripts + '</body>', 1)
           path.write_text(html, encoding='utf-8')
           PY
 
           touch _site/.nojekyll
           test -s _site/index.html
           test -s _site/auth-v76.js
-          grep -q "Octopus Admin V7.6" _site/index.html
+          test -s _site/account-settings-v77.js
+          grep -q "Octopus Admin V7.7" _site/index.html
           grep -q "auth-v76.js" _site/index.html
-          grep -q "authLogin" _site/auth-v76.js
-          grep -q "authRegister" _site/auth-v76.js
-          grep -q "authReset" _site/auth-v76.js
-          grep -q "data-account=\"logout\"" _site/auth-v76.js
-          grep -q "SESSION_KEY" _site/auth-v76.js
+          grep -q "account-settings-v77.js" _site/index.html
+          grep -q "个人账户设置" _site/account-settings-v77.js
+          grep -q "退出账号" _site/account-settings-v77.js
+          grep -q "data-a=\"profile\"" _site/account-settings-v77.js
+          grep -q "localStorage.removeItem(S)" _site/account-settings-v77.js
           if grep -q "DecompressionStream" _site/index.html; then
             echo "Browser-side loader must not be deployed"
             exit 1
@@ -82,14 +86,14 @@ jobs:
       - name: Checkout repository for deployment status
         uses: actions/checkout@v4
 
-      - name: Record authentication deployment
+      - name: Record account settings deployment
         shell: bash
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          printf '{"status":"success","version":"v7.6-static-auth","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-static","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"login-register-reset-logout-session","storage":"browser-local","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
+          printf '{"status":"success","version":"v7.7-account-settings","site_url":"%s","source_commit":"%s","architecture":"platform-admin","delivery":"github-pages-static","visual_style":"original-navy","crud":"create-read-update-delete-bulk","auth":"login-register-reset-logout-session","account_settings":"profile-security-session-data","storage":"browser-local","reported_at":"%s"}\n' "$PAGE_URL" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > site-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site-status.json
-          git diff --cached --quiet || git commit -m "chore: record static auth deployment"
+          git diff --cached --quiet || git commit -m "chore: record V7.7 account settings deployment"
           git push
