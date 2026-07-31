@@ -79,8 +79,8 @@ jobs:
           PY
 
           touch _site/.nojekyll
-          grep -q "selectedScript" _site/index.html
-          grep -q 'data-route="${x\[2\]}" role="button"' _site/index.html
+          grep -Fq "selectedScript" _site/index.html
+          grep -Fq 'data-route="${x[2]}" role="button"' _site/index.html
           test -s _site/index.html
 
       - name: Configure GitHub Pages
