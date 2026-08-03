@@ -55,6 +55,10 @@ jobs:
             missing=1
           fi
           if [ "$missing" -ne 0 ]; then exit 1; fi
+          if ! printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | grep -Eq '^[0-9a-fA-F]{32}$'; then
+            echo "::error title=Invalid Cloudflare account ID::CLOUDFLARE_ACCOUNT_ID must be the 32-character Account ID, not an email, zone ID, or account name."
+            exit 1
+          fi
           if ! printf '%s' "$D1_DATABASE_ID" | grep -Eq '^[0-9a-fA-F-]{32,36}$'; then
             echo "::error title=Invalid D1 database ID::CLOUDFLARE_D1_DATABASE_ID must be the Database ID UUID, not the database name."
             exit 1
@@ -81,8 +85,50 @@ jobs:
           NODE
           echo "Wrangler configuration created for D1 binding DB."
 
-      - name: Verify Cloudflare authentication
-        run: npx wrangler whoami
+      - name: Verify Cloudflare API token
+        shell: bash
+        run: |
+          set -euo pipefail
+          body_file="$(mktemp)"
+          http_code="$(curl --silent --show-error --output "$body_file" --write-out '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify)"
+          VERIFY_BODY_FILE="$body_file" VERIFY_HTTP_CODE="$http_code" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const httpCode = Number(process.env.VERIFY_HTTP_CODE || 0);
+          let body = {};
+          try { body = JSON.parse(fs.readFileSync(process.env.VERIFY_BODY_FILE, 'utf8')); } catch {}
+          const message = body.errors?.map((x) => x.message).filter(Boolean).join('; ') || 'Token verification failed.';
+          if (httpCode !== 200 || body.success !== true || body.result?.status !== 'active') {
+            console.error(`::error title=Cloudflare API token invalid::HTTP ${httpCode}. ${message}`);
+            process.exit(1);
+          }
+          console.log('Cloudflare API token is valid and active.');
+          NODE
+          rm -f "$body_file"
+
+      - name: Verify D1 database access
+        shell: bash
+        run: |
+          set -euo pipefail
+          body_file="$(mktemp)"
+          http_code="$(curl --silent --show-error --output "$body_file" --write-out '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database/$D1_DATABASE_ID")"
+          VERIFY_BODY_FILE="$body_file" VERIFY_HTTP_CODE="$http_code" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const httpCode = Number(process.env.VERIFY_HTTP_CODE || 0);
+          let body = {};
+          try { body = JSON.parse(fs.readFileSync(process.env.VERIFY_BODY_FILE, 'utf8')); } catch {}
+          const message = body.errors?.map((x) => `${x.code ?? ''} ${x.message ?? ''}`.trim()).filter(Boolean).join('; ') || 'D1 access verification failed.';
+          if (httpCode !== 200 || body.success !== true) {
+            console.error(`::error title=Cannot access D1 database::HTTP ${httpCode}. ${message}`);
+            console.error('Check that Account ID and Database ID belong to the same Cloudflare account, and that the token has Account > D1 > Read or Edit permission for that account.');
+            process.exit(1);
+          }
+          console.log(`D1 database access confirmed: ${body.result?.name || 'database'} (${body.result?.uuid || 'UUID hidden'}).`);
+          NODE
+          rm -f "$body_file"
 
       - name: Apply D1 migrations
         run: npx wrangler d1 migrations apply DB --remote --config wrangler.toml
