@@ -1,8 +1,11 @@
-name: Publish Octopus Admin Final
+name: Publish Octopus Admin V8
 
 on:
   push:
     branches: [main]
+    paths:
+      - "index.html"
+      - ".github/workflows/publish-site.yml"
   workflow_dispatch:
 
 permissions:
@@ -21,58 +24,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build final self-contained site
+      - name: Validate V8 site
         shell: bash
         run: |
           set -euo pipefail
+          test -s index.html
+          grep -q "Octopus Admin V8.0" index.html
+          grep -q "ADMIN ACCESS ONLY" index.html
+          grep -q "id=\"loginView\"" index.html
+          grep -q "id=\"logoutBtn\"" index.html
+          grep -q "个人账户设置" index.html
+          grep -q "Admin Sign-in" index.html
           mkdir -p _site
-          cat .site-v75b/part-*.txt | base64 --decode | gunzip > /tmp/octopus-base.html
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          base = Path('/tmp/octopus-base.html').read_text(encoding='utf-8')
-          sources = [
-              Path('.site-v76/auth-v76.js').read_text(encoding='utf-8'),
-              Path('.site-v77/account-settings-v77.js').read_text(encoding='utf-8'),
-              Path('.site-v78/ux-i18n-v78.js').read_text(encoding='utf-8'),
-              Path('.site-v79/admin-login-v79.js').read_text(encoding='utf-8'),
-          ]
-
-          html = base.replace(
-              'Octopus Admin V7.5 · CRUD',
-              'Octopus Admin V7.9 · Admin Login · 中文 / EN'
-          )
-          html = html.replace(
-              'Platform Console · V7.5',
-              'Platform Console · V7.9'
-          )
-          cache = (
-              '<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">'
-              '<meta http-equiv="Pragma" content="no-cache">'
-              '<meta http-equiv="Expires" content="0">'
-          )
-          html = html.replace('</head>', cache + '</head>', 1)
-          inline = ''.join('<script>\n' + source + '\n</script>' for source in sources)
-          html = html.replace('</body>', inline + '</body>', 1)
-
-          Path('_site/index.html').write_text(html, encoding='utf-8')
-          Path('_site/octopus-admin-v79-final.html').write_text(html, encoding='utf-8')
-          PY
-
-          printf '%s\n' "$GITHUB_SHA" > _site/deployment-proof.txt
+          cp index.html _site/index.html
           touch _site/.nojekyll
-
-          test -s _site/index.html
-          test -s _site/octopus-admin-v79-final.html
-          cmp _site/index.html _site/octopus-admin-v79-final.html
-          grep -q "Octopus Admin V7.9" _site/index.html
-          grep -q "ADMIN ACCESS ONLY" _site/index.html
-          grep -q "管理员登录" _site/index.html
-          grep -q "Admin Sign-in" _site/index.html
-          grep -q "Partner Management" _site/index.html
-          grep -q "个人账户设置" _site/index.html
-          grep -q "退出账号" _site/index.html
+          printf '%s\n' "$GITHUB_SHA" > _site/deployment-proof.txt
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
