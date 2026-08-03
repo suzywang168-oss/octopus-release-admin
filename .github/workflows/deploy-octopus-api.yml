@@ -8,32 +8,99 @@ on:
       - "cloudflare-worker/**"
       - ".github/workflows/deploy-octopus-api.yml"
 
+permissions:
+  contents: read
+
+concurrency:
+  group: octopus-d1-api-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: cloudflare-worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
-      - name: Create Wrangler config
-        env:
-          D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          cache: npm
+          cache-dependency-path: cloudflare-worker/package.json
+
+      - name: Validate repository secrets
+        shell: bash
         run: |
-          test -n "$D1_DATABASE_ID"
+          set -euo pipefail
+          missing=0
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::error title=Missing repository secret::CLOUDFLARE_API_TOKEN is not configured in Settings > Secrets and variables > Actions."
+            missing=1
+          fi
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "::error title=Missing repository secret::CLOUDFLARE_ACCOUNT_ID is not configured in Settings > Secrets and variables > Actions."
+            missing=1
+          fi
+          if [ -z "${D1_DATABASE_ID:-}" ]; then
+            echo "::error title=Missing repository secret::CLOUDFLARE_D1_DATABASE_ID is not configured in Settings > Secrets and variables > Actions."
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+          if ! printf '%s' "$D1_DATABASE_ID" | grep -Eq '^[0-9a-fA-F-]{32,36}$'; then
+            echo "::error title=Invalid D1 database ID::CLOUDFLARE_D1_DATABASE_ID must be the Database ID UUID, not the database name."
+            exit 1
+          fi
+
+      - name: Install Wrangler
+        run: npm install --no-audit --no-fund
+
+      - name: Create Wrangler configuration
+        shell: bash
+        run: |
+          set -euo pipefail
           cp wrangler.toml.example wrangler.toml
-          sed -i "s/REPLACE_WITH_D1_DATABASE_ID/$D1_DATABASE_ID/g" wrangler.toml
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const file = 'wrangler.toml';
+          const databaseId = process.env.D1_DATABASE_ID;
+          const source = fs.readFileSync(file, 'utf8');
+          const output = source.replace('REPLACE_WITH_D1_DATABASE_ID', databaseId);
+          if (output.includes('REPLACE_WITH_D1_DATABASE_ID')) {
+            throw new Error('D1 database placeholder was not replaced');
+          }
+          fs.writeFileSync(file, output);
+          NODE
+          echo "Wrangler configuration created for D1 binding DB."
+
+      - name: Verify Cloudflare authentication
+        run: npx wrangler whoami
+
       - name: Apply D1 migrations
-        run: npx wrangler d1 migrations apply octopus-release-db --remote
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler d1 migrations apply DB --remote --config wrangler.toml
+
       - name: Deploy Worker
-        run: npx wrangler deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config wrangler.toml
+
+      - name: Deployment summary
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo "## Octopus D1 API deployed"
+            echo ""
+            echo "- Worker: \`octopus-release-api\`"
+            echo "- D1 binding: \`DB\`"
+            echo "- Migrations: applied"
+            echo ""
+            echo "Copy the workers.dev URL from the Deploy Worker step and open \`/api/health\` to verify the database connection."
+          } >> "$GITHUB_STEP_SUMMARY"
