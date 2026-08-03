@@ -29,12 +29,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
+          package-manager-cache: false
 
       - name: Validate repository secrets
         shell: bash
@@ -98,6 +99,7 @@ jobs:
             echo ""
             echo "- Worker: \`octopus-release-api\`"
             echo "- D1 binding: \`DB\`"
+            echo "- Runtime: \`Node.js 24\`"
             echo "- Migrations: applied"
             echo ""
             echo "Copy the workers.dev URL from the Deploy Worker step and open \`/api/health\` to verify the database connection."
