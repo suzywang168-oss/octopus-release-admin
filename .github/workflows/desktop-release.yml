@@ -68,5 +68,7 @@ jobs:
             - Windows: x64 NSIS installer (.exe)
             - macOS: Universal installer for Intel and Apple Silicon (.dmg)
             - Admin Console keeps the hosted authentication and access controls.
-          files: release-assets/*
+          files: |
+            release-assets/**/*.exe
+            release-assets/**/*.dmg
           fail_on_unmatched_files: true
