@@ -1270,6 +1270,8 @@ export default function Home() {
                     onClick={() => {
                       setActive(n.id);
                       setTab(0);
+                      setQuery("");
+                      setDrawer(null);
                     }}
                   >
                     <i>{n.icon}</i>
@@ -1371,7 +1373,11 @@ export default function Home() {
                 <button
                   key={t}
                   className={tab === i ? "selected" : ""}
-                  onClick={() => setTab(i)}
+                  onClick={() => {
+                    setTab(i);
+                    setQuery("");
+                    setDrawer(null);
+                  }}
                 >
                   {t}
                 </button>
@@ -1427,6 +1433,7 @@ export default function Home() {
           ) : (
             <Records
               key={viewKey}
+              viewKey={viewKey}
               active={active}
               tab={tab}
               data={tableView}
@@ -2193,6 +2200,7 @@ function Dashboard({
 }
 
 function Records({
+  viewKey,
   active,
   tab,
   data,
@@ -2200,6 +2208,7 @@ function Records({
   onRowsChange,
   notify,
 }: {
+  viewKey: string;
   active: string;
   tab: number;
   data: TableView;
@@ -2298,6 +2307,13 @@ function Records({
   const [exportConfirm, setExportConfirm] = useState(false);
   const [moreIndex, setMoreIndex] = useState<number | null>(null);
   const policy = exportPolicyFor(active, tab);
+  useEffect(() => {
+    setDialog(null);
+    setDraft([]);
+    setPage(1);
+    setExportConfirm(false);
+    setMoreIndex(null);
+  }, [viewKey]);
   useEffect(() => {
     const closeMore = (event: MouseEvent) => {
       if (!(event.target as HTMLElement).closest(".morewrap")) {
@@ -2580,7 +2596,7 @@ function Records({
                       prev.map((v, j) => (j === i ? next : v)),
                     );
                   return (
-                    <label key={field.label}>
+                    <label key={`${viewKey}-${field.label}`}>
                       <span>
                         {field.label}
                         {field.required && dialog.type !== "view" && <em>*</em>}
