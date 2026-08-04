@@ -1,0 +1,20 @@
+{
+  "name": "octopus-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Desktop launchers for Octopus Release Portal and Admin Console",
+  "license": "UNLICENSED",
+  "author": "Suzy Laboratory",
+  "main": "src/portal.js",
+  "scripts": {
+    "check": "node --check src/app.js && node --check src/portal.js && node --check src/admin.js",
+    "dist:portal:win": "electron-builder --config electron-builder.portal.yml --win nsis --x64",
+    "dist:portal:mac": "electron-builder --config electron-builder.portal.yml --mac dmg --universal",
+    "dist:admin:win": "electron-builder --config electron-builder.admin.yml --win nsis --x64",
+    "dist:admin:mac": "electron-builder --config electron-builder.admin.yml --mac dmg --universal"
+  },
+  "devDependencies": {
+    "electron": "37.2.6",
+    "electron-builder": "26.0.12"
+  }
+}
