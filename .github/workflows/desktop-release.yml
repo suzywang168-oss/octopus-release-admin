@@ -1,0 +1,72 @@
+name: Build Octopus desktop installers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            app: portal
+            command: dist:portal:win
+          - os: windows-latest
+            app: admin
+            command: dist:admin:win
+          - os: macos-latest
+            app: portal
+            command: dist:portal:mac
+          - os: macos-latest
+            app: admin
+            command: dist:admin:mac
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run ${{ matrix.command }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: octopus-${{ matrix.app }}-${{ runner.os }}
+          path: |
+            desktop/dist/**/*.exe
+            desktop/dist/**/*.dmg
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: octopus-desktop-v1.0.0
+          name: Octopus Desktop v1.0.0
+          body: |
+            Octopus Release Portal and Octopus Admin Console desktop installers.
+
+            - Windows: x64 NSIS installer (.exe)
+            - macOS: Universal installer for Intel and Apple Silicon (.dmg)
+            - Admin Console keeps the hosted authentication and access controls.
+          files: release-assets/*
+          fail_on_unmatched_files: true
