@@ -36,6 +36,17 @@ jobs:
           git archive "$V814_COMMIT" user-portal | tar -x -C /tmp/octopus-v814
           mkdir -p _site/user-portal/v814-snapshot
           cp -a /tmp/octopus-v814/user-portal/. _site/user-portal/v814-snapshot/
+          python3 - <<'PY'
+          from pathlib import Path
+
+          page = Path('_site/user-portal/v814-snapshot/v78/index.html')
+          source = page.read_text(encoding='utf-8')
+          needle = "document.body.classList.add('ready')"
+          patch = "const syncVersion=()=>{const w=d.createTreeWalker(d.body,NodeFilter.SHOW_TEXT);while(w.nextNode()){const n=w.currentNode;if(n.nodeValue&&n.nodeValue.includes('Release User Portal V7.3'))n.nodeValue=n.nodeValue.replace(/Release User Portal V7\\.3/g,'Release User Portal V8.14')}};syncVersion();new MutationObserver(syncVersion).observe(d.body,{subtree:true,childList:true,characterData:true});document.body.classList.add('ready')"
+          if needle not in source:
+              raise SystemExit('Unable to patch the V8.14 version label')
+          page.write_text(source.replace(needle, patch, 1), encoding='utf-8')
+          PY
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
