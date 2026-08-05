@@ -23,14 +23,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Pages artifact
+        env:
+          V814_COMMIT: 672ef2d96b499716d6762be8ea8f8ea0f6c63e80
+        run: |
+          rm -rf _site /tmp/octopus-v814
+          mkdir -p _site /tmp/octopus-v814
+          rsync -a --exclude '.git' --exclude '_site' ./ _site/
+          git archive "$V814_COMMIT" user-portal | tar -x -C /tmp/octopus-v814
+          mkdir -p _site/user-portal/v814-snapshot
+          cp -a /tmp/octopus-v814/user-portal/. _site/user-portal/v814-snapshot/
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
