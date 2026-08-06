@@ -49,9 +49,10 @@ jobs:
 
           scripts = (
               '<script src="../../v814-content-generation-layout-fix.js?v=2"></script>'
+              '<script src="../../v814-generation-entry-fix.js?v=1"></script>'
               '<script src="../../v814-button-runtime-fix.js?v=1"></script>'
           )
-          if 'v814-button-runtime-fix.js' not in source:
+          if 'v814-generation-entry-fix.js' not in source:
               if '</body>' not in source:
                   raise SystemExit('Unable to attach the V8.14 runtime patches')
               source = source.replace('</body>', scripts + '</body>', 1)
