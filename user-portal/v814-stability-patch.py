@@ -5,7 +5,7 @@ path = Path(sys.argv[1])
 source = path.read_text(encoding="utf-8")
 
 old_state = "let generationList='pending';"
-new_state = "let generationList='pending';const generationListByModule=Object.fromEntries([...AI_EDIT].map(route=>[route,'pending']));function activateModule(route){if(AI_EDIT.has(active))generationListByModule[active]=generationList;active=route;if(AI_EDIT.has(route))generationList=generationListByModule[route]||'pending'}"
+new_state = "let generationList='pending';const generationListByModule=Object.fromEntries([...AI_EDIT].map(route=>[route,'pending']));function activateModule(route){if(AI_EDIT.has(active))generationListByModule[active]=generationList;active=route;try{state.route=route}catch{}if(AI_EDIT.has(route))generationList=generationListByModule[route]||'pending'}"
 if source.count(old_state) != 1:
     raise SystemExit("V8.14 generation-list state signature changed")
 source = source.replace(old_state, new_state, 1)
