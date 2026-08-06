@@ -57,7 +57,7 @@ jobs:
               "        {src:'ui-qa-fix-v813.js'},\n",
           ):
               loader_source = loader_source.replace(script, '')
-          loader_source = loader_source.replace('814206', '814251')
+          loader_source = loader_source.replace('814206', '814253')
           loader.write_text(loader_source, encoding='utf-8')
           PY
 
@@ -76,6 +76,8 @@ jobs:
           grep -q 'v814-generation-toolbar-position-style' "$TARGET"
           grep -q 'data-generation-list' "$TARGET"
           grep -q 'actions.prepend(bulk)' "$TARGET"
+          grep -q "let action='批量生成'" "$TARGET"
+          grep -q 'data-v81-bulk' "$TARGET"
           grep -q 'function v814SearchRows' "$TARGET"
           grep -q "q.target.id==='globalSearch'" "$TARGET"
           grep -q 'v814-record-field' "$TARGET"
