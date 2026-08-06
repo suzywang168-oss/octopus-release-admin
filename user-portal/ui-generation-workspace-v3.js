@@ -1,0 +1,172 @@
+(()=>{
+  'use strict';
+
+  const ROOT_ID='pageRoot';
+  const TITLE_ID='octopusGlobalTitleSlot';
+  const ACTION_ID='octopusGlobalActionHost';
+  const STYLE_ID='octopus-generation-workspace-v3';
+  const STORAGE_KEY='octopus-generation-workspace-v3';
+
+  const DATA={
+    'release.titles':{
+      kind:'title',noun:'标题',title:'AI标题生成',description:'从未生成内容中选择剧集，批量生成标题，并进入独立编辑页完成修改与采用。',
+      columns:['剧集','目标频道','内容爆点','候选标题数','CTR预测','字符数','冲突检测','状态'],
+      pending:[
+        ['逆光心动','TK-US Drama','豪门千金身份反转','—','—','—','待检测','待生成'],
+        ['契约之后','FB-Latina','契约婚姻反转追妻','—','—','—','待检测','待生成'],
+        ['她从雨夜归来','YT-English','雨夜归来复仇真相','—','—','—','素材完整','参数待确认'],
+        ['炽热边界','TK-US Drama','禁忌关系强冲突','—','—','—','素材完整','待生成'],
+        ['重启心跳','FB-Latina','失忆重逢情绪拉扯','—','—','—','素材完整','待生成'],
+        ['错位千金','YT-English','身份错位逆袭','—','—','—','待检测','素材待补'],
+        ['危险婚约','TK-US Drama','婚约骗局真相揭露','—','—','—','素材完整','待生成'],
+        ['月光失约','FB-Latina','久别重逢误会解除','—','—','—','素材完整','待生成']
+      ],
+      generated:[
+        ['逆光心动','TK-US Drama','豪门千金身份反转','3','8.9%','86','无冲突','已生成'],
+        ['契约之后','FB-Latina','契约婚姻反转追妻','3','8.2%','94','1条相似','待确认'],
+        ['她从雨夜归来','YT-English','雨夜归来复仇真相','3','7.8%','78','无冲突','已采用'],
+        ['炽热边界','TK-US Drama','禁忌关系强冲突','3','8.1%','82','无冲突','已生成'],
+        ['重启心跳','FB-Latina','失忆重逢情绪拉扯','3','7.6%','91','2条相似','待确认'],
+        ['错位千金','YT-English','身份错位逆袭','3','8.4%','76','无冲突','已采用'],
+        ['危险婚约','TK-US Drama','婚约骗局真相揭露','3','8.0%','88','无冲突','已生成'],
+        ['月光失约','FB-Latina','久别重逢误会解除','3','7.5%','89','1条相似','已生成']
+      ]
+    },
+    'release.covers':{
+      kind:'cover',noun:'封面',title:'AI封面生成',description:'从未生成内容中选择剧集，批量生成封面，并进入独立编辑页完成选择、替换与采用。',
+      columns:['剧集','目标频道','视觉爆点','候选封面','CTR预测','风格匹配','重复度','状态'],
+      pending:[
+        ['逆光心动','TK-US Drama','双人对峙 / 豪门','—','—','—','待检测','待生成'],
+        ['契约之后','FB-Latina','婚礼 / 撕毁契约','—','—','—','待检测','待生成'],
+        ['她从雨夜归来','YT-English','雨夜 / 复仇眼神','—','—','—','素材完整','参数待确认'],
+        ['炽热边界','TK-US Drama','火场 / 危险距离','—','—','—','素材完整','待生成'],
+        ['重启心跳','FB-Latina','医院 / 失忆重逢','—','—','—','素材完整','待生成'],
+        ['错位千金','YT-English','双女主 / 身份错位','—','—','—','待检测','素材待补'],
+        ['危险婚约','TK-US Drama','婚戒 / 阴影人物','—','—','—','素材完整','待生成'],
+        ['月光失约','FB-Latina','车站 / 久别重逢','—','—','—','素材完整','待生成']
+      ],
+      generated:[
+        ['逆光心动','TK-US Drama','双人对峙 / 豪门','3张','9.1%','96%','8%','已生成'],
+        ['契约之后','FB-Latina','婚礼 / 撕毁契约','3张','8.5%','94%','12%','待确认'],
+        ['她从雨夜归来','YT-English','雨夜 / 复仇眼神','3张','8.0%','92%','6%','已采用'],
+        ['炽热边界','TK-US Drama','火场 / 危险距离','3张','8.6%','95%','9%','已生成'],
+        ['重启心跳','FB-Latina','医院 / 失忆重逢','3张','7.9%','91%','14%','待确认'],
+        ['错位千金','YT-English','双女主 / 身份错位','3张','8.3%','93%','7%','已采用'],
+        ['危险婚约','TK-US Drama','婚戒 / 阴影人物','3张','8.2%','94%','10%','已生成'],
+        ['月光失约','FB-Latina','车站 / 久别重逢','3张','7.7%','90%','11%','已生成']
+      ]
+    }
+  };
+
+  const viewState={};
+  const selections={};
+  const searches={};
+  let editor=null;
+  let scheduled=false;
+
+  const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
+  const root=()=>document.getElementById(ROOT_ID);
+  const cfg=()=>DATA[route()]||null;
+  const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const selectedSet=()=>selections[route()]||(selections[route()]=new Set());
+  const currentTab=()=>viewState[route()]||'pending';
+  const toast=message=>{try{window.toast?.(message)}catch{}};
+
+  function installStyle(){
+    let style=document.getElementById(STYLE_ID);
+    if(!style){style=document.createElement('style');style.id=STYLE_ID;document.head.appendChild(style)}
+    style.textContent=`
+      html.gw3-active #${ACTION_ID}{display:none!important}
+      #${ROOT_ID}>.gw3-page{max-width:1440px!important;margin:0 auto!important;padding:8px 0 52px!important;color:var(--text)!important}
+      #${ROOT_ID} .gw3-card{border:1px solid var(--line)!important;border-radius:14px!important;background:var(--panel)!important;overflow:hidden!important}
+      #${ROOT_ID} .gw3-list-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:20px!important;min-height:78px!important;padding:17px 18px!important;border-bottom:1px solid var(--line)!important;box-sizing:border-box!important}
+      #${ROOT_ID} .gw3-list-copy{min-width:0!important}#${ROOT_ID} .gw3-list-copy h2{margin:0!important;font-size:14px!important;line-height:1.35!important;color:var(--text)!important}#${ROOT_ID} .gw3-list-copy p{margin:6px 0 0!important;font-size:8px!important;line-height:1.55!important;color:var(--soft)!important}
+      #${ROOT_ID} .gw3-list-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:9px!important;flex:0 0 auto!important}
+      #${ROOT_ID} .gw3-tabs{display:inline-flex!important;align-items:center!important;gap:3px!important;padding:3px!important;border:1px solid var(--line)!important;border-radius:10px!important;background:var(--panel2)!important}
+      #${ROOT_ID} .gw3-tab{height:31px!important;padding:0 12px!important;border:0!important;border-radius:7px!important;background:transparent!important;color:var(--soft)!important;font-size:8px!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important}#${ROOT_ID} .gw3-tab.active{background:var(--panel)!important;color:var(--text)!important;box-shadow:0 2px 9px rgba(0,0,0,.18)!important}#${ROOT_ID} .gw3-tab em{margin-left:5px!important;font-style:normal!important;opacity:.72!important}
+      #${ROOT_ID} .gw3-count{display:inline-flex!important;align-items:center!important;min-height:30px!important;padding:0 10px!important;border:1px solid var(--line)!important;border-radius:999px!important;background:var(--panel2)!important;color:var(--soft)!important;font-size:8px!important;white-space:nowrap!important}
+      #${ROOT_ID} .gw3-primary,#${ROOT_ID} .gw3-secondary{display:inline-flex!important;align-items:center!important;justify-content:center!important;height:35px!important;padding:0 14px!important;margin:0!important;border-radius:9px!important;font-size:9px!important;font-weight:760!important;white-space:nowrap!important;cursor:pointer!important;pointer-events:auto!important}#${ROOT_ID} .gw3-primary{border:1px solid #6683df!important;background:#6683df!important;color:#fff!important}#${ROOT_ID} .gw3-secondary{border:1px solid var(--line)!important;background:var(--panel2)!important;color:var(--text)!important}
+      #${ROOT_ID} .gw3-toolbar{display:grid!important;grid-template-columns:minmax(280px,1fr) 180px!important;gap:9px!important;padding:12px 14px!important;border-bottom:1px solid var(--line)!important;background:color-mix(in srgb,var(--panel2) 55%,var(--panel))!important}#${ROOT_ID} .gw3-toolbar input,#${ROOT_ID} .gw3-toolbar select{width:100%!important;height:36px!important;box-sizing:border-box!important;border:1px solid var(--line)!important;border-radius:9px!important;background:var(--panel)!important;color:var(--text)!important;padding:0 11px!important;font-size:9px!important;outline:0!important}
+      #${ROOT_ID} .gw3-table-wrap{overflow:auto!important}#${ROOT_ID} .gw3-table{width:100%!important;border-collapse:collapse!important;table-layout:auto!important;background:var(--panel)!important}#${ROOT_ID} .gw3-table th,#${ROOT_ID} .gw3-table td{height:48px!important;padding:9px 12px!important;border-bottom:1px solid var(--line)!important;color:var(--text)!important;font-size:8px!important;line-height:1.4!important;text-align:left!important;white-space:nowrap!important}#${ROOT_ID} .gw3-table th{height:42px!important;background:var(--panel2)!important;color:var(--soft)!important;font-weight:750!important}#${ROOT_ID} .gw3-table tr:hover td{background:color-mix(in srgb,#6683df 4%,var(--panel))!important}#${ROOT_ID} .gw3-table th:first-child,#${ROOT_ID} .gw3-table td:first-child{width:42px!important;text-align:center!important;padding-left:8px!important;padding-right:8px!important}#${ROOT_ID} .gw3-table th:last-child,#${ROOT_ID} .gw3-table td:last-child{position:sticky!important;right:0!important;width:126px!important;min-width:126px!important;text-align:center!important;background:var(--panel)!important;border-left:1px solid var(--line)!important;z-index:2!important}#${ROOT_ID} .gw3-table th:last-child{background:var(--panel2)!important;z-index:3!important}
+      #${ROOT_ID} .gw3-check{width:15px!important;height:15px!important;margin:0!important;accent-color:#6683df!important;cursor:pointer!important;pointer-events:auto!important}
+      #${ROOT_ID} .gw3-row-action.v815act{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:92px!important;height:31px!important;padding:0 12px!important;margin:0!important;border:1px solid #6683df!important;border-radius:8px!important;background:transparent!important;color:#a9bbff!important;font-size:8px!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important;pointer-events:auto!important}#${ROOT_ID} .gw3-row-action.v815act:hover{background:color-mix(in srgb,#6683df 12%,transparent)!important}
+      #${ROOT_ID} .gw3-status.done{color:#65d6b2!important;font-weight:760!important}#${ROOT_ID} .gw3-status.warn{color:#ffbe69!important;font-weight:760!important}#${ROOT_ID} .gw3-status.wait{color:#91a8ff!important;font-weight:760!important}
+      #${ROOT_ID} .gw3-foot{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;min-height:48px!important;padding:10px 14px!important;color:var(--soft)!important;font-size:8px!important}
+      #${ROOT_ID} .gw3-editor-nav{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;margin-bottom:16px!important}#${ROOT_ID} .gw3-editor-actions{display:flex!important;align-items:center!important;gap:8px!important}
+      #${ROOT_ID} .gw3-context{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;margin-bottom:16px!important;padding:12px 14px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--panel)!important}#${ROOT_ID} .gw3-context strong{font-size:10px!important}#${ROOT_ID} .gw3-chip{display:inline-flex!important;align-items:center!important;min-height:27px!important;padding:0 9px!important;border:1px solid var(--line)!important;border-radius:999px!important;background:var(--panel2)!important;color:var(--soft)!important;font-size:8px!important}#${ROOT_ID} .gw3-context-state{margin-left:auto!important;color:#91a8ff!important;font-size:8px!important;font-weight:750!important}
+      #${ROOT_ID} .gw3-editor-grid{display:grid!important;grid-template-columns:minmax(390px,.82fr) minmax(560px,1.18fr)!important;gap:16px!important;align-items:start!important}#${ROOT_ID} .gw3-panel{border:1px solid var(--line)!important;border-radius:14px!important;background:var(--panel)!important;overflow:hidden!important}#${ROOT_ID} .gw3-panel-head{padding:16px 17px 13px!important;border-bottom:1px solid var(--line)!important}#${ROOT_ID} .gw3-panel-head h2{margin:0!important;font-size:14px!important;line-height:1.35!important}#${ROOT_ID} .gw3-panel-head p{margin:6px 0 0!important;color:var(--soft)!important;font-size:8px!important;line-height:1.55!important}#${ROOT_ID} .gw3-panel-body{padding:16px 17px 18px!important}
+      #${ROOT_ID} .gw3-form{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important}#${ROOT_ID} .gw3-field{display:grid!important;gap:7px!important;min-width:0!important;color:var(--soft)!important;font-size:8px!important;font-weight:700!important}#${ROOT_ID} .gw3-field.full{grid-column:1/-1!important}#${ROOT_ID} .gw3-field input,#${ROOT_ID} .gw3-field select,#${ROOT_ID} .gw3-field textarea{width:100%!important;box-sizing:border-box!important;border:1px solid var(--line)!important;border-radius:9px!important;background:var(--panel2)!important;color:var(--text)!important;font:9px/1.55 system-ui!important;outline:0!important}#${ROOT_ID} .gw3-field input,#${ROOT_ID} .gw3-field select{height:40px!important;padding:0 11px!important}#${ROOT_ID} .gw3-field textarea{min-height:92px!important;padding:10px 11px!important;resize:vertical!important}
+      #${ROOT_ID} .gw3-options{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important}.gw3-option{display:inline-flex!important;align-items:center!important;gap:6px!important;min-height:31px!important;padding:0 9px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--panel2)!important;color:var(--soft)!important;font-size:8px!important;cursor:pointer!important}.gw3-option input{width:13px!important;height:13px!important;margin:0!important}
+      #${ROOT_ID} .gw3-note{margin-top:14px!important;padding:11px 12px!important;border:1px solid color-mix(in srgb,#6683df 25%,var(--line))!important;border-radius:9px!important;background:color-mix(in srgb,#6683df 7%,var(--panel))!important;color:var(--soft)!important;font-size:8px!important;line-height:1.65!important}
+      #${ROOT_ID} .gw3-title-list{display:grid!important;gap:11px!important}#${ROOT_ID} .gw3-title-card{display:grid!important;grid-template-columns:28px minmax(0,1fr)!important;gap:11px!important;padding:12px!important;border:1px solid var(--line)!important;border-radius:11px!important;background:var(--panel2)!important;cursor:pointer!important}#${ROOT_ID} .gw3-title-card.selected{border-color:#6683df!important;background:color-mix(in srgb,#6683df 8%,var(--panel))!important}#${ROOT_ID} .gw3-radio{display:grid!important;place-items:center!important;width:22px!important;height:22px!important;margin-top:2px!important;border:1px solid var(--line)!important;border-radius:50%!important;background:var(--panel)!important}#${ROOT_ID} .gw3-title-card.selected .gw3-radio:after{content:''!important;width:10px!important;height:10px!important;border-radius:50%!important;background:#6683df!important}#${ROOT_ID} .gw3-title-input{width:100%!important;min-height:66px!important;box-sizing:border-box!important;padding:9px 10px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--panel)!important;color:var(--text)!important;font:10px/1.55 system-ui!important;resize:vertical!important;outline:0!important}
+      #${ROOT_ID} .gw3-meta{display:flex!important;align-items:center!important;gap:7px!important;flex-wrap:wrap!important;margin-top:8px!important;color:var(--soft)!important;font-size:8px!important}#${ROOT_ID} .gw3-meta span{display:inline-flex!important;align-items:center!important;min-height:23px!important;padding:0 7px!important;border-radius:999px!important;background:var(--panel)!important}.gw3-good{color:#65d6b2!important}.gw3-warn{color:#ffbe69!important}
+      #${ROOT_ID} .gw3-cover-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:11px!important}#${ROOT_ID} .gw3-cover-card{padding:9px!important;border:1px solid var(--line)!important;border-radius:11px!important;background:var(--panel2)!important;cursor:pointer!important}#${ROOT_ID} .gw3-cover-card.selected{border-color:#6683df!important;box-shadow:0 0 0 2px color-mix(in srgb,#6683df 12%,transparent)!important}#${ROOT_ID} .gw3-cover-art{position:relative!important;aspect-ratio:4/5!important;overflow:hidden!important;border-radius:8px!important;background:#182338!important}.gw3-cover-art.v1{background:linear-gradient(150deg,#16233b 5%,#6e263c 48%,#0b1220 100%)!important}.gw3-cover-art.v2{background:linear-gradient(165deg,#0c1425 8%,#263e69 52%,#20121c 100%)!important}.gw3-cover-art.v3{background:linear-gradient(140deg,#1b1222 0%,#8b4d3d 44%,#111b2c 100%)!important}#${ROOT_ID} .gw3-cover-copy{position:absolute!important;left:10px!important;right:10px!important;bottom:10px!important;padding:8px!important;border-radius:7px!important;background:rgba(4,9,17,.7)!important}#${ROOT_ID} .gw3-cover-copy b{display:block!important;color:#fff!important;font-size:9px!important}#${ROOT_ID} .gw3-cover-copy small{display:block!important;margin-top:4px!important;color:rgba(255,255,255,.68)!important;font-size:7px!important}
+      #${ROOT_ID} .gw3-editor-foot{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;margin-top:16px!important;padding:13px 15px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--panel)!important}#${ROOT_ID} .gw3-editor-foot small{color:var(--soft)!important;font-size:8px!important;line-height:1.5!important}
+      @media(max-width:1100px){#${ROOT_ID} .gw3-list-head{align-items:flex-start!important;flex-direction:column!important}#${ROOT_ID} .gw3-list-actions{width:100%!important;justify-content:space-between!important}#${ROOT_ID} .gw3-editor-grid{grid-template-columns:1fr!important}}
+      @media(max-width:760px){#${ROOT_ID} .gw3-list-actions{align-items:stretch!important;flex-direction:column!important}#${ROOT_ID} .gw3-tabs{width:100%!important}#${ROOT_ID} .gw3-tab{flex:1!important}#${ROOT_ID} .gw3-toolbar{grid-template-columns:1fr!important}#${ROOT_ID} .gw3-form{grid-template-columns:1fr!important}#${ROOT_ID} .gw3-field.full{grid-column:auto!important}#${ROOT_ID} .gw3-cover-grid{grid-template-columns:1fr!important}#${ROOT_ID} .gw3-editor-nav,#${ROOT_ID} .gw3-editor-foot{align-items:stretch!important;flex-direction:column!important}#${ROOT_ID} .gw3-editor-actions{width:100%!important}#${ROOT_ID} .gw3-editor-actions button{flex:1!important}}
+    `;
+  }
+
+  function setTitle(title,description){
+    const slot=document.getElementById(TITLE_ID);if(!slot)return;
+    let h=slot.querySelector('h1'),p=slot.querySelector('p');
+    if(!h){slot.innerHTML='<h1></h1><p></p>';h=slot.querySelector('h1');p=slot.querySelector('p')}
+    h.textContent=title;p.textContent=description;
+  }
+  function clearTopAction(){document.getElementById(ACTION_ID)?.replaceChildren()}
+  function statusClass(value){if(/已生成|已采用|完成/.test(value))return'done';if(/待确认|参数|素材待补|相似/.test(value))return'warn';return'wait'}
+  function rowsFor(tab){const c=cfg();return tab==='generated'?c.generated:c.pending}
+
+  function listMarkup(){
+    const c=cfg(),tab=currentTab(),rows=rowsFor(tab),set=selectedSet();
+    const action=tab==='pending'?`批量生成${c.noun}`:`导出已生成${c.noun}`;
+    return `<div class="gw3-page v815page" data-gw3-view="list"><section class="gw3-card"><header class="gw3-list-head"><div class="gw3-list-copy"><h2>${c.noun}生成任务</h2><p>${c.description}</p></div><div class="gw3-list-actions"><div class="gw3-tabs"><button type="button" class="gw3-tab ${tab==='pending'?'active':''}" data-gw3-tab="pending">未生成内容<em>${c.pending.length}</em></button><button type="button" class="gw3-tab ${tab==='generated'?'active':''}" data-gw3-tab="generated">已生成内容<em>${c.generated.length}</em></button></div><span class="gw3-count" data-gw3-count>已选择 ${set.size} 条</span><button type="button" class="gw3-primary" data-gw3-batch>${action}</button></div></header><div class="gw3-toolbar"><input type="search" data-gw3-search value="${esc(searches[route()]||'')}" placeholder="搜索剧集、频道或内容爆点"><select data-gw3-status><option value="">全部状态</option><option>待生成</option><option>参数待确认</option><option>已生成</option><option>待确认</option><option>已采用</option></select></div><div class="gw3-table-wrap"><table class="gw3-table"><thead><tr><th><input class="gw3-check" type="checkbox" data-gw3-all aria-label="全选"></th>${c.columns.map(x=>`<th>${esc(x)}</th>`).join('')}<th>操作</th></tr></thead><tbody>${rows.map((row,index)=>`<tr data-gw3-row="${index}"><td><input class="gw3-check" type="checkbox" data-gw3-check="${index}"${set.has(index)?' checked':''}></td>${row.map((value,i)=>`<td${i===row.length-1?` class="gw3-status ${statusClass(value)}"`:''}>${esc(value)}</td>`).join('')}<td><button type="button" class="gw3-row-action v815act" data-gw3-open="${index}">${tab==='pending'?'生成并编辑':'查看并编辑'}</button></td></tr>`).join('')}</tbody></table></div><footer class="gw3-foot"><span>共 ${rows.length} 条${tab==='pending'?'未生成':'已生成'}记录，每页 8 条</span><span>‹　1　›</span></footer></section></div>`;
+  }
+
+  function titleCandidates(series){return [`${series}：所有人都以为她失去一切，直到真正身份被揭开`,`她隐忍多年重回豪门，只为让背叛者亲眼看见真相`,`婚礼当天身份反转，那个被轻视的女人终于不再隐藏`]}
+  function editorShell(left,right){const c=cfg(),row=editor.row;return `<div class="gw3-page v815page" data-gw3-view="editor"><div class="gw3-editor-nav"><button type="button" class="gw3-secondary" data-gw3-back>← 返回${c.noun}列表</button><div class="gw3-editor-actions"><button type="button" class="gw3-secondary" data-gw3-save>保存草稿</button><button type="button" class="gw3-secondary" data-gw3-regenerate>重新生成</button><button type="button" class="gw3-primary" data-gw3-adopt>采用当前${c.noun}</button></div></div><div class="gw3-context"><strong>${esc(row[0])}</strong><span class="gw3-chip">${esc(row[1])}</span><span class="gw3-chip">${esc(row[2])}</span><span class="gw3-context-state">自动保存已开启</span></div><div class="gw3-editor-grid">${left}${right}</div><div class="gw3-editor-foot"><small>保存草稿不会改变当前已采用版本；采用后会更新已生成列表。</small><div class="gw3-editor-actions"><button type="button" class="gw3-secondary" data-gw3-save>保存草稿</button><button type="button" class="gw3-primary" data-gw3-adopt>采用当前${c.noun}</button></div></div></div>`}
+  function titleEditor(){const row=editor.row,titles=editor.titles;const left=`<section class="gw3-panel"><header class="gw3-panel-head"><h2>内容与生成设置</h2><p>确认内容爆点、频道风格和标题限制。</p></header><div class="gw3-panel-body"><div class="gw3-form"><label class="gw3-field"><span>剧集</span><input value="${esc(row[0])}" readonly></label><label class="gw3-field"><span>目标频道</span><select data-gw3-field="channel"><option>${esc(row[1])}</option><option>TK-US Drama</option><option>FB-Latina</option><option>YT-English</option></select></label><label class="gw3-field"><span>输出语言</span><select data-gw3-field="language"><option>英语</option><option>西班牙语</option><option>阿拉伯语</option></select></label><label class="gw3-field"><span>标题结构</span><select data-gw3-field="structure"><option>身份反转 + 强冲突 + 结果悬念</option><option>情绪钩子 + 关系冲突</option><option>事件开场 + 真相揭露</option></select></label><label class="gw3-field"><span>字符上限</span><input type="number" value="100" min="30" max="100" data-gw3-field="limit"></label><label class="gw3-field"><span>候选数量</span><select data-gw3-field="count"><option>3</option><option>5</option></select></label><label class="gw3-field full"><span>内容爆点</span><textarea data-gw3-field="hook">${esc(row[2])}</textarea></label><label class="gw3-field full"><span>补充生成指令</span><textarea data-gw3-field="instruction">强调身份反转和情绪冲突，结尾保留悬念，避免剧透最终结局。</textarea></label><div class="gw3-field full"><span>生成校验</span><div class="gw3-options"><label class="gw3-option"><input type="checkbox" checked>敏感词检测</label><label class="gw3-option"><input type="checkbox" checked>历史标题冲突</label><label class="gw3-option"><input type="checkbox" checked>频道风格匹配</label></div></div></div><div class="gw3-note">建议标题长度控制在 70–90 字符，并优先使用“身份反转 + 强冲突 + 结果悬念”结构。</div></div></section>`;const right=`<section class="gw3-panel"><header class="gw3-panel-head"><h2>候选标题</h2><p>直接编辑内容并选择最终版本。</p></header><div class="gw3-panel-body"><div class="gw3-title-list">${titles.map((text,i)=>`<article class="gw3-title-card ${editor.selected===i?'selected':''}" data-gw3-candidate="${i}"><span class="gw3-radio"></span><div><textarea class="gw3-title-input" data-gw3-title="${i}">${esc(text)}</textarea><div class="gw3-meta"><span>候选 ${i+1}</span><span>CTR ${['8.9%','8.4%','8.1%'][i]}</span><span class="${i===1?'gw3-warn':'gw3-good'}">${i===1?'1 条相似':'无冲突'}</span><span data-gw3-length="${i}">${text.length} 字符</span></div></div></article>`).join('')}</div></div></section>`;return editorShell(left,right)}
+  function coverEditor(){const row=editor.row,labels=['强冲突对峙','人物情绪特写','剧情场景悬念'];const left=`<section class="gw3-panel"><header class="gw3-panel-head"><h2>视觉与生成设置</h2><p>配置人物、场景、构图和频道风格。</p></header><div class="gw3-panel-body"><div class="gw3-form"><label class="gw3-field"><span>剧集</span><input value="${esc(row[0])}" readonly></label><label class="gw3-field"><span>目标频道</span><select data-gw3-field="channel"><option>${esc(row[1])}</option><option>TK-US Drama</option><option>FB-Latina</option><option>YT-English</option></select></label><label class="gw3-field"><span>画面比例</span><select data-gw3-field="ratio"><option>4:5</option><option>9:16</option><option>16:9</option></select></label><label class="gw3-field"><span>视觉风格</span><select data-gw3-field="style"><option>电影感强冲突</option><option>高饱和情绪海报</option><option>极简人物特写</option></select></label><label class="gw3-field"><span>人物主体</span><select data-gw3-field="subject"><option>女主正面 + 男主背影</option><option>双人对峙</option><option>女主单人特写</option></select></label><label class="gw3-field"><span>文字安全区</span><select data-gw3-field="safe"><option>底部 28%</option><option>顶部 22%</option><option>不保留文字区</option></select></label><label class="gw3-field full"><span>视觉提示词</span><textarea data-gw3-field="prompt">${esc(row[2])}，强情绪光影，电影级构图，主体清晰，适配移动端频道封面。</textarea></label><label class="gw3-field full"><span>排除内容</span><textarea data-gw3-field="negative">避免多人杂乱、手部畸形、过多文字、低对比度和历史封面高度重复。</textarea></label></div><div class="gw3-note">建议人物脸部占画面 35%–45%，保留清晰的标题安全区。</div></div></section>`;const right=`<section class="gw3-panel"><header class="gw3-panel-head"><h2>候选封面</h2><p>选择一张作为最终版本。</p></header><div class="gw3-panel-body"><div class="gw3-cover-grid">${labels.map((label,i)=>`<article class="gw3-cover-card ${editor.selected===i?'selected':''}" data-gw3-candidate="${i}"><div class="gw3-cover-art v${i+1}"><div class="gw3-cover-copy"><b>${esc(row[0])}</b><small>${label}</small></div></div><div class="gw3-meta"><span>方案 ${i+1}</span><span>CTR ${['9.1%','8.6%','8.2%'][i]}</span><span class="gw3-good">重复度 ${['8%','11%','6%'][i]}</span></div></article>`).join('')}</div></div></section>`;return editorShell(left,right)}
+
+  function renderList(){const c=cfg(),r=root();if(!c||!r)return;editor=null;setTitle(c.title,c.description);clearTopAction();r.innerHTML=listMarkup();r.dataset.gw3Route=route();r.dataset.gw3View='list';syncSelection();applyFilter()}
+  function openEditor(index){const c=cfg(),tab=currentTab(),rows=rowsFor(tab),row=rows[index];if(!c||!row)return;editor={route:route(),tab,index,row:[...row],selected:0,titles:c.kind==='title'?titleCandidates(row[0]):[]};setTitle(`${c.noun}生成与编辑`,c.kind==='title'?'编辑生成参数、比较候选标题，并选择最终用于频道发布的版本。':'配置视觉方向、比较候选封面，并选择最终用于频道发布的版本。');clearTopAction();root().innerHTML=c.kind==='title'?titleEditor():coverEditor();root().dataset.gw3Route=route();root().dataset.gw3View='editor'}
+  function closeEditor(){editor=null;renderList()}
+
+  function syncSelection(){const set=selectedSet(),rows=rowsFor(currentTab()),r=root();const count=r?.querySelector('[data-gw3-count]');if(count)count.textContent=`已选择 ${set.size} 条`;const all=r?.querySelector('[data-gw3-all]');if(all){all.checked=rows.length>0&&set.size===rows.length;all.indeterminate=set.size>0&&set.size<rows.length}r?.querySelectorAll('[data-gw3-check]').forEach(box=>box.checked=set.has(Number(box.dataset.gw3Check)))}
+  function applyFilter(){const q=(searches[route()]||'').trim().toLowerCase(),status=root()?.querySelector('[data-gw3-status]')?.value||'';root()?.querySelectorAll('[data-gw3-row]').forEach(tr=>{const text=tr.innerText.toLowerCase();tr.hidden=!!((q&&!text.includes(q))||(status&&!text.includes(status)))})}
+  function exportGenerated(){const c=cfg(),csv='\ufeff'+[c.columns,...c.generated].map(row=>row.map(value=>`"${String(value).replaceAll('"','""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`${c.kind}-generated.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+  function toGenerated(c,row){const next=[...row];next[3]=c.kind==='title'?'3':'3张';next[4]=c.kind==='title'?'8.5%':'8.7%';next[5]=c.kind==='title'?'82':'94%';next[6]=c.kind==='title'?'无冲突':'9%';next[7]='已生成';return next}
+  function batchAction(){const c=cfg(),tab=currentTab(),set=selectedSet();if(tab==='generated'){exportGenerated();return}if(!set.size){toast('请先勾选需要生成的内容');return}[...set].sort((a,b)=>b-a).forEach(index=>{const row=c.pending[index];if(row){c.generated.unshift(toGenerated(c,row));c.pending.splice(index,1)}});set.clear();viewState[route()]='generated';toast(`已完成批量生成`);renderList()}
+  function saveDraft(){if(!editor)return;const fields={};root().querySelectorAll('[data-gw3-field]').forEach(field=>fields[field.dataset.gw3Field]=field.value);if(cfg().kind==='title')editor.titles=[...root().querySelectorAll('[data-gw3-title]')].map(field=>field.value);let data={};try{data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}catch{}data[`${editor.route}:${editor.row[0]}`]={fields,titles:editor.titles,selected:editor.selected,updatedAt:new Date().toISOString()};localStorage.setItem(STORAGE_KEY,JSON.stringify(data));toast('草稿已保存')}
+  function regenerate(){if(!editor)return;if(cfg().kind==='title'){editor.titles=[`${editor.row[0]}：她被所有人轻视，直到隐藏身份让全场沉默`,`她以为这是一场交易婚姻，却不知道复仇真相早已逼近`,`所有证据都指向她，直到雨夜里真正的幕后者现身`];root().querySelectorAll('[data-gw3-title]').forEach((field,i)=>{field.value=editor.titles[i];const span=root().querySelector(`[data-gw3-length="${i}"]`);if(span)span.textContent=`${editor.titles[i].length} 字符`})}else root().querySelectorAll('.gw3-cover-art').forEach((art,i)=>art.className=`gw3-cover-art v${((i+1)%3)+1}`);toast(`已重新生成 3 个${cfg().noun}候选`)}
+  function adopt(){if(!editor)return;saveDraft();const c=cfg();if(editor.tab==='pending'){const original=c.pending[editor.index];if(original){c.generated.unshift(toGenerated(c,original));c.pending.splice(editor.index,1)}}else if(c.generated[editor.index])c.generated[editor.index][7]='已采用';viewState[route()]='generated';toast(`已采用当前${c.noun}`);editor=null;renderList()}
+
+  function stop(event,prevent=true){if(prevent)event.preventDefault();event.stopPropagation();event.stopImmediatePropagation()}
+  function handleClick(event){const target=event.target instanceof Element?event.target:null;if(!target||!cfg())return;
+    const tab=target.closest('[data-gw3-tab]');if(tab){stop(event);viewState[route()]=tab.dataset.gw3Tab;selectedSet().clear();renderList();return}
+    const batch=target.closest('[data-gw3-batch]');if(batch){stop(event);batchAction();return}
+    const open=target.closest('[data-gw3-open]');if(open){stop(event);openEditor(Number(open.dataset.gw3Open));return}
+    if(target.closest('[data-gw3-back]')){stop(event);closeEditor();return}
+    if(target.closest('[data-gw3-save]')){stop(event);saveDraft();return}
+    if(target.closest('[data-gw3-regenerate]')){stop(event);regenerate();return}
+    if(target.closest('[data-gw3-adopt]')){stop(event);adopt();return}
+    const candidate=target.closest('[data-gw3-candidate]');if(candidate&&editor&&!target.closest('textarea,input,select')){stop(event);editor.selected=Number(candidate.dataset.gw3Candidate);root().querySelectorAll('[data-gw3-candidate]').forEach(card=>card.classList.toggle('selected',card===candidate));return}
+  }
+  function handleChange(event){const target=event.target;if(!(target instanceof HTMLInputElement||target instanceof HTMLSelectElement)||!cfg())return;
+    if(target.matches('[data-gw3-all]')){stop(event,false);const rows=rowsFor(currentTab()),set=selectedSet();set.clear();if(target.checked)rows.forEach((_,i)=>set.add(i));syncSelection();return}
+    if(target.matches('[data-gw3-check]')){stop(event,false);const set=selectedSet(),index=Number(target.dataset.gw3Check);target.checked?set.add(index):set.delete(index);syncSelection();return}
+    if(target.matches('[data-gw3-status]')){stop(event,false);applyFilter();return}
+  }
+  function handleInput(event){const target=event.target;if(!cfg())return;if(target instanceof HTMLInputElement&&target.matches('[data-gw3-search]')){searches[route()]=target.value;applyFilter();return}if(target instanceof HTMLTextAreaElement&&target.matches('[data-gw3-title]')){const i=Number(target.dataset.gw3Title);if(editor)editor.titles[i]=target.value;const span=root().querySelector(`[data-gw3-length="${i}"]`);if(span)span.textContent=`${target.value.length} 字符`}}
+
+  function apply(){scheduled=false;installStyle();const c=cfg();if(!c){document.documentElement.classList.remove('gw3-active');editor=null;return}document.documentElement.classList.add('gw3-active');const r=root();if(!r)return;const desired=editor?'editor':'list';if(r.dataset.gw3Route!==route()||r.dataset.gw3View!==desired||!r.querySelector('.gw3-page')){editor?openEditor(editor.index):renderList()}else{setTitle(editor?`${c.noun}生成与编辑`:c.title,editor?(c.kind==='title'?'编辑生成参数、比较候选标题，并选择最终用于频道发布的版本。':'配置视觉方向、比较候选封面，并选择最终用于频道发布的版本。'):c.description);clearTopAction()}}
+  function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(apply)}
+
+  window.addEventListener('click',handleClick,true);
+  window.addEventListener('change',handleChange,true);
+  window.addEventListener('input',handleInput,true);
+  window.addEventListener('hashchange',()=>{editor=null;schedule()});
+  new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
+  setTimeout(schedule,350);setTimeout(schedule,900);setTimeout(schedule,1800);
+})();
