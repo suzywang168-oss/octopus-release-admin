@@ -42,10 +42,18 @@ jobs:
           page = Path('_site/user-portal/v814-snapshot/v78/index.html')
           source = page.read_text(encoding='utf-8')
           needle = "document.body.classList.add('ready')"
-          patch = "const syncVersion=()=>{const w=d.createTreeWalker(d.body,NodeFilter.SHOW_TEXT);while(w.nextNode()){const n=w.currentNode;if(n.nodeValue&&n.nodeValue.includes('Release User Portal V7.3'))n.nodeValue=n.nodeValue.replace(/Release User Portal V7\\.3/g,'Release User Portal V8.14')}};syncVersion();new MutationObserver(syncVersion).observe(d.body,{subtree:true,childList:true,characterData:true});document.body.classList.add('ready')"
+          version_patch = "const syncVersion=()=>{const w=d.createTreeWalker(d.body,NodeFilter.SHOW_TEXT);while(w.nextNode()){const n=w.currentNode;if(n.nodeValue&&n.nodeValue.includes('Release User Portal V7.3'))n.nodeValue=n.nodeValue.replace(/Release User Portal V7\\.3/g,'Release User Portal V8.14')}};syncVersion();new MutationObserver(syncVersion).observe(d.body,{subtree:true,childList:true,characterData:true});document.body.classList.add('ready')"
           if needle not in source:
               raise SystemExit('Unable to patch the V8.14 version label')
-          page.write_text(source.replace(needle, patch, 1), encoding='utf-8')
+          source = source.replace(needle, version_patch, 1)
+
+          layout_script = '<script src="../../v814-content-generation-layout-fix.js?v=1"></script>'
+          if layout_script not in source:
+              if '</body>' not in source:
+                  raise SystemExit('Unable to attach the V8.14 content-generation layout patch')
+              source = source.replace('</body>', layout_script + '</body>', 1)
+
+          page.write_text(source, encoding='utf-8')
           PY
 
       - name: Configure Pages
