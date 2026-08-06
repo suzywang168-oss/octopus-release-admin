@@ -57,7 +57,7 @@ jobs:
               "        {src:'ui-qa-fix-v813.js'},\n",
           ):
               loader_source = loader_source.replace(script, '')
-          loader_source = loader_source.replace('814206', '814247')
+          loader_source = loader_source.replace('814206', '814249')
           loader.write_text(loader_source, encoding='utf-8')
           PY
 
@@ -75,6 +75,8 @@ jobs:
           grep -q 'function v814SearchRows' "$TARGET"
           grep -q "q.target.id==='globalSearch'" "$TARGET"
           grep -q 'v814-record-field' "$TARGET"
+          grep -q 'justify-content:flex-end!important' "$TARGET"
+          grep -q '.v80-modal .v81-savebar>div' "$TARGET"
           grep -q 'function setGenerationEditorStep' "$TARGET"
           grep -q 'function commitGenerationEditor' "$TARGET"
           grep -q 'generationListByModule' "$TARGET"
