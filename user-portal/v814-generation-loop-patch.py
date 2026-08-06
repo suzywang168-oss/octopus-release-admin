@@ -71,7 +71,7 @@ function switchGenerationList(route,list){
   if(typeof pageState!=='undefined')pageState[route+'|'+list]=1;
 }
 function commitGenerationEditor(box,kind='save',message=''){
-  const route=box.dataset.route||active,list=box.dataset.list||generationList,index=Number(box.dataset.index),bucket=GEN_DATA[route]?.[list],base=bucket?.[index];
+  const route=box.dataset.generationRoute||active,list=box.dataset.list||generationList,index=Number(box.dataset.index),bucket=GEN_DATA[route]?.[list],base=bucket?.[index];
   if(!base){toast('生成记录已变化，请刷新后重试');box.remove();return}
   if(kind==='draft'){
     if(route==='production.languages'){base[6]='草稿';base[7]='待提交'}
@@ -93,7 +93,7 @@ function commitGenerationEditor(box,kind='save',message=''){
   persistGenerationLoop();box.remove();render();toast(message);
 }
 function regenerateGenerationEditor(box){
-  const route=box.dataset.route||active;
+  const route=box.dataset.generationRoute||active;
   if(route==='release.titles'){
     const titleInputs=[...box.querySelectorAll('.v81-option input[type="text"]')];
     const seed=String(Date.now()).slice(-2);
@@ -152,7 +152,7 @@ source = source.replace(old_actions, new_actions, 1)
 
 # 3) Open pending records with generated candidates and remember the source list.
 old_editor_start = "function editor(i,mode='edit'){let c=P[active],r=genRows()[i];if(!c||!r){toast('未找到可编辑记录，请刷新列表后重试');return}let box=document.createElement('div');box.className='v80-modal';box.dataset.index=i;let body='';"
-new_editor_start = "function editor(i,mode='edit'){let c=P[active],sourceRow=genRows()[i];if(!c||!sourceRow){toast('未找到可编辑记录，请刷新列表后重试');return}let sourceList=generationList,r=sourceList==='pending'?generationResultRow(active,sourceRow):[...sourceRow],box=document.createElement('div');box.className='v80-modal';box.dataset.index=i;box.dataset.route=active;box.dataset.list=sourceList;box.dataset.mode=mode;let body='';"
+new_editor_start = "function editor(i,mode='edit'){let c=P[active],sourceRow=genRows()[i];if(!c||!sourceRow){toast('未找到可编辑记录，请刷新列表后重试');return}let sourceList=generationList,r=sourceList==='pending'?generationResultRow(active,sourceRow):[...sourceRow],box=document.createElement('div');box.className='v80-modal';box.dataset.index=i;box.dataset.generationRoute=active;box.dataset.list=sourceList;box.dataset.mode=mode;let body='';"
 if source.count(old_editor_start) != 1:
     raise SystemExit('V8.14 generation editor entry changed')
 source = source.replace(old_editor_start, new_editor_start, 1)
@@ -207,7 +207,13 @@ if source.count(empty_marker) != 1:
     raise SystemExit('V8.14 generation table render signature changed')
 source = source.replace(empty_marker, empty_replacement, 1)
 
-# 8) Closed-loop visual language.
+# 8) Editor buttons must not be mistaken for navigation links.
+old_click = "document.addEventListener('click',q=>{let list=q.target.closest('[data-v85-list]');"
+new_click = "document.addEventListener('click',q=>{if(q.target.closest('.v80-modal'))return;let list=q.target.closest('[data-v85-list]');"
+if source.count(old_click) != 1:
+    raise SystemExit('V8.14 primary click router changed')
+source = source.replace(old_click, new_click, 1)
+
 loop_css = r'''
 (()=>{
 'use strict';
