@@ -47,11 +47,14 @@ jobs:
               raise SystemExit('Unable to patch the V8.14 version label')
           source = source.replace(needle, version_patch, 1)
 
-          layout_script = '<script src="../../v814-content-generation-layout-fix.js?v=1"></script>'
-          if layout_script not in source:
+          scripts = (
+              '<script src="../../v814-content-generation-layout-fix.js?v=2"></script>'
+              '<script src="../../v814-button-runtime-fix.js?v=1"></script>'
+          )
+          if 'v814-button-runtime-fix.js' not in source:
               if '</body>' not in source:
-                  raise SystemExit('Unable to attach the V8.14 content-generation layout patch')
-              source = source.replace('</body>', layout_script + '</body>', 1)
+                  raise SystemExit('Unable to attach the V8.14 runtime patches')
+              source = source.replace('</body>', scripts + '</body>', 1)
 
           page.write_text(source, encoding='utf-8')
           PY
