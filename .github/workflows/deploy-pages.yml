@@ -57,7 +57,7 @@ jobs:
               "        {src:'ui-qa-fix-v813.js'},\n",
           ):
               loader_source = loader_source.replace(script, '')
-          loader_source = loader_source.replace('814206', '814224')
+          loader_source = loader_source.replace('814206', '814228')
           loader.write_text(loader_source, encoding='utf-8')
           PY
 
@@ -65,6 +65,7 @@ jobs:
           python3 user-portal/v814-stability-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
           python3 user-portal/v814-action-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
           python3 user-portal/v814-final-ui-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          python3 user-portal/v814-generation-loop-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
 
           node --check _site/user-portal/v814-snapshot/demo-fallback-v714.js
 
@@ -72,10 +73,19 @@ jobs:
           grep -q 'v814-stability-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'v814-action-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'v814-final-ui-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'v814-generation-loop-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'function actionModal' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'function recordEditor' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'function archiveRecord' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'function mergeGenerationHeader' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'function commitGenerationEditor' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'function nextGenerationStep' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'GEN_LOOP_STORE' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q '确认生成并入库' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q '保存新版本并采用' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "\['next','进入标题生成'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "\['next','进入封面生成'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "\['next','提交发布'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q "\['recordEdit','编辑'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q "\['recordArchive','归档'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q "\['asset','查看源内容'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
