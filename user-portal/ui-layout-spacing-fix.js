@@ -18,8 +18,12 @@
         max-width:1480px!important;
         min-height:96px!important;
         padding:22px 0 18px!important;
-        margin:0 auto 28px!important;
+        margin:24px auto 28px!important;
         box-sizing:border-box!important;
+      }
+      html.ol2-active #octopusGlobalTitleSlot{
+        align-self:center!important;
+        padding-top:2px!important;
       }
       html.ol2-active #octopusGlobalTitleSlot h1{
         font-size:23px!important;
@@ -195,7 +199,7 @@
           min-height:0!important;
           padding-top:18px!important;
           padding-bottom:16px!important;
-          margin-bottom:22px!important;
+          margin:16px auto 22px!important;
         }
         #${ROOT_ID}>.v815page,#${ROOT_ID}>.occ-page,#${ROOT_ID}>.oge-page{padding-top:2px!important}
         #${ROOT_ID} .ol2-standard>.v815kpis .v815kpi{min-height:96px!important}
@@ -205,6 +209,7 @@
         #${ROOT_ID}>.v815page,
         #${ROOT_ID}>.occ-page,
         #${ROOT_ID}>.oge-page{width:calc(100% - 22px)!important}
+        html.ol2-active .ota-toolbar{margin-top:12px!important}
         #${ROOT_ID} .ol2-data-head,
         #${ROOT_ID} .gml-data-head,
         #${ROOT_ID} .cad-data-head{align-items:flex-start!important;flex-direction:column!important}
