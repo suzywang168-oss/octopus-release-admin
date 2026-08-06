@@ -16,6 +16,12 @@ if source.count(old_merge) != 1:
     raise SystemExit('V8.14 generation header merge signature changed')
 source = source.replace(old_merge, new_merge, 1)
 
+old_action = "let action=CONTENT_FLOW.find(([r])=>r===active)?.[2]||'批量生成';left?.insertAdjacentHTML('afterbegin','<div class=\"v81-bulk\"><button class=\"btn small primary\" data-v81-bulk>'+action+'</button><span class=\"v81-count\" data-v81-count>已选 0 项</span></div>'+contentConsole())"
+new_action = "let action='批量生成';left?.insertAdjacentHTML('afterbegin','<div class=\"v81-bulk\"><button class=\"btn small primary\" data-v81-bulk>'+action+'</button><span class=\"v81-count\" data-v81-count>已选 0 项</span></div>'+contentConsole())"
+if source.count(old_action) != 1:
+    raise SystemExit('V8.14 bulk-generation label signature changed')
+source = source.replace(old_action, new_action, 1)
+
 css = r'''
 (()=>{
 'use strict';
