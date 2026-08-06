@@ -4,26 +4,23 @@
   const STYLE_ID='octopus-shell-alignment-fix';
   const SETTINGS_ID='octopusSettingsMenu';
 
-  const clean=value=>String(value||'').replace(/\s+/g,' ').trim();
   const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
 
   function installStyle(){
     let style=document.getElementById(STYLE_ID);
-    if(!style){
-      style=document.createElement('style');
-      style.id=STYLE_ID;
-      document.head.appendChild(style);
-    }
+    if(!style){style=document.createElement('style');style.id=STYLE_ID;document.head.appendChild(style)}
     style.textContent=`
-      /* Search and utility controls stay on the right. */
+      /* Search and utility controls stay on the right without covering page actions. */
       .ota-toolbar{
+        position:relative!important;
+        z-index:3!important;
         justify-content:flex-end!important;
         align-items:center!important;
         gap:8px!important;
-        min-height:42px!important;
-        padding-top:0!important;
-        margin-top:0!important;
-        margin-bottom:2px!important
+        min-height:44px!important;
+        padding:0 0 7px!important;
+        margin:0 0 7px!important;
+        box-sizing:border-box!important
       }
       .ota-toolbar>input,
       .ota-toolbar .ota-search-host{
@@ -34,32 +31,29 @@
         max-width:420px!important;
         margin-left:auto!important
       }
-      .ota-actions{
-        order:3!important;
-        flex:0 0 auto!important;
-        width:auto!important;
-        margin-left:0!important
-      }
+      .ota-actions{order:3!important;flex:0 0 auto!important;width:auto!important;margin-left:0!important}
 
       /* The native bottom-left settings center is the only settings entry. */
       .ota-settings-button{display:none!important}
       #${SETTINGS_ID}{display:none!important}
 
-      /* Pull page titles closer to the top bar. */
-      #pageRoot{padding-top:0!important}
-      #pageRoot .v815page{padding-top:0!important}
-      #pageRoot .v815head{
-        margin-top:-10px!important;
-        margin-bottom:12px!important
-      }
-      #pageRoot .occ-page{padding-top:0!important}
+      /* Keep titles close to the top, but always below the toolbar. */
+      #pageRoot{padding-top:0!important;overflow:visible!important}
+      #pageRoot .v815page,#pageRoot .occ-page{padding-top:2px!important}
+      #pageRoot .v815head,
       #pageRoot .occ-head{
-        margin-top:-12px!important;
-        margin-bottom:14px!important
+        position:relative!important;
+        z-index:1!important;
+        clear:both!important;
+        margin-top:0!important;
+        margin-bottom:14px!important;
+        padding-top:3px!important
       }
-      #pageRoot .occ-head h1,
       #pageRoot .v815head h1,
-      #pageRoot .v815head h2{line-height:1.15!important}
+      #pageRoot .v815head h2,
+      #pageRoot .occ-head h1{line-height:1.18!important}
+      #pageRoot .v815head>div:last-child,
+      #pageRoot .occ-head-actions{position:relative!important;z-index:2!important;flex-shrink:0!important}
 
       /* Keep the pipeline text legible and immune to inherited compact styles. */
       #pageRoot .occ-pipeline,
@@ -72,18 +66,13 @@
       }
 
       @media(max-width:860px){
-        .ota-toolbar{flex-wrap:wrap!important}
+        .ota-toolbar{flex-wrap:wrap!important;padding-bottom:6px!important}
         .ota-toolbar>input,
         .ota-toolbar .ota-search-host{
-          order:1!important;
-          flex:1 1 100%!important;
-          width:100%!important;
-          min-width:0!important;
-          max-width:none!important;
-          margin-left:0!important
+          order:1!important;flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:none!important;margin-left:0!important
         }
         .ota-actions{order:2!important;margin-left:auto!important}
-        #pageRoot .v815head,#pageRoot .occ-head{margin-top:-4px!important}
+        #pageRoot .v815head,#pageRoot .occ-head{padding-top:2px!important}
       }
     `;
   }
@@ -94,19 +83,13 @@
   }
 
   function findSearch(){
-    return [...document.querySelectorAll('input')].find(input=>
-      /搜索项目|搜索.*任务|搜索.*剧集|Search.*project/i.test(input.placeholder||'')
-    )||null;
+    return [...document.querySelectorAll('input')].find(input=>/搜索项目|搜索.*任务|搜索.*剧集|Search.*project/i.test(input.placeholder||''))||null;
   }
 
   function normalizeToolbar(){
-    const input=findSearch();
-    if(!input)return;
-    input.type='search';
-    input.setAttribute('aria-label','全局搜索');
-    const bar=input.closest('.ota-toolbar');
-    if(!bar)return;
-    bar.classList.add('osa-right-search');
+    const input=findSearch();if(!input)return;
+    input.type='search';input.setAttribute('aria-label','全局搜索');
+    input.closest('.ota-toolbar')?.classList.add('osa-right-search');
   }
 
   const PIPELINE={
@@ -124,53 +107,29 @@
 
   function repairPipeline(){
     if(route()!=='overview')return;
-    const pipeline=document.querySelector('#pageRoot .occ-pipeline');
-    if(!pipeline)return;
-
+    const pipeline=document.querySelector('#pageRoot .occ-pipeline');if(!pipeline)return;
     const heading=pipeline.querySelector('.occ-section-title h2');
     const description=pipeline.querySelector('.occ-section-title p');
     const link=pipeline.querySelector('.occ-section-title .occ-link');
     if(heading)heading.textContent=PIPELINE.title;
     if(description)description.textContent=PIPELINE.description;
     if(link)link.textContent=PIPELINE.link;
-
     pipeline.querySelectorAll('.occ-stage').forEach((stage,index)=>{
-      const values=PIPELINE.stages[index];
-      if(!values)return;
+      const values=PIPELINE.stages[index];if(!values)return;
       const top=stage.querySelectorAll('.occ-stage-top span');
-      if(top[0])top[0].textContent=values[0];
-      if(top[1])top[1].textContent=values[1];
-      const strong=stage.querySelector('strong');
-      const label=stage.querySelector('b');
-      const note=stage.querySelector('small');
-      if(strong)strong.textContent=values[2];
-      if(label)label.textContent=values[3];
-      if(note)note.textContent=values[4];
+      if(top[0])top[0].textContent=values[0];if(top[1])top[1].textContent=values[1];
+      const strong=stage.querySelector('strong'),label=stage.querySelector('b'),note=stage.querySelector('small');
+      if(strong)strong.textContent=values[2];if(label)label.textContent=values[3];if(note)note.textContent=values[4];
       stage.setAttribute('lang','zh-CN');
     });
-    pipeline.setAttribute('lang','zh-CN');
-    pipeline.dataset.encodingRepaired='1';
+    pipeline.setAttribute('lang','zh-CN');pipeline.dataset.encodingRepaired='1';
   }
 
   let pending=false;
-  function apply(){
-    pending=false;
-    installStyle();
-    removeDuplicateSettings();
-    normalizeToolbar();
-    repairPipeline();
-  }
-  function schedule(){
-    if(pending)return;
-    pending=true;
-    requestAnimationFrame(apply);
-  }
-
-  window.addEventListener('hashchange',schedule);
-  window.addEventListener('resize',schedule);
+  function apply(){pending=false;installStyle();removeDuplicateSettings();normalizeToolbar();repairPipeline()}
+  function schedule(){if(pending)return;pending=true;requestAnimationFrame(apply)}
+  window.addEventListener('hashchange',schedule);window.addEventListener('resize',schedule);
   new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
-  setTimeout(schedule,350);
-  setTimeout(schedule,1000);
-  setTimeout(schedule,1900);
+  setTimeout(schedule,350);setTimeout(schedule,1000);setTimeout(schedule,1900);
 })();
