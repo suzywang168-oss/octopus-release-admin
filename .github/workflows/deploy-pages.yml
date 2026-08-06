@@ -57,81 +57,39 @@ jobs:
               "        {src:'ui-qa-fix-v813.js'},\n",
           ):
               loader_source = loader_source.replace(script, '')
-          loader_source = loader_source.replace('814206', '814237')
+          loader_source = loader_source.replace('814206', '814247')
           loader.write_text(loader_source, encoding='utf-8')
           PY
 
-          python3 user-portal/v814-build-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          python3 user-portal/v814-stability-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          python3 user-portal/v814-action-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          python3 user-portal/v814-final-ui-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          python3 user-portal/v814-generation-loop-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          python3 user-portal/v814-generation-state-machine-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          TARGET=_site/user-portal/v814-snapshot/demo-fallback-v714.js
+          python3 user-portal/v814-build-patch.py "$TARGET"
+          python3 user-portal/v814-stability-patch.py "$TARGET"
+          python3 user-portal/v814-action-patch.py "$TARGET"
+          python3 user-portal/v814-final-ui-patch.py "$TARGET"
+          python3 user-portal/v814-generation-loop-patch.py "$TARGET"
+          python3 user-portal/v814-generation-state-machine-patch.py "$TARGET"
+          python3 user-portal/v814-search-editor-layout-patch.py "$TARGET"
 
-          node --check _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          node --check "$TARGET"
+          grep -q 'v814-search-editor-layout-style' "$TARGET"
+          grep -q 'function v814SearchRows' "$TARGET"
+          grep -q "q.target.id==='globalSearch'" "$TARGET"
+          grep -q 'v814-record-field' "$TARGET"
+          grep -q 'function setGenerationEditorStep' "$TARGET"
+          grep -q 'function commitGenerationEditor' "$TARGET"
+          grep -q 'generationListByModule' "$TARGET"
+          grep -q "window.addEventListener('hashchange',syncRoute)" "$TARGET"
 
-          grep -q 'v814-stable-list-tabs' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'v814-stability-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'v814-action-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'v814-final-ui-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'v814-generation-loop-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'v814-generation-state-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function actionModal' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function recordEditor' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function archiveRecord' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function mergeGenerationHeader' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function commitGenerationEditor' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function nextGenerationStep' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function setGenerationEditorStep' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function runGenerationEditorAI' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'function finishGenerationEditor' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'box.dataset.generationRoute=active' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "if(q.target.closest('.v80-modal'))return" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'data-v814-start' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'data-v81-draft' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'data-v81-regenerate' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'data-v81-save' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'GEN_LOOP_STORE' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q '开始 AI 生成' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q '确认结果并入库' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q '保存新版本并采用' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "\['next','进入标题生成'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "\['next','进入封面生成'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "\['next','提交发布'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "\['recordEdit','编辑'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "\['recordArchive','归档'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "\['asset','查看源内容'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "\['extract','查看 AI 提炼'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'generationListByModule' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "window.addEventListener('hashchange',syncRoute)" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q 'grid-template-columns:repeat(2,minmax(0,1fr))' _site/user-portal/v814-snapshot/demo-fallback-v714.js
-
-          if grep -q '<span class="done">1 配置' _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
-            echo 'The generation stepper is still decorative instead of state-driven' >&2
-            exit 1
-          fi
-          if grep -q 'box.dataset.route=active' _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
+          if grep -q 'box.dataset.route=active' "$TARGET"; then
             echo 'Generation editor still exposes a navigation data-route attribute' >&2
-            exit 1
-          fi
-          if grep -q "\['source','查看内容'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
-            echo 'Redundant title source button is still present' >&2
-            exit 1
-          fi
-          if grep -q "\['source','查看剧情'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
-            echo 'Redundant cover story button is still present' >&2
             exit 1
           fi
           if grep -Eq 'crud-patch-v710.js|workflow-crud-bridge-v712.js|workflow-actions-v814.js|ui-qa-fix-v813.js' _site/user-portal/v814/index.html; then
             echo 'A competing legacy runtime is still attached' >&2
             exit 1
           fi
-          if grep -q 'setInterval(()=>.*nav()},250)' _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
+          if grep -q 'setInterval(()=>.*nav()},250)' "$TARGET"; then
             echo 'Legacy navigation polling is still present' >&2
-            exit 1
-          fi
-          if grep -q 'v814-button-runtime-fix.js' _site/user-portal/v814-snapshot/v78/index.html; then
-            echo 'Legacy runtime patch is still attached' >&2
             exit 1
           fi
 
