@@ -51,7 +51,8 @@ jobs:
           loader = Path('_site/user-portal/v814/index.html')
           loader_source = loader.read_text(encoding='utf-8')
           loader_source = loader_source.replace("        {src:'workflow-actions-v814.js'}\n", '')
-          loader_source = loader_source.replace('814206', '814209')
+          loader_source = loader_source.replace("        {src:'ui-qa-fix-v813.js'},\n", '')
+          loader_source = loader_source.replace('814206', '814214')
           loader.write_text(loader_source, encoding='utf-8')
           PY
 
@@ -61,12 +62,21 @@ jobs:
           node --check _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'v814-stable-list-tabs' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'v814-stability-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'generationListByModule' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'function activateModule' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "generationListByModule\[active\]=next" _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q "window.addEventListener('hashchange',syncRoute)" _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          grep -q "next!=='pending'&&next!=='results'" _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'grid-template-columns:repeat(2,minmax(0,1fr))' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "'production.languages','语种 AI 译配'" _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "'release.titles','标题生成'" _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "'release.covers','封面生成'" _site/user-portal/v814-snapshot/demo-fallback-v714.js
 
           if grep -q 'workflow-actions-v814.js' _site/user-portal/v814/index.html; then
             echo 'Competing V8.14 navigation runtime is still attached' >&2
+            exit 1
+          fi
+          if grep -q 'ui-qa-fix-v813.js' _site/user-portal/v814/index.html; then
+            echo 'Legacy mutation observer UI patch is still attached' >&2
             exit 1
           fi
           if grep -q 'setInterval(()=>.*nav()},250)' _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
