@@ -36,6 +36,7 @@ jobs:
           git archive "$V814_COMMIT" user-portal | tar -x -C /tmp/octopus-v814
           mkdir -p _site/user-portal/v814-snapshot
           cp -a /tmp/octopus-v814/user-portal/. _site/user-portal/v814-snapshot/
+
           python3 - <<'PY'
           from pathlib import Path
 
@@ -45,20 +46,18 @@ jobs:
           version_patch = "const syncVersion=()=>{const w=d.createTreeWalker(d.body,NodeFilter.SHOW_TEXT);while(w.nextNode()){const n=w.currentNode;if(n.nodeValue&&n.nodeValue.includes('Release User Portal V7.3'))n.nodeValue=n.nodeValue.replace(/Release User Portal V7\\.3/g,'Release User Portal V8.14')}};syncVersion();new MutationObserver(syncVersion).observe(d.body,{subtree:true,childList:true,characterData:true});document.body.classList.add('ready')"
           if needle not in source:
               raise SystemExit('Unable to patch the V8.14 version label')
-          source = source.replace(needle, version_patch, 1)
-
-          scripts = (
-              '<script src="../../v814-content-generation-layout-fix.js?v=2"></script>'
-              '<script src="../../v814-generation-entry-fix.js?v=1"></script>'
-              '<script src="../../v814-button-runtime-fix.js?v=1"></script>'
-          )
-          if 'v814-generation-entry-fix.js' not in source:
-              if '</body>' not in source:
-                  raise SystemExit('Unable to attach the V8.14 runtime patches')
-              source = source.replace('</body>', scripts + '</body>', 1)
-
-          page.write_text(source, encoding='utf-8')
+          page.write_text(source.replace(needle, version_patch, 1), encoding='utf-8')
           PY
+
+          python3 user-portal/v814-build-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          node --check _site/user-portal/v814-snapshot/demo-fallback-v714.js
+
+          grep -q 'v814-stable-list-tabs' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'grid-template-columns:repeat(2,minmax(0,1fr))' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          if grep -q 'v814-button-runtime-fix.js' _site/user-portal/v814-snapshot/v78/index.html; then
+            echo 'Legacy runtime patch is still attached' >&2
+            exit 1
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
