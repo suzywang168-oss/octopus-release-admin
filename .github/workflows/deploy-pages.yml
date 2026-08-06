@@ -47,13 +47,32 @@ jobs:
           if needle not in source:
               raise SystemExit('Unable to patch the V8.14 version label')
           page.write_text(source.replace(needle, version_patch, 1), encoding='utf-8')
+
+          loader = Path('_site/user-portal/v814/index.html')
+          loader_source = loader.read_text(encoding='utf-8')
+          loader_source = loader_source.replace("        {src:'workflow-actions-v814.js'}\n", '')
+          loader_source = loader_source.replace('814206', '814209')
+          loader.write_text(loader_source, encoding='utf-8')
           PY
 
           python3 user-portal/v814-build-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
-          node --check _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          python3 user-portal/v814-stability-patch.py _site/user-portal/v814-snapshot/demo-fallback-v714.js
 
+          node --check _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'v814-stable-list-tabs' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'v814-stability-style' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "window.addEventListener('hashchange',syncRoute)" _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "next!=='pending'&&next!=='results'" _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'grid-template-columns:repeat(2,minmax(0,1fr))' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+
+          if grep -q 'workflow-actions-v814.js' _site/user-portal/v814/index.html; then
+            echo 'Competing V8.14 navigation runtime is still attached' >&2
+            exit 1
+          fi
+          if grep -q 'setInterval(()=>.*nav()},250)' _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
+            echo 'Legacy navigation polling is still present' >&2
+            exit 1
+          fi
           if grep -q 'v814-button-runtime-fix.js' _site/user-portal/v814-snapshot/v78/index.html; then
             echo 'Legacy runtime patch is still attached' >&2
             exit 1
