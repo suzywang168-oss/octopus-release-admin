@@ -57,7 +57,7 @@ jobs:
               "        {src:'ui-qa-fix-v813.js'},\n",
           ):
               loader_source = loader_source.replace(script, '')
-          loader_source = loader_source.replace('814206', '814228')
+          loader_source = loader_source.replace('814206', '814233')
           loader.write_text(loader_source, encoding='utf-8')
           PY
 
@@ -80,6 +80,11 @@ jobs:
           grep -q 'function mergeGenerationHeader' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'function commitGenerationEditor' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'function nextGenerationStep' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'box.dataset.generationRoute=active' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q "if(q.target.closest('.v80-modal'))return" _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'data-v81-draft' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'data-v81-regenerate' _site/user-portal/v814-snapshot/demo-fallback-v714.js
+          grep -q 'data-v81-save' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'GEN_LOOP_STORE' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q '确认生成并入库' _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q '保存新版本并采用' _site/user-portal/v814-snapshot/demo-fallback-v714.js
@@ -94,6 +99,10 @@ jobs:
           grep -q "window.addEventListener('hashchange',syncRoute)" _site/user-portal/v814-snapshot/demo-fallback-v714.js
           grep -q 'grid-template-columns:repeat(2,minmax(0,1fr))' _site/user-portal/v814-snapshot/demo-fallback-v714.js
 
+          if grep -q 'box.dataset.route=active' _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
+            echo 'Generation editor still exposes a navigation data-route attribute' >&2
+            exit 1
+          fi
           if grep -q "\['source','查看内容'\]" _site/user-portal/v814-snapshot/demo-fallback-v714.js; then
             echo 'Redundant title source button is still present' >&2
             exit 1
