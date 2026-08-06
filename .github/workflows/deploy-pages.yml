@@ -57,7 +57,7 @@ jobs:
               "        {src:'ui-qa-fix-v813.js'},\n",
           ):
               loader_source = loader_source.replace(script, '')
-          loader_source = loader_source.replace('814206', '814253')
+          loader_source = loader_source.replace('814206', '814255')
           loader.write_text(loader_source, encoding='utf-8')
           PY
 
@@ -70,14 +70,18 @@ jobs:
           python3 user-portal/v814-generation-state-machine-patch.py "$TARGET"
           python3 user-portal/v814-search-editor-layout-patch.py "$TARGET"
           python3 user-portal/v814-generation-toolbar-position-patch.py "$TARGET"
+          python3 user-portal/v814-batch-generation-editor-patch.py "$TARGET"
 
           node --check "$TARGET"
           grep -q 'v814-search-editor-layout-style' "$TARGET"
           grep -q 'v814-generation-toolbar-position-style' "$TARGET"
+          grep -q 'v814-batch-editor-style' "$TARGET"
           grep -q 'data-generation-list' "$TARGET"
           grep -q 'actions.prepend(bulk)' "$TARGET"
           grep -q "let action='批量生成'" "$TARGET"
-          grep -q 'data-v81-bulk' "$TARGET"
+          grep -q 'box.dataset.batchIndexes' "$TARGET"
+          grep -q "editor(ids\[0\],editOnly?'edit':'generate')" "$TARGET"
+          grep -q '确认后才写入已生成结果' "$TARGET"
           grep -q 'function v814SearchRows' "$TARGET"
           grep -q "q.target.id==='globalSearch'" "$TARGET"
           grep -q 'v814-record-field' "$TARGET"
