@@ -30,7 +30,7 @@ jobs:
         env:
           V814_CONTENT_COMMIT: 672ef2d96b499716d6762be8ea8f8ea0f6c63e80
           V814_STABLE_COMMIT: f3def25d7cef4e16d3120833ad517eb70f4f2caf
-          V814_CACHE_VERSION: 814302
+          V814_CACHE_VERSION: 814303
         run: |
           rm -rf _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
           mkdir -p _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
@@ -135,9 +135,21 @@ jobs:
           rm -rf _site/v814 _site/v814-snapshot
           cp -a _site/user-portal/v814 _site/v814
           cp -a _site/user-portal/v814-snapshot _site/v814-snapshot
+
+          # Also publish one root HTML file. This avoids trailing-slash and nested-directory routing issues.
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path('_site/v814/index.html').read_text(encoding='utf-8')
+          source = source.replace("new URL('../v814-snapshot/',location.href)", "new URL('./v814-snapshot/',location.href)")
+          Path('_site/octopus-v814.html').write_text(source, encoding='utf-8', newline='\n')
+          PY
+
           test -f _site/v814/index.html
           test -f _site/v814-snapshot/base-v77.html
           test -f _site/v814-snapshot/demo-fallback-v714.js
+          test -f _site/octopus-v814.html
+          grep -q "new URL('./v814-snapshot/',location.href)" _site/octopus-v814.html
+          grep -q 'Octopus User Portal V8.14' _site/octopus-v814.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
