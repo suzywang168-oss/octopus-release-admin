@@ -30,12 +30,11 @@ jobs:
         env:
           V814_CONTENT_COMMIT: 672ef2d96b499716d6762be8ea8f8ea0f6c63e80
           V814_STABLE_COMMIT: f3def25d7cef4e16d3120833ad517eb70f4f2caf
-          V814_CACHE_VERSION: 814300
+          V814_CACHE_VERSION: 814301
         run: |
           rm -rf _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
           mkdir -p _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
 
-          # Keep every current repository page, but rebuild the V8.14 route from fixed commits.
           rsync -a --exclude '.git' --exclude '_site' ./ _site/
           git archive "$V814_CONTENT_COMMIT" user-portal | tar -x -C /tmp/octopus-v814-base
           git archive "$V814_STABLE_COMMIT" user-portal | tar -x -C /tmp/octopus-v814-stable
@@ -76,7 +75,6 @@ jobs:
           TARGET=_site/user-portal/v814-snapshot/demo-fallback-v714.js
           STABLE=/tmp/octopus-v814-stable/user-portal
 
-          # Apply only the last visually verified patch set. Later stacked patches are intentionally excluded.
           python3 "$STABLE/v814-build-patch.py" "$TARGET"
           python3 "$STABLE/v814-stability-patch.py" "$TARGET"
           python3 "$STABLE/v814-action-patch.py" "$TARGET"
@@ -105,8 +103,6 @@ jobs:
                   raise SystemExit(f'Unicode replacement character found: {path}')
           if '<meta charset="utf-8">' not in files[0].read_text(encoding='utf-8'):
               raise SystemExit('The V8.14 loader is missing an explicit UTF-8 charset')
-          if '批量生成' in files[-1].read_text(encoding='utf-8'):
-              print('Stable build contains generation controls and valid UTF-8 text')
           PY
 
           grep -q 'v814-search-editor-layout-style' "$TARGET"
@@ -128,6 +124,14 @@ jobs:
             echo 'Legacy navigation polling is still present' >&2
             exit 1
           fi
+
+          # Publish a short standalone alias that does not depend on the longer user-portal path.
+          rm -rf _site/v814 _site/v814-snapshot
+          cp -a _site/user-portal/v814 _site/v814
+          cp -a _site/user-portal/v814-snapshot _site/v814-snapshot
+          test -f _site/v814/index.html
+          test -f _site/v814-snapshot/base-v77.html
+          test -f _site/v814-snapshot/demo-fallback-v714.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
