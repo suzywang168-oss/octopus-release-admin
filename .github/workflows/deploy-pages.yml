@@ -30,7 +30,7 @@ jobs:
         env:
           V814_CONTENT_COMMIT: 672ef2d96b499716d6762be8ea8f8ea0f6c63e80
           V814_STABLE_COMMIT: f3def25d7cef4e16d3120833ad517eb70f4f2caf
-          V814_CACHE_VERSION: 814303
+          V814_CACHE_VERSION: 814304
         run: |
           rm -rf _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
           mkdir -p _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
@@ -83,6 +83,7 @@ jobs:
           python3 "$STABLE/v814-generation-state-machine-patch.py" "$TARGET"
           python3 "$STABLE/v814-search-editor-layout-patch.py" "$TARGET"
           python3 user-portal/v814-list-recovery-patch.py "$TARGET"
+          python3 user-portal/v814-project-route-patch.py "$TARGET"
 
           node --check "$TARGET"
 
@@ -111,6 +112,13 @@ jobs:
 
           grep -q 'v814-list-recovery-style' "$TARGET"
           grep -q 'octopus-v814-generation-loop-v3-clean' "$TARGET"
+          grep -q 'function overviewProjectRoute' "$TARGET"
+          grep -q "action==='enter'&&active==='overview'" "$TARGET"
+          grep -q "return 'production.upload'" "$TARGET"
+          grep -q "return 'production.languages'" "$TARGET"
+          grep -q "return 'release.titles'" "$TARGET"
+          grep -q "return 'release.covers'" "$TARGET"
+          grep -q "return 'release.publish'" "$TARGET"
           grep -q 'PingFang SC' "$TARGET"
           grep -q 'font-size:12px!important' "$TARGET"
           grep -q 'v814-search-editor-layout-style' "$TARGET"
@@ -136,7 +144,6 @@ jobs:
           cp -a _site/user-portal/v814 _site/v814
           cp -a _site/user-portal/v814-snapshot _site/v814-snapshot
 
-          # Also publish one root HTML file. This avoids trailing-slash and nested-directory routing issues.
           python3 - <<'PY'
           from pathlib import Path
           source = Path('_site/v814/index.html').read_text(encoding='utf-8')
