@@ -19,9 +19,15 @@ if nav_old not in source:
 source = source.replace(nav_old, nav_new, 1)
 
 render_old = "function render(){let c=P[active];if(!c)return;style();nav();"
-render_new = "function render(){let c=P[active];if(!c)return;if(typeof currentLang!=='undefined'&&currentLang==='en'&&typeof renderEnglishRoute==='function'){let englishRoute=EN_ROUTE_MAP[active]||'overview';if(typeof EN_CONFIGS==='object'&&EN_CONFIGS[englishRoute]){style();nav();document.querySelectorAll('[data-v80]').forEach(b=>b.classList.toggle('active',b.dataset.v80===active));if(typeof state==='object')state.route=englishRoute;document.getElementById('pageRoot').innerHTML=renderEnglishRoute(englishRoute);history.replaceState(null,'','#/'+active.replaceAll('.','/'));return}}style();nav();"
+render_new = "function render(){let c=P[active];if(!c)return;if(typeof currentLang!=='undefined'&&currentLang==='en'&&typeof renderEnglishRoute==='function'){let englishRoute=EN_ROUTE_MAP[active]||'overview';if(typeof EN_CONFIGS==='object'&&EN_CONFIGS[englishRoute]){style();nav();document.querySelectorAll('[data-v80]').forEach(b=>b.classList.toggle('active',b.dataset.v80===active));document.getElementById('pageRoot').innerHTML=renderEnglishRoute(englishRoute);history.replaceState(null,'','#/'+active.replaceAll('.','/'));return}}style();nav();"
 if render_old not in source:
     raise SystemExit("Unable to locate the V8.14 page renderer")
 source = source.replace(render_old, render_new, 1)
+
+toggle_old = "document.addEventListener('click',q=>{if(active&&q.target.closest('.lang-toggle'))setTimeout(render,60)},true);"
+toggle_new = "document.addEventListener('click',q=>{let toggle=q.target.closest('.lang-toggle');if(!active||!toggle)return;q.preventDefault();q.stopImmediatePropagation();if(typeof currentLang!=='undefined')currentLang=currentLang==='en'?'zh':'en';render();document.querySelectorAll('.lang-toggle').forEach(button=>button.textContent=currentLang==='en'?'中文':'EN')},true);"
+if toggle_old not in source:
+    raise SystemExit("Unable to locate the language toggle bridge")
+source = source.replace(toggle_old, toggle_new, 1)
 
 path.write_text(source, encoding="utf-8", newline="\n")
