@@ -30,7 +30,7 @@ jobs:
         env:
           V814_CONTENT_COMMIT: 672ef2d96b499716d6762be8ea8f8ea0f6c63e80
           V814_STABLE_COMMIT: f3def25d7cef4e16d3120833ad517eb70f4f2caf
-          V814_CACHE_VERSION: 814306
+          V814_CACHE_VERSION: 814307
         run: |
           rm -rf _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
           mkdir -p _site /tmp/octopus-v814-base /tmp/octopus-v814-stable
