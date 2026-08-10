@@ -132,6 +132,7 @@ jobs:
           grep -q 'v814-todo-route-close-icon-style' "$TARGET"
           grep -q "const GE=\[\['Workspace'" "$TARGET"
           grep -q "currentLang==='en'&&typeof renderEnglishRoute" "$TARGET"
+          grep -q "q.stopImmediatePropagation();if(typeof currentLang" "$TARGET"
           grep -q 'PingFang SC' "$TARGET"
           grep -q 'font-size:12px!important' "$TARGET"
           grep -q 'v814-search-editor-layout-style' "$TARGET"
