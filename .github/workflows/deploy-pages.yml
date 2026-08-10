@@ -86,6 +86,7 @@ jobs:
           python3 user-portal/v814-project-route-patch.py "$TARGET"
           python3 user-portal/v814-bulk-action-position-patch.py "$TARGET"
           python3 user-portal/v814-todo-route-close-icon-patch.py "$TARGET"
+          python3 user-portal/v814-i18n-fix.py "$TARGET"
 
           node --check "$TARGET"
 
@@ -129,6 +130,8 @@ jobs:
           grep -q "action==='process'&&active==='todo'" "$TARGET"
           grep -q 'v814-icon-close' "$TARGET"
           grep -q 'v814-todo-route-close-icon-style' "$TARGET"
+          grep -q "const GE=\[\['Workspace'" "$TARGET"
+          grep -q "currentLang==='en'&&typeof renderEnglishRoute" "$TARGET"
           grep -q 'PingFang SC' "$TARGET"
           grep -q 'font-size:12px!important' "$TARGET"
           grep -q 'v814-search-editor-layout-style' "$TARGET"
