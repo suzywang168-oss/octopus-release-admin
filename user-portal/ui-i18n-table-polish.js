@@ -46,7 +46,7 @@
       .ota-actions>.ota-preserved.otp-language,.ota-actions>.otp-language{width:66px!important;min-width:66px!important;max-width:66px!important;padding:0 8px!important;white-space:nowrap!important}
       #octopusGlobalActionHost{display:none!important}
       #pageRoot .otp-primary-row{display:none!important}
-      #pageRoot .ols-data-actions .otp-list-primary{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:132px!important;height:36px!important;padding:0 16px!important;margin:0!important;border:1px solid #6683df!important;border-radius:9px!important;background:#6683df!important;color:#fff!important;font-size:9px!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important}
+      #pageRoot .otp-list-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important;min-height:78px!important;padding:17px 18px!important;border-bottom:1px solid var(--line)!important;background:var(--panel)!important}\n      #pageRoot .otp-list-head-copy h2{margin:0!important;color:var(--text)!important;font-size:14px!important}\n      #pageRoot .otp-list-head-copy p{margin:6px 0 0!important;color:var(--soft)!important;font-size:8px!important}\n      #pageRoot .otp-list-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:9px!important}\n      #pageRoot .otp-list-meta{display:inline-flex!important;align-items:center!important;min-height:30px!important;padding:0 10px!important;border:1px solid var(--line)!important;border-radius:999px!important;background:var(--panel2)!important;color:var(--soft)!important;font-size:8px!important;white-space:nowrap!important}\n      #pageRoot .ols-data-actions .otp-list-primary,#pageRoot .otp-list-actions .otp-list-primary{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:132px!important;height:36px!important;padding:0 16px!important;margin:0!important;border:1px solid #6683df!important;border-radius:9px!important;background:#6683df!important;color:#fff!important;font-size:9px!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important}
       #pageRoot .v815table thead th{
         height:54px!important;
         min-height:54px!important;
@@ -76,12 +76,21 @@
   }
   function movePrimary(){
     document.querySelectorAll('#pageRoot .otp-primary-row').forEach(row=>row.remove());
+    const page=document.querySelector('#pageRoot>:is(.v815page,.occ-page,.oge-page)');
     const host=document.getElementById('octopusGlobalActionHost');
-    const header=document.querySelector('#pageRoot .ol2-data-head,#pageRoot .gml-data-head,#pageRoot .cad-data-head');
-    if(!host||!header)return;
-    let actions=header.querySelector('.ols-data-actions');
-    if(!actions){actions=document.createElement('div');actions.className='ols-data-actions';const meta=header.querySelector('.ol2-data-meta,.gml-data-meta,.cad-data-meta');if(meta)actions.appendChild(meta);header.appendChild(actions)}
-    const button=host.querySelector('button');
+    const toolbar=page?.querySelector('.v815toolbar');
+    if(!page||!toolbar)return;
+    let header=page.querySelector('.ol2-data-head,.gml-data-head,.cad-data-head,.otp-list-head');
+    if(!header){
+      header=document.createElement('header');header.className='otp-list-head';
+      const labels={operations:['分析结果与任务','汇总运营分析、风险判断与可执行任务。'],production:['生产任务列表','查看素材处理、AI 加工与质检进度。'],release:['发行任务列表','管理物料生成、审核与渠道分发任务。'],dashboard:['数据明细','查看核心指标、趋势与异常记录。'],system:['配置与记录','管理系统配置、权限与异步任务记录。']};
+      const copy=labels[route().split('.')[0]]||['任务列表','查看当前模块的业务记录。'];
+      header.innerHTML='<div class="otp-list-head-copy"><h2>'+copy[0]+'</h2><p>'+copy[1]+'</p></div><div class="otp-list-actions"><span class="otp-list-meta">8 条记录 · 每页 8 条</span></div>';
+      toolbar.insertAdjacentElement('beforebegin',header);
+    }
+    let actions=header.querySelector('.ols-data-actions,.otp-list-actions');
+    if(!actions){actions=document.createElement('div');actions.className='otp-list-actions';header.appendChild(actions)}
+    const button=host?.querySelector('button')||page.querySelector('.v815head [data-primary],.occ-head-actions button,.gml-page-actions button');
     if(button&&!actions.contains(button)){button.classList.add('otp-list-primary');actions.appendChild(button)}
   }
   function stabilize(){
