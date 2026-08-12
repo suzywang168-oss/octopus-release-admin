@@ -15,5 +15,5 @@ function render(){const c=CFG[route()],root=document.getElementById(ROOT);if(!c|
 function apply(){scheduled=false;css();if(!active())return;const root=document.getElementById(ROOT);if(root&&(!root.dataset.daw||root.dataset.route!==route()||!root.querySelector('.daw-page')))render()}
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(apply)}
 window.addEventListener('click',e=>{if(!active())return;const b=e.target.closest('[data-daw-period]');if(b){e.preventDefault();e.stopImmediatePropagation();period=b.dataset.dawPeriod;const root=document.getElementById(ROOT);if(root)delete root.dataset.daw;render()}if(e.target.closest('[data-daw-export]')){e.preventDefault();e.stopImmediatePropagation();window.toast?.('综合分析报告已生成')}} ,true);
-window.addEventListener('hashchange',schedule);new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});schedule();
+window.addEventListener('hashchange',schedule);new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});schedule();setInterval(()=>{if(active()&&!document.querySelector('#pageRoot .daw-page'))render()},700);
 })();
