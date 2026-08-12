@@ -37,7 +37,7 @@ function apply(){
  if(exportButton){exportButton.classList.add('apf-export');if(exportButton.parentElement!==actions)actions.appendChild(exportButton)}
  [...actions.querySelectorAll('button')].forEach(button=>{if(button!==exportButton&&!button.classList.contains('apf-primary'))button.remove()});
  const duplicatePrimary=[...actions.querySelectorAll('.apf-primary,.otp-list-primary')];duplicatePrimary.slice(1).forEach(button=>button.remove());let primary=duplicatePrimary[0]||null;if(primary)primary.classList.add('apf-primary');if(!primary){primary=document.createElement('button');primary.type='button';primary.className='apf-primary';primary.dataset.apfRoute=r;actions.appendChild(primary)}
- if(primary.dataset.apfRoute!==r)primary.dataset.apfRoute=r;if(primary.textContent!==label)primary.textContent=label;
+ if(primary.dataset.apfRoute!==r)primary.dataset.apfRoute=r;if(primary.textContent!==label)primary.textContent=label;if(exportButton&&primary.parentElement===actions)actions.insertBefore(primary,exportButton);
  header.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta').forEach(n=>n.remove());syncSelectionButtons();syncProductionCandidates();
 }
 let pending=false;function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;apply()})}
