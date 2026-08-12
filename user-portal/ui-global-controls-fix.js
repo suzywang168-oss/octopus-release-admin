@@ -47,11 +47,41 @@ function applyLanguage(next){
  setTimeout(translateUi,320);
  window.toast?.(next==='en'?'Switched to English':'已切换中文');
 }
+function suppressLegacyPointerClick(el,attr){
+ const value=el.getAttribute(attr);
+ const pointer=el.style.pointerEvents;
+ el.removeAttribute(attr);
+ el.style.pointerEvents='none';
+ setTimeout(()=>{
+   if(!el.isConnected)return;
+   el.setAttribute(attr,value??'');
+   el.style.pointerEvents=pointer;
+   syncTheme();
+   translateUi();
+ },520);
+}
 window.addEventListener('pointerdown',e=>{
  const t=e.target instanceof Element?e.target:null;if(!t)return;
- if(t.closest('#octopusRowEditor [data-ore-close]')){e.preventDefault();e.stopImmediatePropagation();closeEditor()}
+ if(t.closest('#octopusRowEditor [data-ore-close]')){e.preventDefault();e.stopImmediatePropagation();closeEditor();return}
+ const theme=t.closest('[data-theme]');
+ if(theme){
+   e.preventDefault();e.stopImmediatePropagation();
+   const next=localStorage.getItem(THEME_KEY)==='light'?'dark':'light';
+   localStorage.setItem(THEME_KEY,next);syncTheme();
+   window.toast?.(next==='light'?'已切换浅色主题':'已切换深色主题');
+   suppressLegacyPointerClick(theme,'data-theme');
+   return;
+ }
+ const lang=t.closest('[data-lang-toggle]');
+ if(lang){
+   e.preventDefault();e.stopImmediatePropagation();
+   const next=localStorage.getItem(LANG_KEY)==='en'?'zh':'en';
+   applyLanguage(next);
+   suppressLegacyPointerClick(lang,'data-lang-toggle');
+ }
 },true);
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('octopusRowEditor')?.classList.contains('open')){e.preventDefault();closeEditor()}},true);
+// Keep click handlers as keyboard-accessibility fallbacks. Pointer input is handled earlier above.
 window.addEventListener('click',e=>{
  const t=e.target instanceof Element?e.target:null;if(!t)return;
  const theme=t.closest('[data-theme]');if(theme){e.preventDefault();e.stopImmediatePropagation();const next=localStorage.getItem(THEME_KEY)==='light'?'dark':'light';localStorage.setItem(THEME_KEY,next);syncTheme();window.toast?.(next==='light'?'已切换浅色主题':'已切换深色主题');return}
