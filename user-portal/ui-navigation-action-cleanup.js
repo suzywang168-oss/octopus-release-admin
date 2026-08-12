@@ -3,7 +3,7 @@
 
   const STYLE_ID='octopus-clean-navigation-actions';
   const ACTIONS={
-    'operations.channel-analysis':['对标对比','加入选剧报告'],
+    'operations.channel-analysis':['对标对比','加入候选片单','已加入片单'],
     'operations.ad-intelligence':['查看素材','生成上线建议'],
     'operations.unblock':['查看链接','更新工单'],
     'production.content':['查看解析','编辑AI标签','配置入库','移出片单'],
