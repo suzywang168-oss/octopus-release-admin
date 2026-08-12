@@ -31,5 +31,5 @@ function apply(){
  header.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta').forEach(n=>n.remove());
 }
 let pending=false;function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;apply()})}
-window.addEventListener('hashchange',schedule);new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});schedule();setTimeout(schedule,500);setTimeout(schedule,1400);
+window.addEventListener('click',e=>{const b=e.target instanceof Element?e.target.closest('.apf-primary'):null;if(!b)return;e.preventDefault();e.stopImmediatePropagation();try{window.toast?.(b.textContent+' · 已打开当前模块操作')}catch{}},true);window.addEventListener('hashchange',schedule);new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});schedule();setTimeout(schedule,500);setTimeout(schedule,1400);
 })();
