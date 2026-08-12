@@ -183,6 +183,7 @@
   function openEditor(button){
     const info=rowInfo(button);
     if(!info)return;
+    if(window.OctopusActionPages?.open?.(button,info))return;
     activeRow=info.row;
     activeAction=button.dataset.a||button.innerText.trim()||'记录操作';
     const editable=editableAction(activeAction);
