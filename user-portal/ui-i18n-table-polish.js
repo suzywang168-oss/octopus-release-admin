@@ -103,11 +103,11 @@
 
     let actions=header.querySelector('.ols-data-actions,.otp-list-actions');
     if(!actions){actions=document.createElement('div');actions.className=nativeHeader?'ols-data-actions':'otp-list-actions';header.appendChild(actions)}
-    actions.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta,.otp-list-primary,.otp-list-export').forEach(node=>node.remove());
+    actions.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta,.otp-list-primary').forEach(node=>node.remove());
     header.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta').forEach(node=>node.remove());
 
-    const exportButton=toolbar.querySelector('[data-export]');
-    if(exportButton){exportButton.classList.add('otp-list-export');actions.appendChild(exportButton)}
+    const exportButton=actions.querySelector('.otp-list-export')||toolbar.querySelector('[data-export]');
+    if(exportButton&&!actions.contains(exportButton)){exportButton.classList.add('otp-list-export');actions.appendChild(exportButton)}
 
     const button=document.createElement('button');
     button.type='button';button.className='v815primary otp-list-primary';button.dataset.primary='1';button.dataset.otpRoute=route();
