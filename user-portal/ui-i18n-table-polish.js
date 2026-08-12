@@ -31,7 +31,16 @@
     'release.titles':['批量生成标题','Generate Titles'],
     'release.covers':['批量生成封面','Generate Covers'],
     'release.review':['进入批量审核','Batch Review'],
-    'release.distribution':['新建分发任务','New Distribution Task']
+    'release.distribution':['新建分发任务','New Distribution Task'],
+    'dashboard.series':['导出剧集报表','Export Series Report'],
+    'dashboard.channels':['导出频道报表','Export Channel Report'],
+    'dashboard.external':['生成对标报告','Generate Benchmark Report'],
+    'dashboard.risk':['导出风险报告','Export Risk Report'],
+    'system.channels':['新增频道账号','Add Channel Account'],
+    'system.assets':['新增素材或片方','Add Asset or Partner'],
+    'system.templates':['新建 AI 模板','New AI Template'],
+    'system.roles':['新增角色','Add Role'],
+    'system.tasks':['查看失败任务','View Failed Tasks']
   };
   const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
   const english=()=>{
@@ -77,9 +86,9 @@
   function movePrimary(){
     document.querySelectorAll('#pageRoot .otp-primary-row').forEach(row=>row.remove());
     const page=document.querySelector('#pageRoot>:is(.v815page,.occ-page,.oge-page)');
-    const host=document.getElementById('octopusGlobalActionHost');
     const toolbar=page?.querySelector('.v815toolbar');
-    if(!page||!toolbar)return;
+    const spec=PRIMARY[route()];
+    if(!page||!toolbar||!spec)return;
     let header=page.querySelector('.ol2-data-head,.gml-data-head,.cad-data-head,.otp-list-head');
     if(!header){
       header=document.createElement('header');header.className='otp-list-head';
@@ -90,8 +99,8 @@
     }
     let actions=header.querySelector('.ols-data-actions,.otp-list-actions');
     if(!actions){actions=document.createElement('div');actions.className='otp-list-actions';header.appendChild(actions)}
-    const button=host?.querySelector('button')||page.querySelector('.v815head [data-primary],.occ-head-actions button,.gml-page-actions button');
-    if(button&&!actions.contains(button)){button.classList.add('otp-list-primary');actions.appendChild(button)}
+    actions.querySelectorAll('.otp-list-primary').forEach(button=>button.remove());
+    const button=document.createElement('button');button.type='button';button.className='v815primary otp-list-primary';button.dataset.primary='1';button.dataset.otpRoute=route();button.textContent=spec[english()?1:0];actions.appendChild(button)
   }
   function stabilize(){
     installStyle();
@@ -99,8 +108,7 @@
     movePrimary();
     const r=route(),isEn=english(),headers=HEADER_MAP[r]?.[isEn?1:0];
     if(headers)document.querySelectorAll('#pageRoot .v815table thead th').forEach((th,i)=>{if(headers[i])th.textContent=headers[i]});
-    const primary=document.querySelector('#octopusGlobalActionHost button,[data-primary]');
-    if(primary&&PRIMARY[r])primary.textContent=PRIMARY[r][isEn?1:0];
+    document.querySelectorAll('.otp-list-primary').forEach(primary=>{if(PRIMARY[r])primary.textContent=PRIMARY[r][isEn?1:0]});
     if(control){
       control.textContent=isEn?'中文':'EN';
       control.setAttribute('aria-label',isEn?'切换为中文':'Switch to English');
