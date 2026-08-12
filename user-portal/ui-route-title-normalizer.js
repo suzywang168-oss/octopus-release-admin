@@ -22,7 +22,9 @@ overview:['业务总览','以“选品 → 内容加工 → 物料制作 → 渠
 'system.tasks':['异步任务中心','统一查看译配、标题封面、批量上传任务及失败重试。']
 };
 const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
+function style(){let s=document.getElementById('route-title-spacing-style');if(!s){s=document.createElement('style');s.id='route-title-spacing-style';document.head.appendChild(s)}s.textContent=`.ota-toolbar #octopusGlobalActionHost,.ota-toolbar [data-primary],.ota-toolbar .otp-list-primary{display:none!important}#pageRoot>.v815page:not(.gw3-page),#pageRoot>.occ-page,#pageRoot>.oge-page{padding-top:22px!important}.gw3-page{padding-top:24px!important}`}
 function fix(){
+ style();
  const data=TITLES[route()];if(!data)return;
  const slot=document.getElementById('octopusGlobalTitleSlot');if(!slot)return;
  let h=slot.querySelector('h1'),p=slot.querySelector('p');if(!h||!p){slot.innerHTML='<h1></h1><p></p>';h=slot.querySelector('h1');p=slot.querySelector('p')}
