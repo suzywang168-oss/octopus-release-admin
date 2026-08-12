@@ -16,20 +16,36 @@ const UI_EN={
 '确认并创建待分发任务':'Create distribution task','新建分发任务':'New distribution task',
 '保存权限配置':'Save permissions','保存密钥配置':'Save credentials','检查接入条件':'Check requirements','验证配置条件':'Validate configuration'
 };
+const UI_ZH=Object.fromEntries(Object.entries(UI_EN).map(([zh,en])=>[en,zh]));
+const setText=(el,value)=>{if(value!=null&&el.textContent!==value)el.textContent=value};
 function closeEditor(){
  const d=document.getElementById('octopusRowEditor');if(!d)return;
  d.classList.remove('open','oap-tags-mode');d.removeAttribute('data-oap-mode');
 }
 function syncTheme(){
  const light=localStorage.getItem(THEME_KEY)==='light';document.body.classList.toggle('light',light);
- document.querySelectorAll('[data-theme]').forEach(b=>{b.textContent=light?'☾':'◐';b.title=light?'Switch to dark theme':'Switch to light theme';b.setAttribute('aria-label',b.title)});
+ document.querySelectorAll('[data-theme]').forEach(b=>{setText(b,light?'☾':'◐');b.title=light?'Switch to dark theme':'Switch to light theme';b.setAttribute('aria-label',b.title)});
 }
 function translateUi(){
- const en=localStorage.getItem(LANG_KEY)==='en';document.documentElement.lang=en?'en':'zh-CN';
- document.querySelectorAll('[data-lang-toggle]').forEach(b=>b.textContent=en?'中文':'EN');
- if(!en)return;
- document.querySelectorAll('button,th,option,label span,.rvw-foot,.dpw-foot').forEach(el=>{if(el.children.length)return;const raw=el.textContent.trim(),translated=UI_EN[raw];if(translated)el.textContent=translated});
- document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{const t=UI_EN[el.placeholder];if(t)el.placeholder=t});
+ const en=localStorage.getItem(LANG_KEY)==='en';
+ document.documentElement.lang=en?'en':'zh-CN';
+ document.body?.setAttribute('data-language',en?'en':'zh');
+ document.querySelectorAll('[data-lang-toggle]').forEach(b=>setText(b,en?'中文':'EN'));
+ document.querySelectorAll('[data-zh][data-en]').forEach(el=>setText(el,en?el.dataset.en:el.dataset.zh));
+ document.querySelectorAll('[data-zh-placeholder][data-en-placeholder]').forEach(el=>{const v=en?el.dataset.enPlaceholder:el.dataset.zhPlaceholder;if(el.placeholder!==v)el.placeholder=v});
+ const dict=en?UI_EN:UI_ZH;
+ document.querySelectorAll('button,th,option,label span,.rvw-foot,.dpw-foot').forEach(el=>{if(el.children.length)return;const raw=el.textContent.trim(),translated=dict[raw];if(translated)setText(el,translated)});
+ document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{const translated=dict[el.placeholder];if(translated&&el.placeholder!==translated)el.placeholder=translated});
+}
+function applyLanguage(next){
+ localStorage.setItem(LANG_KEY,next);
+ translateUi();
+ try{window.dispatchEvent(new CustomEvent('octopus-language-change',{detail:{language:next}}))}catch{}
+ try{window.dispatchEvent(new Event('hashchange'))}catch{}
+ requestAnimationFrame(()=>translateUi());
+ setTimeout(translateUi,80);
+ setTimeout(translateUi,320);
+ window.toast?.(next==='en'?'Switched to English':'已切换中文');
 }
 window.addEventListener('pointerdown',e=>{
  const t=e.target instanceof Element?e.target:null;if(!t)return;
@@ -39,8 +55,11 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementBy
 window.addEventListener('click',e=>{
  const t=e.target instanceof Element?e.target:null;if(!t)return;
  const theme=t.closest('[data-theme]');if(theme){e.preventDefault();e.stopImmediatePropagation();const next=localStorage.getItem(THEME_KEY)==='light'?'dark':'light';localStorage.setItem(THEME_KEY,next);syncTheme();window.toast?.(next==='light'?'已切换浅色主题':'已切换深色主题');return}
- const lang=t.closest('[data-lang-toggle]');if(lang){e.preventDefault();e.stopImmediatePropagation();const next=localStorage.getItem(LANG_KEY)==='en'?'zh':'en';localStorage.setItem(LANG_KEY,next);location.reload()}
+ const lang=t.closest('[data-lang-toggle]');if(lang){e.preventDefault();e.stopImmediatePropagation();applyLanguage(localStorage.getItem(LANG_KEY)==='en'?'zh':'en');return}
 },true);
 let pending=false;function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;syncTheme();translateUi()})}
-new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});window.addEventListener('hashchange',schedule);syncTheme();translateUi();setTimeout(schedule,400);setTimeout(schedule,1200);
+new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+window.addEventListener('hashchange',schedule);
+window.addEventListener('octopus-language-change',schedule);
+syncTheme();translateUi();setTimeout(schedule,400);setTimeout(schedule,1200);
 })();
