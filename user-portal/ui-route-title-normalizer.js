@@ -28,7 +28,7 @@ function fix(){
  const data=TITLES[route()];if(!data)return;
  const slot=document.getElementById('octopusGlobalTitleSlot');if(!slot)return;
  let h=slot.querySelector('h1'),p=slot.querySelector('p');if(!h||!p){slot.innerHTML='<h1></h1><p></p>';h=slot.querySelector('h1');p=slot.querySelector('p')}
- h.textContent=data[0];p.textContent=data[1];h.setAttribute('lang','zh-CN');p.setAttribute('lang','zh-CN');
+ if(h.textContent!==data[0])h.textContent=data[0];if(p.textContent!==data[1])p.textContent=data[1];if(h.getAttribute('lang')!=='zh-CN')h.setAttribute('lang','zh-CN');if(p.getAttribute('lang')!=='zh-CN')p.setAttribute('lang','zh-CN');
 }
-window.addEventListener('hashchange',()=>setTimeout(fix,0));new MutationObserver(()=>requestAnimationFrame(fix)).observe(document.documentElement,{childList:true,subtree:true,characterData:true});fix();setTimeout(fix,400);setTimeout(fix,1200);
+window.addEventListener('hashchange',()=>setTimeout(fix,0));let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;fix()})}).observe(document.documentElement,{childList:true,subtree:true});fix();setTimeout(fix,400);setTimeout(fix,1200);
 })();
