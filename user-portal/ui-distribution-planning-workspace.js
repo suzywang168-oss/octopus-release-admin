@@ -1,5 +1,5 @@
 (()=>{
-'use strict';
+'use strict';window.OctopusDistributionPlanner=true;
 const ROOT='pageRoot',PLAN_KEY='octopus-launch-plans',READY_KEY='octopus-ready-distributions';const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.');const active=()=>route()==='release.distribution';let tab='demands',editing=-1,scheduled=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const defaultPlans=[{opportunity:'TikTok 北美高热趋势',theme:'身份反转 / 豪门复仇',region:'北美 · 英语',channel:'TK-US Drama',budget:'$1,500',schedule:'明天 18:00',status:'待确定剧集'},{opportunity:'Facebook 拉美增长机会',theme:'契约婚姻 / 追妻',region:'拉美 · 西班牙语',channel:'FB-Latina',budget:'$1,200',schedule:'周五 20:00',status:'待选择物料'}];
