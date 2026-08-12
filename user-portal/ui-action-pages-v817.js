@@ -10,7 +10,7 @@ const CONFIG={
 '查看链接':['禁播链接详情','view','查看原始链接、禁播平台、检测记录和当前申诉材料。',['原始链接','平台检测','禁播原因','材料记录']],
 '更新工单':['更新解禁工单','edit','更新负责人、处理状态、材料进度和下一步动作。',['处理状态','负责人','补充材料','下一步']],
 '查看解析':['AI 解析结果','view','查看全剧故事总结、剧情亮点、人物关系和标签置信度。',['故事总结','剧情亮点','人物关系','解析质量']],
-'编辑AI标签':['编辑 AI 标签','edit','按标签体系检查并修改频道、剧情、演员、人设、场景、地域和时代标签。',['频道标签','剧情标签','人物标签','场景与地域']],
+'编辑AI标签':['编辑 AI 标签','tags','按标签体系检查并修改频道、剧情、演员、人设、场景、地域和时代标签。',['频道标签','剧情标签','人物标签','场景与地域']],
 '查看任务':['译配任务详情','view','查看翻译、配音、字幕对齐、去重和质检的分步骤进度。',['翻译进度','配音进度','字幕对齐','质检记录']],
 '配置译配':['配置译配任务','edit','配置目标语种、角色音色、字幕规则、去重策略和质检阈值。',['目标语种','角色音色','字幕规则','质检阈值']],
 '查看3个标题':['AI 标题候选','view','同时查看三个标题候选、字符数、CTR 预测和频道匹配理由。',['候选 A','候选 B','候选 C','预测对比']],
@@ -40,6 +40,11 @@ const CONFIG={
 '查看日志':['任务运行日志','view','查看任务节点、时间线、错误信息、重试记录和运行参数。',['运行时间线','节点日志','错误信息','运行参数']],
 '重试任务':['重试任务','edit','确认重试节点、优先级和失败后的告警方式。',['重试节点','任务优先级','告警方式','运行参数']]
 };
+const TAGS={
+'逆光心动':{'频道标签':['TikTok 北美','YouTube 英语','女性向'],'剧情标签':['豪门复仇','身份反转','真假千金','强冲突','爽剧'],'演员标签':['年轻女主','成熟男主','双强组合','高辨识度配角'],'人设标签':['复仇女主','豪门继承人','危险盟友'],'场景标签':['豪宅','董事会','雨夜'],'地域标签':['北美适配','都市'],'时代标签':['现代','当代商业']},
+'契约之后':{'频道标签':['Facebook 拉美','TikTok 西语','女性向'],'剧情标签':['先婚后爱','契约婚姻','追妻火葬场','误会反转','甜虐'],'演员标签':['年轻女主','冷面男主','情侣组合'],'人设标签':['独立女主','冷面总裁','欢喜冤家'],'场景标签':['婚礼','办公室'],'地域标签':['拉美适配','都市'],'时代标签':['现代']},
+'她从雨夜归来':{'频道标签':['YouTube 英语','Facebook 北美','悬疑向'],'剧情标签':['复仇','悬疑调查','失踪谜案','身份秘密','真相反转'],'演员标签':['神秘女主','调查者','危险盟友'],'人设标签':['复仇女主','神秘归来者','执着调查者'],'场景标签':['雨夜','旧宅'],'地域标签':['北美适配'],'时代标签':['现代']}
+};
 const EXTRA={
 api:[['当前密钥','•••• •••• •••• 7A2F'],['授权范围','读取频道 · 上传内容 · 查询数据'],['到期时间','2026-11-18 · 剩余 98 天'],['连接状态','最近检测正常 · 142 ms']],
 effect:[['近30天使用','1,286 次'],['结果采用率','47.2% · 较上一版 +6.4pt'],['CTR 提升','+0.8pt'],['最佳渠道','TK-US Drama']],
@@ -53,7 +58,7 @@ function style(){
  #octopusRowEditor .oap-card{min-height:78px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
  #octopusRowEditor .oap-card b{display:block;color:var(--soft);font-size:8px}
  #octopusRowEditor .oap-card strong{display:block;margin-top:8px;color:var(--text);font-size:10px;line-height:1.5}
- #octopusRowEditor .oap-members{grid-column:1/-1;display:grid;gap:7px}
+ #octopusRowEditor .oap-tags{grid-column:1/-1;display:grid;gap:10px}\n #octopusRowEditor .oap-tag-group{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}\n #octopusRowEditor .oap-tag-group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}\n #octopusRowEditor .oap-tag-group-head b{color:var(--text);font-size:9px}.oap-tag-group-head span{color:var(--soft);font-size:8px}\n #octopusRowEditor .oap-tag-group textarea{width:100%;min-height:66px!important}\n #octopusRowEditor .oap-tag-total{grid-column:1/-1;color:#91a8ff;font-size:9px;font-weight:750}\n #octopusRowEditor .oap-members{grid-column:1/-1;display:grid;gap:7px}
  #octopusRowEditor .oap-member{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:9px}
  #octopusRowEditor .oap-member span{color:var(--soft)}
  `;document.head.appendChild(s)
@@ -75,7 +80,11 @@ function open(button,info){
  drawer.querySelector('#oreTitle').textContent=title;
  drawer.querySelector('#oreSub').textContent=(info.values[0]||'当前记录')+' · '+(mode==='view'?'只读页面':'业务操作页面');
  let cards='';
- if(EXTRA[mode]){
+ if(mode==='tags'){
+   const series=String(info.values[0]||'').replace(/\s+\d+$/,'').trim(),groups=TAGS[series]||TAGS['逆光心动'];
+   const total=Object.values(groups).reduce((sum,tags)=>sum+tags.length,0);
+   cards='<div class="oap-tag-total">完整 AI 标签 · 共 '+total+' 个</div><div class="oap-tags">'+Object.entries(groups).map(([name,tags])=>'<section class="oap-tag-group"><div class="oap-tag-group-head"><b>'+esc(name)+'</b><span>'+tags.length+' 个</span></div><textarea data-oap-tags="'+esc(name)+'">'+esc(tags.join('，'))+'</textarea></section>').join('')+'</div>';
+ }else if(EXTRA[mode]){
    cards=EXTRA[mode].map(([a,b])=>'<article class="oap-card"><b>'+esc(a)+'</b><strong>'+esc(b)+'</strong></article>').join('');
    if(mode==='members')cards='<div class="oap-members">'+EXTRA.members.map(([a,b])=>'<div class="oap-member"><b>'+esc(a)+'</b><span>'+esc(b)+'</span></div>').join('')+'</div>';
  }else{
