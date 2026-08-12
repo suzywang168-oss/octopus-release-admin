@@ -16,6 +16,7 @@ const parsed=[
 let pending=[];
 function load(){try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved){pending=saved.pending||[];if(saved.parsed?.length){parsed.splice(0,parsed.length,...saved.parsed)}}const incoming=JSON.parse(localStorage.getItem('octopus-production-candidates')||'null');(incoming?.series||[]).forEach(series=>{if(!pending.some(x=>x[0]===series)&&!parsed.some(x=>x[0]===series))pending.push([series,'来自选剧报告','待配置','未上传','待配置入库'])})}catch{}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({pending,parsed}))}catch{}}
+if(!pending.length)tab='parsed';
 function style(){if(document.getElementById('pcw-style'))return;const s=document.createElement('style');s.id='pcw-style';s.textContent=`
 html.pcw-active #octopusGlobalActionHost,html.pcw-active .otp-list-head,html.pcw-active .ol2-data-head,html.pcw-active .gml-data-head{display:none!important}
 #pageRoot>.pcw-page{width:calc(100% - 48px);max-width:1480px;margin:0 auto;padding:20px 0 64px}
