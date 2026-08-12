@@ -104,15 +104,16 @@
 
     let actions=header.querySelector('.ols-data-actions,.otp-list-actions');
     if(!actions){actions=document.createElement('div');actions.className=nativeHeader?'ols-data-actions':'otp-list-actions';header.appendChild(actions)}
-    actions.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta,.otp-list-primary').forEach(node=>node.remove());
+    actions.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta').forEach(node=>node.remove());
     header.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta').forEach(node=>node.remove());
 
     const exportButton=actions.querySelector('.otp-list-export')||carriedExport||toolbar.querySelector('[data-export]');
     if(exportButton&&!actions.contains(exportButton)){exportButton.classList.add('otp-list-export');actions.appendChild(exportButton)}
 
-    const button=document.createElement('button');
-    button.type='button';button.className='v815primary otp-list-primary';button.dataset.primary='1';button.dataset.otpRoute=route();
-    button.textContent=spec[english()?1:0];actions.appendChild(button);
+    let button=actions.querySelector('.otp-list-primary');
+    if(!button){button=document.createElement('button');button.type='button';button.className='v815primary otp-list-primary';button.dataset.primary='1';actions.appendChild(button)}
+    if(button.dataset.otpRoute!==route())button.dataset.otpRoute=route();
+    const label=spec[english()?1:0];if(button.textContent!==label)button.textContent=label;
   }
   function stabilize(){
     installStyle();
@@ -140,7 +141,7 @@
   }
   window.addEventListener('click',switchLanguage,true);
   window.addEventListener('hashchange',()=>setTimeout(stabilize,0));
-  new MutationObserver(()=>requestAnimationFrame(stabilize)).observe(document.documentElement,{childList:true,subtree:true});
+  let polishPending=false;new MutationObserver(()=>{if(polishPending)return;polishPending=true;requestAnimationFrame(()=>{polishPending=false;stabilize()})}).observe(document.documentElement,{childList:true,subtree:true});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',stabilize,{once:true});else stabilize();
   setTimeout(stabilize,400);setTimeout(stabilize,1200);
 })();
