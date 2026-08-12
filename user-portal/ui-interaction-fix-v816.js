@@ -86,15 +86,15 @@
       ${ROOT} .v815act:hover{filter:brightness(1.1)!important}
       ${ROOT} .v815act:active{transform:translateY(1px)!important}
 
-      #${DRAWER_ID}{position:fixed;inset:0;z-index:20000;display:none}
-      #${DRAWER_ID}.open{display:block}
-      #${DRAWER_ID} .ore-backdrop{position:absolute;inset:0;background:rgba(2,8,18,.62);backdrop-filter:blur(3px)}
+      #${DRAWER_ID}{position:fixed;inset:0;z-index:20000;display:none;place-items:center;padding:24px;box-sizing:border-box}
+      #${DRAWER_ID}.open{display:grid}
+      #${DRAWER_ID} .ore-backdrop{position:absolute;inset:0;background:rgba(2,8,18,.68);backdrop-filter:blur(4px)}
       #${DRAWER_ID} .ore-panel{
-        position:absolute;top:0;right:0;width:min(560px,94vw);height:100%;display:flex;flex-direction:column;
-        border-left:1px solid var(--line);background:var(--panel);box-shadow:-24px 0 70px rgba(0,0,0,.38);
-        animation:ore-in .2s ease-out
+        position:relative;z-index:1;width:min(820px,96vw);height:auto;max-height:90vh;display:flex;flex-direction:column;
+        border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:0 32px 100px rgba(0,0,0,.5);
+        overflow:hidden;animation:ore-in .18s ease-out
       }
-      @keyframes ore-in{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}
+      @keyframes ore-in{from{transform:translateY(12px) scale(.985);opacity:.55}to{transform:none;opacity:1}}
       #${DRAWER_ID} .ore-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-bottom:1px solid var(--line)}
       #${DRAWER_ID} .ore-head h2{margin:0;color:var(--text);font-size:17px}
       #${DRAWER_ID} .ore-head p{margin:7px 0 0;color:var(--soft);font-size:9px;line-height:1.55}
