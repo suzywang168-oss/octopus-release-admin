@@ -23,10 +23,10 @@ function apply(){
  const page=document.querySelector('#pageRoot>:is(.v815page,.occ-page,.oge-page)');const toolbar=page?.querySelector('.v815toolbar');const label=PRIMARY[r];if(!page||!toolbar||!label)return;
  const header=page.querySelector('.ol2-data-head,.gml-data-head,.cad-data-head,.otp-list-head');if(!header)return;
  let actions=header.querySelector('.ols-data-actions,.otp-list-actions,.apf-actions');if(!actions){actions=document.createElement('div');header.appendChild(actions)}actions.classList.add('apf-actions');
- const exportButton=actions.querySelector('[data-export],.otp-list-export,.apf-export')||toolbar.querySelector('[data-export]');
+ const exportCandidates=[...actions.querySelectorAll('[data-export],.otp-list-export,.apf-export'),...toolbar.querySelectorAll('[data-export]')];exportCandidates.slice(1).forEach(button=>button.remove());const exportButton=exportCandidates[0]||null;
  if(exportButton){exportButton.classList.add('apf-export');if(exportButton.parentElement!==actions)actions.appendChild(exportButton)}
  [...actions.querySelectorAll('button')].forEach(button=>{if(button!==exportButton&&!button.classList.contains('apf-primary'))button.remove()});
- let primary=actions.querySelector('.apf-primary');if(!primary){primary=document.createElement('button');primary.type='button';primary.className='apf-primary';primary.dataset.apfRoute=r;actions.appendChild(primary)}
+ const duplicatePrimary=[...actions.querySelectorAll('.apf-primary,.otp-list-primary')];duplicatePrimary.slice(1).forEach(button=>button.remove());let primary=duplicatePrimary[0]||null;if(primary)primary.classList.add('apf-primary');if(!primary){primary=document.createElement('button');primary.type='button';primary.className='apf-primary';primary.dataset.apfRoute=r;actions.appendChild(primary)}
  if(primary.dataset.apfRoute!==r)primary.dataset.apfRoute=r;if(primary.textContent!==label)primary.textContent=label;
  header.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta').forEach(n=>n.remove());
 }
