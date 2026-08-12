@@ -41,7 +41,6 @@
       }
     }catch(e){console.warn('Demo enter fallback',e)}
 
-    // Keep compatibility with the current shell even if the legacy enter() only partially updates auth UI.
     const appShell=document.getElementById('appShell');
     if(appShell)appShell.classList.remove('hidden');
     ['authShell','authView','loginView','registerView'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
@@ -57,13 +56,26 @@
     return entered||!!appShell;
   }
 
-  // Capture before the legacy demo handler so the old route('overview') path cannot hijack navigation.
-  window.addEventListener('click',e=>{
-    const entry=entryFrom(e.target);
-    if(!entry)return;
+  function consume(entry,e){
     e.preventDefault();
     e.stopImmediatePropagation();
     activateDemo();
+    const previous=entry.style.pointerEvents;
+    entry.style.pointerEvents='none';
+    setTimeout(()=>{if(entry.isConnected)entry.style.pointerEvents=previous},520);
+  }
+
+  // Pointerdown runs before legacy click handlers already present in the base page.
+  window.addEventListener('pointerdown',e=>{
+    const entry=entryFrom(e.target);
+    if(entry)consume(entry,e);
+  },true);
+
+  // Keyboard-accessibility fallback. Because this script now loads before demo-fallback,
+  // this handler also has priority over the legacy delegated click handler.
+  window.addEventListener('click',e=>{
+    const entry=entryFrom(e.target);
+    if(entry)consume(entry,e);
   },true);
 
   window.OctopusEnterDemoCurrent=activateDemo;
