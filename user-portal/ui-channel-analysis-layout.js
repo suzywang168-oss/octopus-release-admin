@@ -290,3 +290,103 @@
   setTimeout(schedule,1100);
   setTimeout(schedule,1900);
 })();
+
+
+/* octopus-channel-analysis-ai-tag-detail-v1 */
+(()=>{
+  'use strict';
+  const ROUTE='operations.channel-analysis';
+  const TAGS={
+    '逆光心动':{
+      '频道标签':['TikTok 北美','YouTube 英语','女性向'],
+      '剧情标签':['豪门复仇','身份反转','真假千金','强冲突','爽剧'],
+      '人物标签':['女强','复仇女主','豪门继承人','双强对峙'],
+      '场景标签':['豪宅','董事会','雨夜','都市'],
+      '地域与时代':['北美适配','现代都市'],
+      '情绪与节奏':['高能反转','强悬念','快节奏']
+    },
+    '契约之后':{
+      '频道标签':['Facebook 拉美','TikTok 西语','女性向'],
+      '剧情标签':['先婚后爱','契约婚姻','追妻火葬场','误会反转','甜虐'],
+      '人物标签':['独立女主','冷面总裁','欢喜冤家'],
+      '场景标签':['婚礼','办公室','都市公寓','宴会'],
+      '地域与时代':['拉美适配','现代都市'],
+      '情绪与节奏':['情感拉扯','中强冲突','连续钩子']
+    },
+    '她从雨夜归来':{
+      '频道标签':['YouTube 英语','Facebook 北美','悬疑向'],
+      '剧情标签':['复仇','悬疑调查','失踪谜案','身份秘密','真相反转'],
+      '人物标签':['复仇女主','神秘归来者','调查者','危险盟友'],
+      '场景标签':['雨夜','旧宅','警局','地下车库'],
+      '地域与时代':['北美适配','现代都市'],
+      '情绪与节奏':['暗黑氛围','层层解谜','结尾悬念']
+    }
+  };
+  const clean=s=>String(s||'').replace(/\s+\d+$/,'').trim();
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const active=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')===ROUTE;
+
+  function installStyle(){
+    if(document.getElementById('cad-tag-detail-style'))return;
+    const s=document.createElement('style');
+    s.id='cad-tag-detail-style';
+    s.textContent=`
+      #pageRoot .cad-tag-cell{min-width:210px!important;white-space:normal!important}
+      #pageRoot .cad-tag-summary{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+      #pageRoot .cad-tag-chip{display:inline-flex;align-items:center;min-height:22px;padding:3px 7px;border:1px solid color-mix(in srgb,#6683df 28%,var(--line));border-radius:999px;background:color-mix(in srgb,#6683df 9%,var(--panel));color:var(--text);font-size:7px;line-height:1.2}
+      #pageRoot .cad-tag-more{min-height:22px;padding:2px 7px;border:0;border-bottom:1px solid color-mix(in srgb,#6683df 55%,transparent);background:transparent;color:#86a0ff;font-size:7px;cursor:pointer}
+      #pageRoot .cad-tag-more:hover{color:var(--text);border-bottom-color:#86a0ff}
+      .cad-tag-modal-intro{margin:0 0 12px;color:var(--soft);font-size:9px}
+      .cad-tag-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+      .cad-tag-group{padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+      .cad-tag-group h4{margin:0 0 8px;color:var(--text);font-size:9px}
+      .cad-tag-list{display:flex;flex-wrap:wrap;gap:5px}
+      .cad-tag-list span{display:inline-flex;padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text);font-size:8px}
+      @media(max-width:680px){.cad-tag-groups{grid-template-columns:1fr}}
+    `;
+    document.head.appendChild(s);
+  }
+
+  function decorate(){
+    installStyle();
+    if(!active())return;
+    const root=document.getElementById('pageRoot');
+    if(root?.dataset.route!==ROUTE)return;
+    root.querySelectorAll('.v815table tbody tr').forEach(tr=>{
+      const cells=tr.querySelectorAll(':scope>td');
+      if(cells.length<2||cells[1].dataset.cadTags)return;
+      const series=clean(cells[0].textContent);
+      const groups=TAGS[series];
+      if(!groups)return;
+      const all=Object.values(groups).flat();
+      cells[1].dataset.cadTags='1';
+      cells[1].classList.add('cad-tag-cell');
+      cells[1].innerHTML='<div class="cad-tag-summary">'+all.slice(0,2).map(x=>'<span class="cad-tag-chip">'+esc(x)+'</span>').join('')+'<button type="button" class="cad-tag-more" data-cad-tags="'+esc(series)+'">查看全部 '+all.length+' 个</button></div>';
+    });
+  }
+
+  function openTags(series){
+    const groups=TAGS[series];
+    const modal=document.getElementById('v815modal');
+    if(!groups||!modal)return;
+    modal.querySelector('h3').textContent=series+' · AI 标签详情';
+    modal.querySelector('.v815mb').innerHTML='<p class="cad-tag-modal-intro">AI 已按频道、剧情、人物、场景、地域时代与情绪节奏完成分类。以下为该剧集的完整标签，可用于同标签推荐和选剧报告。</p><div class="cad-tag-groups">'+Object.entries(groups).map(([name,tags])=>'<section class="cad-tag-group"><h4>'+esc(name)+' · '+tags.length+'</h4><div class="cad-tag-list">'+tags.map(tag=>'<span>'+esc(tag)+'</span>').join('')+'</div></section>').join('')+'</div>';
+    const confirm=modal.querySelector('[data-confirm]');
+    const close=modal.querySelector('.v815mf [data-close]');
+    if(confirm)confirm.textContent='加入选剧报告';
+    if(close)close.textContent='关闭';
+    modal.classList.add('open');
+  }
+
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-cad-tags]');
+    if(!b)return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    openTags(b.dataset.cadTags);
+  },true);
+  window.addEventListener('hashchange',()=>setTimeout(decorate,30));
+  new MutationObserver(()=>requestAnimationFrame(decorate)).observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(decorate,250);
+  setTimeout(decorate,900);
+})();
