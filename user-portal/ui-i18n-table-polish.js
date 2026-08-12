@@ -43,8 +43,10 @@
     if(!s){s=document.createElement('style');s.id=STYLE_ID;document.head.appendChild(s)}
     s.textContent=`
       html.ol2-active .ota-toolbar,html.gml-active .ota-toolbar,.ota-toolbar{border-bottom:0!important}
-      .ota-actions>.ota-preserved.lang-toggle,.ota-actions>.lang-toggle{width:66px!important;min-width:66px!important;max-width:66px!important;padding:0 8px!important;white-space:nowrap!important}
-      #octopusGlobalActionHost button{min-width:132px!important;max-width:190px!important;height:38px!important;padding:0 16px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+      .ota-actions>.ota-preserved.otp-language,.ota-actions>.otp-language{width:66px!important;min-width:66px!important;max-width:66px!important;padding:0 8px!important;white-space:nowrap!important}
+      #octopusGlobalActionHost{display:none!important}
+      #pageRoot .otp-primary-row{display:flex!important;align-items:center!important;justify-content:flex-end!important;min-height:38px!important;margin:0 0 18px!important}
+      #pageRoot .otp-primary-row button{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:132px!important;height:38px!important;padding:0 16px!important;margin:0!important;border:1px solid #6683df!important;border-radius:9px!important;background:#6683df!important;color:#fff!important;font-size:9px!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important}
       #pageRoot .v815table thead th{
         height:54px!important;
         min-height:54px!important;
@@ -60,26 +62,49 @@
       #pageRoot .v815table thead tr{height:54px!important}
     `;
   }
+  function replaceLanguageControl(){
+    let control=document.querySelector('.otp-language');
+    if(control)return control;
+    const old=document.querySelector('.lang-toggle');
+    if(!old)return null;
+    control=old.cloneNode(true);
+    control.classList.remove('lang-toggle');
+    control.classList.add('otp-language');
+    control.removeAttribute('onclick');
+    old.replaceWith(control);
+    return control;
+  }
+  function movePrimary(){
+    const page=document.querySelector('#pageRoot>:is(.v815page,.occ-page,.oge-page)');
+    const host=document.getElementById('octopusGlobalActionHost');
+    if(!page||!host)return;
+    let row=page.querySelector(':scope>.otp-primary-row');
+    if(!row){row=document.createElement('div');row.className='otp-primary-row';const head=page.querySelector(':scope>.v815head,:scope>.occ-head,:scope>.oge-head');if(head)head.insertAdjacentElement('afterend',row);else page.prepend(row)}
+    const button=host.querySelector('button');
+    if(button&&!row.contains(button))row.replaceChildren(button);
+  }
   function stabilize(){
     installStyle();
+    const control=replaceLanguageControl();
+    movePrimary();
     const r=route(),isEn=english(),headers=HEADER_MAP[r]?.[isEn?1:0];
     if(headers)document.querySelectorAll('#pageRoot .v815table thead th').forEach((th,i)=>{if(headers[i])th.textContent=headers[i]});
     const primary=document.querySelector('#octopusGlobalActionHost button,[data-primary]');
     if(primary&&PRIMARY[r])primary.textContent=PRIMARY[r][isEn?1:0];
-    document.querySelectorAll('.lang-toggle').forEach(button=>{
-      button.textContent=isEn?'中文':'EN';
-      button.setAttribute('aria-label',isEn?'切换为中文':'Switch to English');
-      button.title=button.getAttribute('aria-label');
-    });
+    if(control){
+      control.textContent=isEn?'中文':'EN';
+      control.setAttribute('aria-label',isEn?'切换为中文':'Switch to English');
+      control.title=control.getAttribute('aria-label');
+    }
   }
   function switchLanguage(event){
-    const target=event.target instanceof Element?event.target.closest('.lang-toggle'):null;
+    const target=event.target instanceof Element?event.target.closest('.otp-language'):null;
     if(!target)return;
     event.preventDefault();event.stopImmediatePropagation();
     const next=english()?'zh':'en';
     try{currentLang=next}catch{window.currentLang=next}
     document.documentElement.lang=next==='en'?'en':'zh-CN';
-    document.querySelectorAll('.lang-toggle').forEach(button=>button.textContent=next==='en'?'中文':'EN');
+    target.textContent=next==='en'?'中文':'EN';
     window.dispatchEvent(new HashChangeEvent('hashchange'));
     [0,40,120,300].forEach(ms=>setTimeout(stabilize,ms));
   }
