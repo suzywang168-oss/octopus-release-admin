@@ -25,23 +25,42 @@
       #pageRoot>.v815page.cad-page>.v815head{display:none!important}
 
       /* Keep the visible global title aligned with the relaxed shell. */
-      html.ol2-active .ota-toolbar{
+      html.ol2-active .ota-toolbar,
+      html.gml-active .ota-toolbar{
         position:relative!important;
+        display:grid!important;
+        grid-template-columns:minmax(260px,1fr) minmax(320px,520px) auto!important;
+        grid-template-rows:auto!important;
+        align-items:center!important;
+        gap:14px!important;
         width:calc(100% - 48px)!important;
         max-width:1480px!important;
-        margin:24px auto 28px!important;
+        min-height:72px!important;
+        margin:18px auto 24px!important;
+        padding:0 0 14px!important;
+        box-sizing:border-box!important;
       }
-      html.ol2-active #octopusGlobalTitleSlot{
+      html.ol2-active #octopusGlobalTitleSlot,
+      html.gml-active #octopusGlobalTitleSlot{
+        grid-column:1!important;
+        grid-row:1!important;
         min-width:0!important;
         align-self:center!important;
-        padding-top:2px!important;
+        padding:0!important;
       }
-      html.ol2-active #octopusGlobalTitleSlot h1{
+      html.ol2-active .ota-toolbar>input,html.gml-active .ota-toolbar>input,
+      html.ol2-active .ota-toolbar .ota-search-host,html.gml-active .ota-toolbar .ota-search-host{
+        grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important;margin:0!important
+      }
+      html.ol2-active .ota-actions,html.gml-active .ota-actions{
+        grid-column:3!important;grid-row:1!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;margin:0!important
+      }
+      html.ol2-active #octopusGlobalTitleSlot h1,html.gml-active #octopusGlobalTitleSlot h1{
         margin:0!important;
         font-size:23px!important;
         line-height:1.2!important;
       }
-      html.ol2-active #octopusGlobalTitleSlot p{
+      html.ol2-active #octopusGlobalTitleSlot p,html.gml-active #octopusGlobalTitleSlot p{
         margin:8px 0 0!important;
         line-height:1.6!important;
       }
