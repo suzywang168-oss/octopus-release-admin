@@ -11,6 +11,8 @@ const CONFIG={
 '更新工单':['更新解禁工单','edit','更新负责人、处理状态、材料进度和下一步动作。',['处理状态','负责人','补充材料','下一步']],
 '查看解析':['AI 解析结果','view','查看全剧故事总结、剧情亮点、人物关系和标签置信度。',['故事总结','剧情亮点','人物关系','解析质量']],
 '编辑AI标签':['编辑 AI 标签','tags','按标签体系检查并修改频道、剧情、演员、人设、场景、地域和时代标签。',['频道标签','剧情标签','人物标签','场景与地域']],
+'配置入库':['配置剧集入库','ingest','该剧集来自选剧报告。请在剧集上传模块补齐素材、版本、集数和 AI 解析策略，提交后正式进入内容生产。',['素材来源','所属片方','素材版本','上传方式','集数范围','AI解析范围']],
+'移出片单':['移出待入库片单','remove','从剧集上传模块移除这条待配置记录，不影响原选剧报告。',['移除原因']],
 '查看任务':['译配任务详情','view','查看翻译、配音、字幕对齐、去重和质检的分步骤进度。',['翻译进度','配音进度','字幕对齐','质检记录']],
 '配置译配':['配置译配任务','edit','配置目标语种、角色音色、字幕规则、去重策略和质检阈值。',['目标语种','角色音色','字幕规则','质检阈值']],
 '查看3个标题':['AI 标题候选','view','同时查看三个标题候选、字符数、CTR 预测和频道匹配理由。',['候选 A','候选 B','候选 C','预测对比']],
@@ -77,7 +79,7 @@ function valueFor(label,map,info,index){
 function open(button,info){
  const action=button.dataset.a||button.textContent.trim(),cfg=CONFIG[action];if(!cfg)return false;
  style();const [title,mode,summary,labels]=cfg,map=context(info),drawer=document.getElementById('octopusRowEditor');if(!drawer)return false;
- drawer.classList.toggle('oap-tags-mode',mode==='tags');drawer.dataset.oapMode=mode;drawer.querySelector('#oreTitle').textContent=title;
+ drawer.classList.toggle('oap-tags-mode',mode==='tags');drawer.dataset.oapMode=mode;drawer.dataset.oapSeries=info.values[0]||'';drawer.querySelector('#oreTitle').textContent=title;
  drawer.querySelector('#oreSub').textContent=(info.values[0]||'当前记录')+' · '+(mode==='view'?'只读页面':'业务操作页面');
  let cards='';
  if(mode==='creative'){
@@ -85,6 +87,10 @@ function open(button,info){
    cards='<div class="oap-creative"><section class="oap-preview-panel"><h4>标题候选 · '+channel+'</h4><div class="oap-title-option active"><input type="radio" checked><span>'+series+'：她隐忍多年归来，所有人才发现真正身份</span></div><div class="oap-title-option"><input type="radio"><span>婚礼当天真相揭晓，那个被轻视的女人不再隐藏</span></div><div class="oap-title-option"><input type="radio"><span>所有证据都指向她，直到雨夜里的幕后者出现</span></div></section><section class="oap-preview-panel"><h4>封面候选 · 频道预览</h4><div class="oap-cover-options"><div class="oap-cover active"><span>方案 A · 双人对峙</span></div><div class="oap-cover"><span>方案 B · 人物特写</span></div><div class="oap-cover"><span>方案 C · 场景悬念</span></div></div></section><div class="oap-checks"><article class="oap-check"><b>标题封面语义一致性</b><strong>96% · 通过</strong></article><article class="oap-check"><b>频道风格匹配</b><strong>94% · 通过</strong></article><article class="oap-check"><b>历史重复检测</b><strong>8% · 低风险</strong></article></div></div>';
  }else if(mode==='approval'){
    cards='<div class="oap-approval"><div class="oap-decision"><label><input type="radio" name="approvalDecision" value="pass" checked>通过物料并进入分发</label><label><input type="radio" name="approvalDecision" value="return">退回标题 / 封面修改</label></div><div class="oap-approval-grid"><label class="ore-field"><label>审核版本</label><select><option>'+esc(map['版本']||'当前版本')+'</option><option>上一版本</option></select></label><label class="ore-field"><label>发布限制</label><select><option>无额外限制</option><option>仅指定频道</option><option>需版权复核</option></select></label></div><label class="ore-field"><label>审核意见</label><textarea placeholder="填写通过说明或明确指出需要修改的标题、封面及原因">标题与封面语义一致，频道风格匹配，可进入分发。</textarea></label><label class="ore-field"><label>通知对象</label><input value="物料制作负责人、频道运营"></label></div>';
+ }else if(mode==='ingest'){
+   cards='<label class="ore-field"><label>素材来源</label><select><option>本地上传</option><option>对象存储链接</option><option>片方交付目录</option></select></label><label class="ore-field"><label>所属片方</label><input value="'+esc(map['片方']==='来自选剧报告'?'待选择':map['片方']||'待选择')+'" placeholder="选择或输入片方"></label><label class="ore-field"><label>素材版本</label><input value="原片 V1" placeholder="例如：原片 V1"></label><label class="ore-field"><label>上传方式</label><select><option>逐集上传</option><option>整包上传并自动拆集</option><option>复用素材库版本</option></select></label><label class="ore-field"><label>集数范围</label><input value="全剧" placeholder="例如：1-80 集"></label><label class="ore-field"><label>AI 解析范围</label><select><option>全剧解析并生成完整标签</option><option>仅解析新增集</option><option>暂不解析</option></select></label><label class="ore-field"><label>去重与质检</label><select><option>上传后自动去重并质检</option><option>仅去重</option><option>人工确认后执行</option></select></label><label class="ore-field"><label>生产备注</label><textarea placeholder="补充交付要求、版本差异或解析重点"></textarea></label>';
+ }else if(mode==='remove'){
+   cards='<label class="ore-field" style="grid-column:1/-1"><label>移除原因</label><textarea placeholder="填写移出待入库片单的原因">暂不进入内容生产</textarea></label>';
  }else if(mode==='tags'){
    const series=String(info.values[0]||'').replace(/\s+\d+$/,'').trim(),groups=TAGS[series]||TAGS['逆光心动'];
    const total=Object.values(groups).reduce((sum,tags)=>sum+tags.length,0);
@@ -98,10 +104,10 @@ function open(button,info){
  drawer.querySelector('.ore-body').innerHTML='<div class="oap-summary">'+esc(summary)+'</div><div class="ore-grid"><div class="oap-section-title">'+esc(info.values[0]||'当前对象')+'</div>'+cards+'</div><div class="ore-note">'+(['view','effect','members','creative'].includes(mode)?'此页面用于审核前预览，不会修改已采用的标题或封面。':mode==='approval'?'提交后将更新物料审核状态，并通知物料制作与频道运营。':'确认后将记录本次业务操作，并更新对应任务状态。')+'</div>';
  if(mode==='tags')drawer.querySelector('.ore-panel')?.setAttribute('role','dialog');const foot=drawer.querySelector('.ore-foot');
  const readonly=['view','effect','members','creative'].includes(mode);
- const confirmLabel=mode==='approval'?'提交审核结论':mode==='api'?'保存密钥配置':'确认操作';
+ const confirmLabel=mode==='approval'?'提交审核结论':mode==='api'?'保存密钥配置':mode==='ingest'?'提交入库并开始上传':mode==='remove'?'确认移出':'确认操作';
  foot.innerHTML='<button class="ore-btn" type="button" data-ore-close>关闭</button>'+(readonly?'':'<button class="ore-btn primary" type="button" data-oap-confirm>'+esc(confirmLabel)+'</button>');
  drawer.classList.add('open');return true;
 }
-window.addEventListener('click',e=>{const b=e.target instanceof Element?e.target.closest('[data-oap-confirm]'):null;if(!b)return;e.preventDefault();e.stopImmediatePropagation();document.getElementById('octopusRowEditor')?.classList.remove('open');try{window.toast?.('操作已保存')}catch{}},true);
+window.addEventListener('click',e=>{const b=e.target instanceof Element?e.target.closest('[data-oap-confirm]'):null;if(!b)return;e.preventDefault();e.stopImmediatePropagation();const drawer=document.getElementById('octopusRowEditor'),mode=drawer?.dataset.oapMode,series=drawer?.dataset.oapSeries||'';if(mode==='ingest'){const row=[...document.querySelectorAll('.v815table tbody tr')].find(r=>r.cells?.[0]?.textContent.trim()===series);if(row){if(row.cells[2])row.cells[2].textContent='原片 V1';if(row.cells[3])row.cells[3].textContent='待上传';if(row.cells[5])row.cells[5].textContent='待生成';if(row.cells[6])row.cells[6].textContent='入库配置完成'}try{const list=JSON.parse(localStorage.getItem('octopus-production-candidates')||'[]');const item=list.find(x=>x.series===series);if(item){item.status='入库配置完成';item.next='上传素材并启动 AI 解析';localStorage.setItem('octopus-production-candidates',JSON.stringify(list))}}catch{}try{window.toast?.('入库配置已保存，请上传剧集素材')}catch{}}else if(mode==='remove'){[...document.querySelectorAll('.v815table tbody tr')].find(r=>r.cells?.[0]?.textContent.trim()===series)?.remove();try{const list=JSON.parse(localStorage.getItem('octopus-production-candidates')||'[]').filter(x=>x.series!==series);localStorage.setItem('octopus-production-candidates',JSON.stringify(list))}catch{}try{window.toast?.('已移出待入库片单')}catch{}}else{try{window.toast?.('操作已保存')}catch{}}drawer?.classList.remove('open')},true);
 window.OctopusActionPages={open,config:CONFIG};
 })();
