@@ -90,6 +90,7 @@
     const spec=PRIMARY[route()];
     if(!page||!toolbar||!spec)return;
 
+    const carriedExport=page.querySelector('.otp-list-export');
     const nativeHeader=page.querySelector('.ol2-data-head,.gml-data-head,.cad-data-head');
     let header=nativeHeader||page.querySelector('.otp-list-head');
     if(nativeHeader)page.querySelectorAll('.otp-list-head').forEach(node=>node.remove());
@@ -106,7 +107,7 @@
     actions.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta,.otp-list-primary').forEach(node=>node.remove());
     header.querySelectorAll('.ol2-data-meta,.gml-data-meta,.cad-data-meta,.otp-list-meta').forEach(node=>node.remove());
 
-    const exportButton=actions.querySelector('.otp-list-export')||toolbar.querySelector('[data-export]');
+    const exportButton=actions.querySelector('.otp-list-export')||carriedExport||toolbar.querySelector('[data-export]');
     if(exportButton&&!actions.contains(exportButton)){exportButton.classList.add('otp-list-export');actions.appendChild(exportButton)}
 
     const button=document.createElement('button');
