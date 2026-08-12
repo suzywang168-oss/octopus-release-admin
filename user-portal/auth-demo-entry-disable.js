@@ -21,13 +21,13 @@
     }
   }catch{}
 
-  function isDemoEntry(el){
-    if(!(el instanceof Element))return false;
+  function demoEntry(el){
+    if(!(el instanceof Element))return null;
     const button=el.closest('button,a,[role="button"]');
-    if(!button)return false;
-    if(DEMO_IDS.includes(button.id))return true;
+    if(!button)return null;
+    if(DEMO_IDS.includes(button.id))return button;
     const authHost=button.closest('#loginForm,#registerForm,.auth-card,.auth-panel,.login-card,.register-card');
-    return !!authHost&&DEMO_TEXT.test((button.textContent||'').trim());
+    return authHost&&DEMO_TEXT.test((button.textContent||'').trim())?button:null;
   }
 
   function removeEntries(root=document){
@@ -39,16 +39,19 @@
 
   // Defensive capture guard in case legacy code inserts a demo entry between mutation frames.
   window.addEventListener('pointerdown',e=>{
-    if(isDemoEntry(e.target)){
+    const entry=demoEntry(e.target);
+    if(entry){
       e.preventDefault();
       e.stopImmediatePropagation();
+      entry.remove();
     }
   },true);
   window.addEventListener('click',e=>{
-    if(isDemoEntry(e.target)){
+    const entry=demoEntry(e.target);
+    if(entry){
       e.preventDefault();
       e.stopImmediatePropagation();
-      isDemoEntry(e.target)?.remove?.();
+      entry.remove();
     }
   },true);
 
