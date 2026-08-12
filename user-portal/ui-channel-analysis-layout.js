@@ -64,7 +64,7 @@
         display:grid!important;
         grid-template-columns:repeat(4,minmax(0,1fr))!important;
         gap:10px!important;
-        margin:0 0 12px!important
+        margin:18px 0 12px!important
       }
       #${ROOT_ID} .cad-page>.v815kpis .v815kpi{
         min-height:72px!important;
@@ -225,7 +225,7 @@
       section.className='cad-data-section';
       section.innerHTML=`
         <header class="cad-data-head">
-          <div><h2>剧集表现与推荐</h2><p>按播放、点击、留存、RPM 和推荐分筛选剧集，并将高潜内容加入选剧报告。</p></div>
+          <div><h2>剧集表现与推荐</h2><p>按播放、点击、留存、RPM 和推荐分筛选剧集，并将高潜内容加入候选片单。</p></div>
           <span class="cad-data-meta">8 条结果 · 实时数据</span>
         </header>`;
       page.appendChild(section);
@@ -373,7 +373,7 @@
     modal.querySelector('.v815mb').innerHTML='<p class="cad-tag-modal-intro">AI 已按频道、剧情、人物、场景、地域时代与情绪节奏完成分类。以下为该剧集的完整标签，可用于同标签推荐和选剧报告。</p><div class="cad-tag-groups">'+Object.entries(groups).map(([name,tags])=>'<section class="cad-tag-group"><h4>'+esc(name)+' · '+tags.length+'</h4><div class="cad-tag-list">'+tags.map(tag=>'<span>'+esc(tag)+'</span>').join('')+'</div></section>').join('')+'</div>';
     const confirm=modal.querySelector('[data-confirm]');
     const close=modal.querySelector('.v815mf [data-close]');
-    if(confirm)confirm.textContent='加入选剧报告';
+    if(confirm)confirm.textContent='加入候选片单';
     if(close)close.textContent='关闭';
     modal.classList.add('open');
   }
