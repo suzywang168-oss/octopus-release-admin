@@ -83,7 +83,7 @@
     old.replaceWith(control);
     return control;
   }
-  function movePrimary(){
+  function legacyMovePrimaryDisabled(){
     document.querySelectorAll('#pageRoot .otp-primary-row').forEach(row=>row.remove());
     const page=document.querySelector('#pageRoot>:is(.v815page,.occ-page,.oge-page)');
     const toolbar=page?.querySelector('.v815toolbar');
@@ -118,7 +118,7 @@
   function stabilize(){
     installStyle();
     const control=replaceLanguageControl();
-    movePrimary();
+    /* Primary action placement is owned by ui-action-placement-final.js. */
     const r=route(),isEn=english(),headers=HEADER_MAP[r]?.[isEn?1:0];
     if(headers)document.querySelectorAll('#pageRoot .v815table thead th').forEach((th,i)=>{if(headers[i])th.textContent=headers[i]});
     document.querySelectorAll('.otp-list-primary').forEach(primary=>{if(PRIMARY[r])primary.textContent=PRIMARY[r][isEn?1:0]});
