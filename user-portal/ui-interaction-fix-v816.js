@@ -127,6 +127,7 @@
   function removeLegacyActions(){
     document.querySelectorAll('#crudMenu,#crudMask,.crud-menu,.crud-mask').forEach(node=>node.remove());
     document.querySelectorAll(`${ROOT} table tbody tr`).forEach(row=>{
+      if(row.closest('.loc-table,.pcw-table,.rvw-table,.gw3-table'))return;
       const cell=row.cells[row.cells.length-1];
       if(!cell)return;
       cell.querySelectorAll('button:not(.v815act),.crud-edit,.crud-remove,.crud-readonly-note,[data-more],[data-crud-edit],[data-crud-remove]').forEach(node=>node.remove());
