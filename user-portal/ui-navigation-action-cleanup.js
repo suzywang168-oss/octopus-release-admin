@@ -6,7 +6,7 @@
     'operations.channel-analysis':['对标对比','加入选剧报告'],
     'operations.ad-intelligence':['查看素材','生成上线建议'],
     'operations.unblock':['查看链接','更新工单'],
-    'production.content':['查看解析','编辑AI标签'],
+    'production.content':['查看解析','编辑AI标签','配置入库','移出片单'],
     'production.localization':['查看任务','配置译配'],
     'release.titles':['开始生成','编辑参数','查看标题','重新生成','查看3个标题','采用标题'],
     'release.covers':['开始生成','编辑参数','查看封面','重新生成','预览3张封面','采用封面'],
