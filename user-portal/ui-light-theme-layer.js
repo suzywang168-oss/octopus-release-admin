@@ -156,10 +156,8 @@
   sync();
   window.addEventListener('storage',e=>{if(e.key===THEME_KEY)sync()});
   window.addEventListener('hashchange',sync);
-  window.addEventListener('click',e=>{
-    if(e.target instanceof Element&&e.target.closest('[data-theme]'))requestAnimationFrame(sync);
-  },true);
-  new MutationObserver(()=>requestAnimationFrame(sync)).observe(document.documentElement,{childList:true,subtree:true});
+  const observer=new MutationObserver(()=>requestAnimationFrame(sync));
+  observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','data-theme-mode']});
   setTimeout(sync,250);
   setTimeout(sync,900);
 })();
