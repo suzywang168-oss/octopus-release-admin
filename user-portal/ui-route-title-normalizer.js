@@ -21,14 +21,35 @@ overview:['\u4e1a\u52a1\u603b\u89c8','\u4ee5\u201c\u9009\u54c1 \u2192 \u5185\u5b
 'system.roles':['\u6743\u9650\u89d2\u8272\u7ba1\u7406','\u7ba1\u7406\u8fd0\u8425\u3001\u5185\u5bb9\u4e0e\u7ba1\u7406\u5458\u89d2\u8272\u7684\u6570\u636e\u8303\u56f4\u548c\u64cd\u4f5c\u6743\u9650\u3002'],
 'system.tasks':['\u5f02\u6b65\u4efb\u52a1\u4e2d\u5fc3','\u7edf\u4e00\u67e5\u770b\u8bd1\u914d\u3001\u6807\u9898\u5c01\u9762\u3001\u6279\u91cf\u4e0a\u4f20\u4efb\u52a1\u53ca\u5931\u8d25\u91cd\u8bd5\u3002']
 };
+const EN_TITLES={
+overview:['Business Overview','Manage the full release workflow from content selection and production to material creation, channel distribution, and optimization.'],
+'operations.channel-analysis':['Channel Data Analysis','Analyze views, CTR, revenue, retention and RPM, then produce data-backed content-selection reports.'],
+'operations.ad-intelligence':['Paid Media Intelligence','Collect and analyze TikTok, Facebook, YouTube and Instagram campaign materials and launch opportunities.'],
+'operations.unblock':['Restriction Resolution','Track blocked links, causes, owners and appeal cases through resolution.'],
+'production.content':['Series Upload & AI Tags','Upload series materials, extract story highlights and manage complete AI tag sets.'],
+'production.localization':['Multilingual Localization','Create and manage translation, dubbing, subtitles, quality checks and generated video versions.'],
+'release.titles':['AI Title Generation','Generate channel-specific title candidates and support manual editing.'],
+'release.covers':['AI Cover Generation','Generate and edit channel-specific cover candidates.'],
+'release.review':['Material Review','Review titles and covers together, approve, return and retain version history.'],
+'release.distribution':['Channel Distribution','Match approved content and materials to channels, validate and create distribution tasks.'],
+'dashboard.series':['Series Analytics','Analyze series performance across views, CTR, retention, RPM and revenue.'],
+'dashboard.channels':['Channel Analytics','Analyze channel revenue, performance, health and top-performing series.'],
+'dashboard.external':['External Benchmarking','Compare external campaign trends with internal series performance.'],
+'dashboard.risk':['Risk & Restriction Analytics','Analyze restriction trends, resolution progress, channel risk and alerts.'],
+'system.channels':['Channel Account Management','Manage channel accounts, OAuth/API configuration, channel styles and tags.'],
+'system.assets':['Material & Partner Library','Manage series materials, versions, rights and content partners.'],
+'system.templates':['AI Template Configuration','Configure title prompts, cover styles, watermark templates and tag systems.'],
+'system.roles':['Roles & Permissions','Manage role data scopes, module permissions and approval policies.'],
+'system.tasks':['Async Task Center','Monitor localization, generation, upload and retry tasks.']
+};
 const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
 function style(){let s=document.getElementById('route-title-spacing-style');if(!s){s=document.createElement('style');s.id='route-title-spacing-style';document.head.appendChild(s)}s.textContent=`.ota-toolbar #octopusGlobalActionHost,.ota-toolbar [data-primary],.ota-toolbar .otp-list-primary{display:none!important}#pageRoot>.v815page:not(.gw3-page),#pageRoot>.occ-page,#pageRoot>.oge-page{padding-top:22px!important}.gw3-page{padding-top:24px!important}`}
 function fix(){
  style();
- const data=TITLES[route()];if(!data)return;
+ const isEn=localStorage.getItem('octopus-user-v7-language')==='en',data=(isEn?EN_TITLES:TITLES)[route()];if(!data)return;
  const slot=document.getElementById('octopusGlobalTitleSlot');if(!slot)return;
  let h=slot.querySelector('h1'),p=slot.querySelector('p');if(!h||!p){slot.innerHTML='<h1></h1><p></p>';h=slot.querySelector('h1');p=slot.querySelector('p')}
- if(h.textContent!==data[0])h.textContent=data[0];if(p.textContent!==data[1])p.textContent=data[1];if(h.getAttribute('lang')!=='zh-CN')h.setAttribute('lang','zh-CN');if(p.getAttribute('lang')!=='zh-CN')p.setAttribute('lang','zh-CN');
+ if(h.textContent!==data[0])h.textContent=data[0];if(p.textContent!==data[1])p.textContent=data[1];const lang=isEn?'en':'zh-CN';if(h.getAttribute('lang')!==lang)h.setAttribute('lang',lang);if(p.getAttribute('lang')!==lang)p.setAttribute('lang',lang);
 }
 window.addEventListener('hashchange',()=>{setTimeout(fix,0);setTimeout(fix,80);setTimeout(fix,240)});let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;fix()})}).observe(document.documentElement,{childList:true,subtree:true});fix();setTimeout(fix,400);setTimeout(fix,1200);
 })();
