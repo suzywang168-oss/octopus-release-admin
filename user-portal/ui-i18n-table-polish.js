@@ -45,8 +45,8 @@
       html.ol2-active .ota-toolbar,html.gml-active .ota-toolbar,.ota-toolbar{border-bottom:0!important}
       .ota-actions>.ota-preserved.otp-language,.ota-actions>.otp-language{width:66px!important;min-width:66px!important;max-width:66px!important;padding:0 8px!important;white-space:nowrap!important}
       #octopusGlobalActionHost{display:none!important}
-      #pageRoot .otp-primary-row{display:flex!important;align-items:center!important;justify-content:flex-end!important;min-height:38px!important;margin:0 0 18px!important}
-      #pageRoot .otp-primary-row button{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:132px!important;height:38px!important;padding:0 16px!important;margin:0!important;border:1px solid #6683df!important;border-radius:9px!important;background:#6683df!important;color:#fff!important;font-size:9px!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important}
+      #pageRoot .otp-primary-row{display:none!important}
+      #pageRoot .ols-data-actions .otp-list-primary{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:132px!important;height:36px!important;padding:0 16px!important;margin:0!important;border:1px solid #6683df!important;border-radius:9px!important;background:#6683df!important;color:#fff!important;font-size:9px!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important}
       #pageRoot .v815table thead th{
         height:54px!important;
         min-height:54px!important;
@@ -75,13 +75,14 @@
     return control;
   }
   function movePrimary(){
-    const page=document.querySelector('#pageRoot>:is(.v815page,.occ-page,.oge-page)');
+    document.querySelectorAll('#pageRoot .otp-primary-row').forEach(row=>row.remove());
     const host=document.getElementById('octopusGlobalActionHost');
-    if(!page||!host)return;
-    let row=page.querySelector(':scope>.otp-primary-row');
-    if(!row){row=document.createElement('div');row.className='otp-primary-row';const head=page.querySelector(':scope>.v815head,:scope>.occ-head,:scope>.oge-head');if(head)head.insertAdjacentElement('afterend',row);else page.prepend(row)}
+    const header=document.querySelector('#pageRoot .ol2-data-head,#pageRoot .gml-data-head,#pageRoot .cad-data-head');
+    if(!host||!header)return;
+    let actions=header.querySelector('.ols-data-actions');
+    if(!actions){actions=document.createElement('div');actions.className='ols-data-actions';const meta=header.querySelector('.ol2-data-meta,.gml-data-meta,.cad-data-meta');if(meta)actions.appendChild(meta);header.appendChild(actions)}
     const button=host.querySelector('button');
-    if(button&&!row.contains(button))row.replaceChildren(button);
+    if(button&&!actions.contains(button)){button.classList.add('otp-list-primary');actions.appendChild(button)}
   }
   function stabilize(){
     installStyle();
