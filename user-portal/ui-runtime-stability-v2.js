@@ -72,6 +72,16 @@ if(!window.__octopusStableTimeout){
  window.__octopusStableTimeout=true;
 }
 
+/* Register before legacy global click handlers. Dedicated system dialogs own these four actions end to end. */
+nativeAdd('click',e=>{
+ const api=window.OctopusSystemManagementDialogs;if(!api)return;
+ const target=e.target instanceof Element?e.target.closest('button,a,[role="button"],[data-oct-system-action],[data-a]'):null;if(!target)return;
+ const internal=target.closest?.('#octopusSystemManagementDialog [data-smd-action]');
+ if(internal){const action=internal.dataset.smdAction||'';if(api.handleInternal?.(action,internal)){e.preventDefault();e.stopImmediatePropagation()}return}
+ const kind=api.detectTrigger?.(target);if(!kind)return;
+ e.preventDefault();e.stopImmediatePropagation();api.open?.(kind,target);
+},true);
+
 function syncNav(r=route()){
  document.querySelectorAll('#v80nav [data-r]').forEach(b=>b.classList.toggle('active',b.dataset.r===r));
 }
@@ -128,5 +138,5 @@ nativeAdd('popstate',()=>{
  requestAnimationFrame(pokeOwners);
 });
 nativeAdd('pageshow',()=>{syncNav();requestAnimationFrame(pokeOwners)});
-window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.3'};
+window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.4'};
 })();
