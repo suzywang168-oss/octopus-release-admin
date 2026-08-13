@@ -18,10 +18,12 @@ iframe{visibility:hidden}.ready iframe{visibility:visible}.ready .load{display:n
 </head>
 <body>
 <div class="load"><div class="box"><h3>Octopus User Portal</h3><p id="status">正在并行加载工作台…</p><div class="bar"></div><button class="retry" id="retry" onclick="location.reload()">重新加载</button></div></div>
-<iframe id="portal" src="./base-v77.html?v=202608131940"></iframe>
+<iframe id="portal"></iframe>
 <script>
 const f=document.getElementById('portal'),msg=document.getElementById('status'),retry=document.getElementById('retry');
 const bootStarted=performance.now();
+const initialHash=location.hash||'#/overview';
+f.src='./base-v77.html?v=202608131945'+initialHash;
 const files=[
   {src:'auth-stepper-v79.js?v=202608071348',optional:true},
   {src:'auth-colors-v711.js?v=202608071348',optional:true},
@@ -96,7 +98,7 @@ const files=[
   {src:'ui-route-ownership-lock.js?v=202608131548'},
 
   /* Fixed shell title only; global search and floating title are removed. */
-  {src:'ui-title-single-source.js?v=202608131940'},
+  {src:'ui-title-single-source.js?v=202608131945'},
 
   /* Preserve business-owned controls and remove duplicate global contracts. */
   {src:'ui-business-native-restore.js?v=202608131750'},
@@ -111,9 +113,8 @@ function preloadScripts(){
   });
 }
 preloadScripts();
-let done=0,lastHash=location.hash;
+let done=0,lastHash=initialHash;
 function finish(d){
-  if(location.hash)f.contentWindow.location.hash=location.hash;
   d.addEventListener('click',e=>{
     if(e.target.closest('[data-copy]')){
       e.preventDefault();e.stopImmediatePropagation();
@@ -121,6 +122,7 @@ function finish(d){
       navigator.clipboard?.writeText(u);f.contentWindow.toast?.('链接已复制');
     }
   },true);
+  window.addEventListener('hashchange',()=>{try{const h=location.hash||'#/overview';if(f.contentWindow.location.hash!==h)f.contentWindow.location.hash=h}catch(e){}});
   setInterval(()=>{try{const h=f.contentWindow.location.hash;if(h&&h!==lastHash){lastHash=h;history.replaceState(null,'',location.pathname+location.search+h)}}catch(e){}},300);
   console.info(`[Octopus] portal ready in ${Math.round(performance.now()-bootStarted)}ms with ${files.length} modules preloaded in parallel`);
   document.body.classList.add('ready');
