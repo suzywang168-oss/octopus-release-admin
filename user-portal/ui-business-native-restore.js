@@ -33,28 +33,6 @@ function cleanupNativeButtons(){
   root.querySelector(':scope>.gw3-page,:scope>.atw-page')?.removeAttribute('data-metrics-insight');
  }
 }
-function rowInfo(button){
- const tr=button.closest('tr'),table=tr?.closest('table');
- const headers=table?[...table.querySelectorAll('thead th')].slice(0,-1).map(x=>x.textContent.replace(/\s+/g,' ').trim()):[];
- const values=tr?[...tr.cells].slice(0,-1).map(x=>x.textContent.replace(/\s+/g,' ').trim()):[];
- return {headers,values};
-}
-function openOriginalSystemPopup(button){
- const raw=button.dataset.octSystemAction||button.textContent.trim();
- const action=raw.replace(/\s+/g,'');
- if(!['编辑账号','管理API密钥'].includes(action))return false;
- const api=window.OctopusActionPages;if(!api?.open)return false;
- const fake=document.createElement('button');fake.dataset.a=action;fake.textContent=action;
- return api.open(fake,rowInfo(button));
-}
-window.addEventListener('click',e=>{
- if(route()!=='system.channels')return;
- const b=e.target instanceof Element?e.target.closest('[data-oct-system-action]'):null;
- if(!b)return;
- const raw=(b.dataset.octSystemAction||'').replace(/\s+/g,'');
- if(!['编辑账号','管理API密钥'].includes(raw))return;
- e.preventDefault();e.stopImmediatePropagation();openOriginalSystemPopup(b);
-},true);
 function apply(){installCss();releaseContracts();cleanupNativeButtons()}
 window.addEventListener('hashchange',()=>{setTimeout(apply,20);setTimeout(apply,180)});
 window.addEventListener('octopus-owned-route-change',()=>setTimeout(apply,40));
@@ -62,5 +40,5 @@ window.addEventListener('pageshow',()=>setTimeout(apply,100));
 window.addEventListener('octopus-language-change',()=>setTimeout(apply,120));
 document.addEventListener('focusout',()=>setTimeout(apply,160),true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(apply,150),{once:true});else setTimeout(apply,40);
-window.OctopusBusinessNativeRestore={apply,version:'1.2'};
+window.OctopusBusinessNativeRestore={apply,version:'1.3'};
 })();
