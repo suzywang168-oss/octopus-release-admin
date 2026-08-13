@@ -38,7 +38,7 @@ const files=[
   {src:'ui-qa-fix-v813.js?v=202608071348'},
 
   /* Runtime coordinator loads before legacy architecture so owned routes never flash through old pages. */
-  {src:'ui-runtime-stability-v2.js?v=202608131548'},
+  {src:'ui-runtime-stability-v2.js?v=202608131750'},
 
   {src:'portal-architecture-v815.js?v=202608071348'},
   {src:'ui-navigation-action-cleanup.js?v=202608130040'},
@@ -100,8 +100,11 @@ const files=[
   /* One visible page title in the top toolbar. */
   {src:'ui-title-single-source.js?v=202608131548'},
 
-  /* Absolute last: preserve business-owned controls and remove duplicate global contracts. */
-  {src:'ui-business-native-restore.js?v=202608131548'}
+  /* Preserve business-owned controls and remove duplicate global contracts. */
+  {src:'ui-business-native-restore.js?v=202608131750'},
+
+  /* Complete, dedicated dialogs for channel accounts, API credentials and async task recovery. */
+  {src:'ui-system-management-dialogs-v3.js?v=202608131750'}
 ];
 function preloadScripts(){
   files.forEach((file,index)=>{
