@@ -4,19 +4,19 @@ const STYLE='octopus-runtime-stability-v2';
 const OWNED=new Set([
  'operations.channel-analysis','operations.ad-intelligence',
  'production.content','production.localization',
- 'release.review','release.distribution',
+ 'release.titles','release.covers','release.review','release.distribution',
  'dashboard.series','dashboard.channels','dashboard.external','dashboard.risk',
  'system.assets','system.templates','system.roles'
 ]);
 const QUIET_OBSERVERS=new Set([
  'ui-navigation-action-cleanup.js','ui-interaction-fix-v816.js','ui-shell-alignment-fix.js',
  'ui-global-module-layout.js','ui-layout-v2.js','ui-layout-spacing-fix.js',
- 'ui-title-layout-stability.js','ui-route-title-normalizer.js','ui-action-placement-final.js'
+ 'ui-generation-workspace-v3.js','ui-title-layout-stability.js','ui-route-title-normalizer.js','ui-action-placement-final.js'
 ]);
 const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
 const scriptName=()=>{try{return new URL(document.currentScript?.src||'',location.href).pathname.split('/').pop()}catch{return ''}};
 function css(){let s=document.getElementById(STYLE);if(!s){s=document.createElement('style');s.id=STYLE;document.head.appendChild(s)}s.textContent=`
-/* The global title slot is the only top-toolbar title. Hide the old workspace label before first paint. */
+/* The global title slot is the only top-toolbar title. */
 .ota-toolbar .workspace{display:none!important}
 .ota-toolbar>#octopusGlobalTitleSlot{display:block!important;min-width:0!important}
 /* Route changes are DOM swaps, not animated layout transitions. */
@@ -24,7 +24,6 @@ html.oct-route-switching #pageRoot,html.oct-route-switching #pageRoot *{transiti
 `}
 css();
 
-/* Keep legacy observers from rescanning the whole document after every business DOM change. */
 const NativeMO=window.MutationObserver;
 if(NativeMO&&!window.__octopusStableMutationObserver){
  class StableMutationObserver{
@@ -48,7 +47,6 @@ if(NativeMO&&!window.__octopusStableMutationObserver){
  window.__octopusStableMutationObserver=true;
 }
 
-/* Legacy architecture may receive real generic-route hashchanges, but never owned or layout-only ones. */
 const nativeAdd=window.addEventListener.bind(window);
 if(!window.__octopusStableWindowEvents){
  window.addEventListener=function(type,listener,options){
@@ -56,14 +54,12 @@ if(!window.__octopusStableWindowEvents){
   if(owner==='portal-architecture-v815.js'&&type==='hashchange'&&typeof listener==='function'){
    return nativeAdd(type,function(ev){if(OWNED.has(route())||ev?.octopusLayoutOnly)return;return listener.call(this,ev)},options);
   }
-  /* Pointerdown used to open forms before the browser completed focus/click. Standard click remains active. */
   if(owner==='ui-action-placement-final.js'&&type==='pointerdown')return;
   return nativeAdd(type,listener,options);
  };
  window.__octopusStableWindowEvents=true;
 }
 
-/* Suppress the architecture's delayed owned-route redraws at 500/1300 ms. */
 const nativeTimeout=window.setTimeout.bind(window);
 if(!window.__octopusStableTimeout){
  window.setTimeout=function(fn,delay,...args){
@@ -94,19 +90,18 @@ function pokeOwners(){
  }catch{}
  try{window.OctopusMetricsInsightContract?.ensure?.()}catch{}
  try{window.OctopusTitleSingleSource?.apply?.()}catch{}
+ try{window.OctopusBusinessNativeRestore?.apply?.()}catch{}
 }
 function markSwitch(){
  document.documentElement.classList.add('oct-route-switching');
  nativeTimeout(()=>document.documentElement.classList.remove('oct-route-switching'),90);
 }
 
-/* Register before portal-architecture's capture listener. */
 document.addEventListener('click',e=>{
  const t=e.target instanceof Element?e.target.closest('[data-r]'):null;
  if(!t)return;
  const r=t.dataset.r;
  if(!OWNED.has(r)){
-  /* Let portal-architecture render the generic page once, then run layout/title/action passes once. */
   markSwitch();
   nativeTimeout(()=>{syncNav(r);layoutOnly();requestAnimationFrame(pokeOwners)},0);
   return;
@@ -133,5 +128,5 @@ nativeAdd('popstate',()=>{
  requestAnimationFrame(pokeOwners);
 });
 nativeAdd('pageshow',()=>{syncNav();requestAnimationFrame(pokeOwners)});
-window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.2'};
+window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.3'};
 })();
