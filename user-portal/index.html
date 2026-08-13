@@ -74,8 +74,11 @@ const files=[
   /* Critical actions are registered independently from page rendering. */
   {src:'ui-stable-action-registry.js?v=202608131134'},
 
-  /* Non-destructive runtime health guard is always last. */
-  {src:'ui-critical-pages-final.js?v=202608131134'}
+  /* Health guard only restores missing workspaces. */
+  {src:'ui-critical-pages-final.js?v=202608131134'},
+
+  /* Final click channel bypasses legacy click interception without redrawing a second action DOM. */
+  {src:'ui-action-click-hardening-v2.js?v=202608131143'}
 ];
 function preloadScripts(){
   files.forEach((file,index)=>{
