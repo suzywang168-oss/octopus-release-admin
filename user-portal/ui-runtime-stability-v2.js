@@ -4,7 +4,7 @@ const STYLE='octopus-runtime-stability-v2';
 const OWNED=new Set([
  'operations.channel-analysis','operations.ad-intelligence',
  'production.content','production.localization',
- 'release.titles','release.covers','release.review','release.distribution',
+ 'release.review','release.distribution',
  'dashboard.series','dashboard.channels','dashboard.external','dashboard.risk',
  'system.assets','system.templates','system.roles'
 ]);
@@ -92,7 +92,7 @@ function pokeOwners(){
   else if(/^dashboard\./.test(r))window.OctopusDashboardWorkspace?.ensure?.();
   else if(r==='system.assets')window.OctopusAssetsBusinessActions?.check?.();
  }catch{}
- try{window.OctopusMetricsInsightContract?.apply?.()}catch{}
+ try{window.OctopusMetricsInsightContract?.ensure?.()}catch{}
  try{window.OctopusTitleSingleSource?.apply?.()}catch{}
 }
 function markSwitch(){
@@ -133,5 +133,5 @@ nativeAdd('popstate',()=>{
  requestAnimationFrame(pokeOwners);
 });
 nativeAdd('pageshow',()=>{syncNav();requestAnimationFrame(pokeOwners)});
-window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.1'};
+window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.2'};
 })();
