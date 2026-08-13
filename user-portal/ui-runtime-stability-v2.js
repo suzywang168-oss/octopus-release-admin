@@ -48,13 +48,13 @@ if(NativeMO&&!window.__octopusStableMutationObserver){
  window.__octopusStableMutationObserver=true;
 }
 
-/* Legacy architecture may still listen to hashchange, but it must never repaint an owned route. */
+/* Legacy architecture may receive real generic-route hashchanges, but never owned or layout-only ones. */
 const nativeAdd=window.addEventListener.bind(window);
 if(!window.__octopusStableWindowEvents){
  window.addEventListener=function(type,listener,options){
   const owner=scriptName();
   if(owner==='portal-architecture-v815.js'&&type==='hashchange'&&typeof listener==='function'){
-   return nativeAdd(type,function(ev){if(OWNED.has(route()))return;return listener.call(this,ev)},options);
+   return nativeAdd(type,function(ev){if(OWNED.has(route())||ev?.octopusLayoutOnly)return;return listener.call(this,ev)},options);
   }
   /* Pointerdown used to open forms before the browser completed focus/click. Standard click remains active. */
   if(owner==='ui-action-placement-final.js'&&type==='pointerdown')return;
@@ -79,6 +79,11 @@ if(!window.__octopusStableTimeout){
 function syncNav(r=route()){
  document.querySelectorAll('#v80nav [data-r]').forEach(b=>b.classList.toggle('active',b.dataset.r===r));
 }
+function layoutOnly(){
+ const ev=new Event('hashchange');
+ try{Object.defineProperty(ev,'octopusLayoutOnly',{value:true})}catch{ev.octopusLayoutOnly=true}
+ window.dispatchEvent(ev);
+}
 function pokeOwners(){
  const r=route();
  try{
@@ -95,12 +100,19 @@ function markSwitch(){
  nativeTimeout(()=>document.documentElement.classList.remove('oct-route-switching'),90);
 }
 
-/* Register before portal-architecture's capture listener. Owned navigation never calls its go()->render(true). */
+/* Register before portal-architecture's capture listener. */
 document.addEventListener('click',e=>{
  const t=e.target instanceof Element?e.target.closest('[data-r]'):null;
- if(!t||!OWNED.has(t.dataset.r))return;
+ if(!t)return;
+ const r=t.dataset.r;
+ if(!OWNED.has(r)){
+  /* Let portal-architecture render the generic page once, then run layout/title/action passes once. */
+  markSwitch();
+  nativeTimeout(()=>{syncNav(r);layoutOnly();requestAnimationFrame(pokeOwners)},0);
+  return;
+ }
  e.preventDefault();e.stopImmediatePropagation();
- const oldURL=location.href,r=t.dataset.r,next='#/'+r.replaceAll('.','/');
+ const oldURL=location.href,next='#/'+r.replaceAll('.','/');
  markSwitch();
  history.pushState(null,'',next);
  syncNav(r);
@@ -111,15 +123,15 @@ document.addEventListener('click',e=>{
  nativeTimeout(pokeOwners,60);
 },true);
 
-nativeAdd('hashchange',()=>{markSwitch();syncNav();requestAnimationFrame(pokeOwners)});
+nativeAdd('hashchange',e=>{if(e?.octopusLayoutOnly)return;markSwitch();syncNav();requestAnimationFrame(pokeOwners)});
 nativeAdd('popstate',()=>{
  markSwitch();syncNav();
  if(OWNED.has(route())){
   window.dispatchEvent(new Event('hashchange'));
   window.dispatchEvent(new CustomEvent('octopus-owned-route-change',{detail:{route:route()}}));
- }
+ }else nativeTimeout(layoutOnly,0);
  requestAnimationFrame(pokeOwners);
 });
 nativeAdd('pageshow',()=>{syncNav();requestAnimationFrame(pokeOwners)});
-window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,version:'2.0'};
+window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.1'};
 })();
