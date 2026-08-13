@@ -53,11 +53,8 @@ const files=[
   {src:'ui-route-title-normalizer.js?v=202608130810'},
   {src:'ui-action-placement-final.js?v=202608130635'},
   {src:'ui-content-production-workspace.js?v=202608130515'},
-  {src:'ui-material-review-workspace.js?v=202608130845'},
   {src:'ui-overview-final-fix.js?v=202608122145'},
   {src:'ui-release-package-coordinator.js?v=202608130435'},
-  {src:'ui-dashboard-analysis-workspaces.js?v=202608130845'},
-  {src:'ui-distribution-planning-workspace.js?v=202608130845'},
   {src:'ui-personal-role-workspace.js?v=202608130925'},
   {src:'ui-assets-template-workspace.js?v=202608131000'},
   {src:'ui-operations-action-protection.js?v=202608131230'},
@@ -68,8 +65,15 @@ const files=[
   {src:'ui-assets-actions-fix.js?v=20260813-assets-actions-1'},
   {src:'ui-i18n-form-v2.js?v=202608131035'},
   {src:'ui-light-theme-layer.js?v=202608131035'},
-  {src:'ui-assets-row-actions-select-perf-final.js?v=202608131050'},
-  {src:'ui-critical-pages-final.js?v=202608131100'}
+
+  /* Business-owned workspaces load after generic layout/i18n/theme layers. */
+  {src:'ui-material-review-workspace.js?v=202608131110'},
+  {src:'ui-dashboard-analysis-workspaces.js?v=202608131110'},
+  {src:'ui-distribution-planning-workspace.js?v=202608131110'},
+  {src:'ui-assets-row-actions-select-perf-final.js?v=202608131110'},
+
+  /* Non-destructive runtime health guard is always last. */
+  {src:'ui-critical-pages-final.js?v=202608131110'}
 ];
 function preloadScripts(){
   files.forEach((file,index)=>{
