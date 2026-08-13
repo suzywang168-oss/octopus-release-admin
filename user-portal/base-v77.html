@@ -12,7 +12,7 @@ body{margin:0;background:#07111f;color:#fff;font:14px system-ui;display:grid;pla
 (async()=>{
   try{
     const started=performance.now();
-    const urls=Array.from({length:4},(_,i)=>`site-v7-7/part-0${i}.txt?v=202608071348`);
+    const urls=Array.from({length:4},(_,i)=>`site-v7-7/part-0${i}.txt?v=202608131945`);
     s.textContent='Loading workspace shell…';
     const parts=await Promise.all(urls.map(async(url,index)=>{
       const r=await fetch(url,{cache:'force-cache'});
@@ -23,8 +23,56 @@ body{margin:0;background:#07111f;color:#fff;font:14px system-ui;display:grid;pla
     const u=new Uint8Array(z.length);
     for(let i=0;i<z.length;i++)u[i]=z.charCodeAt(i);
     const h=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    const shellStyle=`<style id="oct-shell-source-fix">
+      #octopusGlobalTitleSlot{display:none!important;visibility:hidden!important;position:absolute!important;left:-10000px!important;top:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important}
+      .ota-toolbar>input,.ota-toolbar>.ota-search-host,.ota-toolbar input[type="search"]{display:none!important;width:0!important;min-width:0!important;max-width:0!important;height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}
+      .ota-toolbar{justify-content:flex-end!important;gap:8px!important}
+      .workspace.oct-shell-title-owner{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;inset:auto!important;transform:none!important;width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;padding:0!important;overflow:visible!important}
+      .workspace.oct-shell-title-owner>b{display:block!important;margin:0!important;font-size:16px!important;line-height:1.25!important;font-weight:760!important;color:var(--text,#edf3ff)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+      .workspace.oct-shell-title-owner>small{display:block!important;margin:7px 0 0!important;font-size:8px!important;line-height:1.45!important;color:var(--soft,#8292a8)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    </style>`;
+    const shellScript=`<script id="oct-shell-source-controller">(()=>{'use strict';
+      const META={
+        overview:['业务总览','以选品、内容加工、物料制作、渠道分发和监控迭代为主线管理全部发行项目。'],
+        'operations.channel-analysis':['频道数据分析','以频道为单位分析已上传剧集表现，再从内部库推荐相似且尚未在该频道发行的剧集。'],
+        'operations.ad-intelligence':['大数据投流分析','广泛观察外部平台投流内容表现，再从内部剧集库推荐相似剧集进入发行测试。'],
+        'operations.unblock':['解禁链接反馈管理','自动检测禁播状态，汇总链接、片方、渠道与原因，并推动解禁工单闭环。'],
+        'production.content':['剧集上传与AI标签','上传全剧素材，完成AI解析、剧情亮点提炼、标签生成与人工确认。'],
+        'production.localization':['多语种译配处理','先从原视频素材选择可用版本创建任务，再跟踪翻译、配音、字幕、质检和采用结果。'],
+        'release.titles':['AI标题生成','从未生成内容中选择剧集，批量生成标题，并进入独立编辑流程完成修改与采用。'],
+        'release.covers':['AI封面生成','从未生成内容中选择剧集，批量生成封面，并进入独立编辑流程完成选择与采用。'],
+        'release.review':['物料审核','逐条或批量审核标题与封面物料，保留审核结论、意见与版本记录。'],
+        'release.distribution':['上传频道分发','校验剧集、语种版本、审核物料包与频道账号后执行正式分发。'],
+        'dashboard.series':['剧集维度看板','按剧集查看播放量、点击率、留存、RPM、收入与趋势。'],
+        'dashboard.channels':['频道账号看板','按频道账号查看平台、受众、播放、CTR、RPM、收入与账号健康度。'],
+        'dashboard.external':['外部投流对标看板','对比外部投流素材、投放热度、成本指标与库内可匹配剧集。'],
+        'dashboard.risk':['风险禁播看板','集中查看禁播风险、影响范围、SLA、负责人、处理状态与恢复结果。'],
+        'system.channels':['频道账号管理','维护TK、FB、YT、INS账号、API密钥、频道风格与标签配置。'],
+        'system.assets':['素材与片方库','统一管理短剧素材、版本记录、授权信息与片方合作档案。'],
+        'system.templates':['AI模板配置','配置标题Prompt、封面风格、水印模板与标签体系。'],
+        'system.roles':['权限角色管理','按个人与角色管理数据范围、操作权限、继承规则与审批要求。'],
+        'system.tasks':['异步任务中心','统一查看译配、生成、上传等异步任务的运行状态、日志与失败重试。']
+      };
+      const alias={'production.languages':'production.localization','ops.analytics':'operations.channel-analysis','ops.crawl':'operations.ad-intelligence','ops.unblock':'operations.unblock','production.upload':'production.content','release.publish':'release.distribution'};
+      const route=()=>{const r=location.hash.replace(/^#\\/?/,'').replaceAll('/','.')||'overview';return alias[r]||r};
+      let busy=false;
+      function enforce(){if(busy)return;busy=true;
+        document.querySelectorAll('.ota-toolbar>input,.ota-toolbar>.ota-search-host,.ota-toolbar input[type="search"]').forEach(x=>x.remove());
+        document.getElementById('octopusGlobalTitleSlot')?.remove();
+        const m=META[route()];let w=document.querySelector('.workspace');
+        if(m&&w){w.classList.add('oct-shell-title-owner');w.classList.remove('oct-shell-legacy-title','oct-title-duplicate');w.replaceChildren(Object.assign(document.createElement('b'),{textContent:m[0]}),Object.assign(document.createElement('small'),{textContent:m[1]}));w.dataset.routeTitle=route()}
+        busy=false;
+      }
+      let t=0;const schedule=()=>{clearTimeout(t);t=setTimeout(enforce,0)};
+      addEventListener('hashchange',schedule);addEventListener('popstate',schedule);addEventListener('octopus-owned-route-change',schedule);addEventListener('pageshow',schedule);addEventListener('octopus-language-change',schedule);
+      new MutationObserver(()=>{if(!busy)schedule()}).observe(document.documentElement,{childList:true,subtree:true});
+      enforce();setTimeout(enforce,80);setTimeout(enforce,240);
+    })();<\/script>`;
+    let patched=h;
+    if(/<\/head>/i.test(patched))patched=patched.replace(/<\/head>/i,shellStyle+'</head>');else patched=shellStyle+patched;
+    if(/<\/body>/i.test(patched))patched=patched.replace(/<\/body>/i,shellScript+'</body>');else patched+=shellScript;
     console.info(`[Octopus] base shell ready in ${Math.round(performance.now()-started)}ms`);
-    document.open();document.write(h);document.close();
+    document.open();document.write(patched);document.close();
   }catch(e){
     s.textContent='Load failed: '+e.message;
     console.error('[Octopus] base shell load failed',e);
