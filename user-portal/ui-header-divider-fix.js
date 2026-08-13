@@ -5,8 +5,8 @@ function css(){
  let s=document.getElementById(STYLE);
  if(!s){s=document.createElement('style');s.id=STYLE;document.head.appendChild(s)}
  s.textContent=`
-/* One header divider only. */
-html body .oct-header-single-divider{position:relative!important;border-top:0!important;border-bottom:1px solid var(--line)!important;box-shadow:none!important;padding-bottom:14px!important;margin-bottom:0!important;overflow:visible!important}
+/* One header divider only. Keep it close to the title, with clear space before content. */
+html body .oct-header-single-divider{position:relative!important;border-top:0!important;border-bottom:1px solid var(--line)!important;box-shadow:none!important;padding-bottom:8px!important;margin-bottom:14px!important;overflow:visible!important}
 html body .oct-header-single-divider>.workspace,
 html body .oct-header-single-divider>.ota-toolbar{border-top:0!important;border-bottom:0!important;box-shadow:none!important}
 html body .oct-header-single-divider>.workspace:before,
@@ -16,7 +16,7 @@ html body .oct-header-single-divider>.ota-toolbar:after{display:none!important;c
 html body .workspace.oct-fixed-title-owner,
 html body .workspace.oct-shell-title-owner{border-top:0!important;border-bottom:0!important;box-shadow:none!important;padding-bottom:0!important;overflow:visible!important}
 html body .workspace.oct-fixed-title-owner>small,
-html body .workspace.oct-shell-title-owner>small{display:block!important;margin:7px 0 0!important;max-width:760px!important;height:auto!important;max-height:none!important;line-height:1.55!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;word-break:break-word!important}
+html body .workspace.oct-shell-title-owner>small{display:block!important;margin:6px 0 0!important;width:auto!important;max-width:min(1000px,72vw)!important;height:auto!important;max-height:none!important;line-height:1.45!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:normal!important}
 html body .ota-toolbar{border-top:0!important;border-bottom:0!important;box-shadow:none!important;padding-bottom:0!important}
 `;
 }
@@ -42,5 +42,5 @@ window.addEventListener('popstate',schedule);
 window.addEventListener('octopus-owned-route-change',schedule);
 window.addEventListener('pageshow',schedule);
 window.addEventListener('octopus-language-change',schedule);
-window.OctopusHeaderDividerFix={apply,version:'1.0'};
+window.OctopusHeaderDividerFix={apply,version:'1.1'};
 })();
