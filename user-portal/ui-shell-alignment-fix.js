@@ -3,77 +3,25 @@
 
   const STYLE_ID='octopus-shell-alignment-fix';
   const SETTINGS_ID='octopusSettingsMenu';
-
+  const LANG_KEY='octopus-user-v7-language';
   const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
+  const en=()=>localStorage.getItem(LANG_KEY)==='en'||String(document.documentElement.lang||'').toLowerCase().startsWith('en');
 
   function installStyle(){
     let style=document.getElementById(STYLE_ID);
     if(!style){style=document.createElement('style');style.id=STYLE_ID;document.head.appendChild(style)}
     style.textContent=`
-      /* Search and utility controls stay on the right without covering page actions. */
-      .ota-toolbar{
-        position:relative!important;
-        z-index:3!important;
-        justify-content:flex-end!important;
-        align-items:center!important;
-        gap:8px!important;
-        min-height:44px!important;
-        padding:0 0 7px!important;
-        margin:0 0 7px!important;
-        box-sizing:border-box!important
-      }
-      .ota-toolbar>input,
-      .ota-toolbar .ota-search-host{
-        order:2!important;
-        flex:0 1 420px!important;
-        width:min(420px,38vw)!important;
-        min-width:280px!important;
-        max-width:420px!important;
-        margin-left:auto!important
-      }
+      .ota-toolbar{position:relative!important;z-index:3!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;min-height:44px!important;padding:0 0 7px!important;margin:0 0 7px!important;box-sizing:border-box!important}
+      .ota-toolbar>input,.ota-toolbar .ota-search-host{order:2!important;flex:0 1 420px!important;width:min(420px,38vw)!important;min-width:280px!important;max-width:420px!important;margin-left:auto!important}
       .ota-actions{order:3!important;flex:0 0 auto!important;width:auto!important;margin-left:0!important}
-
-      /* The native bottom-left settings center is the only settings entry. */
-      .ota-settings-button{display:none!important}
-      #${SETTINGS_ID}{display:none!important}
-
-      /* Keep titles close to the top, but always below the toolbar. */
+      .ota-settings-button{display:none!important}#${SETTINGS_ID}{display:none!important}
       #pageRoot{padding-top:0!important;overflow:visible!important}
       #pageRoot .v815page,#pageRoot .occ-page{padding-top:2px!important}
-      #pageRoot .v815head,
-      #pageRoot .occ-head{
-        position:relative!important;
-        z-index:1!important;
-        clear:both!important;
-        margin-top:0!important;
-        margin-bottom:14px!important;
-        padding-top:3px!important
-      }
-      #pageRoot .v815head h1,
-      #pageRoot .v815head h2,
-      #pageRoot .occ-head h1{line-height:1.18!important}
-      #pageRoot .v815head>div:last-child,
-      #pageRoot .occ-head-actions{position:relative!important;z-index:2!important;flex-shrink:0!important}
-
-      /* Keep the pipeline text legible and immune to inherited compact styles. */
-      #pageRoot .occ-pipeline,
-      #pageRoot .occ-pipeline button,
-      #pageRoot .occ-pipeline span,
-      #pageRoot .occ-pipeline b,
-      #pageRoot .occ-pipeline small{
-        font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif!important;
-        text-rendering:optimizeLegibility!important
-      }
-
-      @media(max-width:860px){
-        .ota-toolbar{flex-wrap:wrap!important;padding-bottom:6px!important}
-        .ota-toolbar>input,
-        .ota-toolbar .ota-search-host{
-          order:1!important;flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:none!important;margin-left:0!important
-        }
-        .ota-actions{order:2!important;margin-left:auto!important}
-        #pageRoot .v815head,#pageRoot .occ-head{padding-top:2px!important}
-      }
+      #pageRoot .v815head,#pageRoot .occ-head{position:relative!important;z-index:1!important;clear:both!important;margin-top:0!important;margin-bottom:14px!important;padding-top:3px!important}
+      #pageRoot .v815head h1,#pageRoot .v815head h2,#pageRoot .occ-head h1{line-height:1.18!important}
+      #pageRoot .v815head>div:last-child,#pageRoot .occ-head-actions{position:relative!important;z-index:2!important;flex-shrink:0!important}
+      #pageRoot .occ-pipeline,#pageRoot .occ-pipeline button,#pageRoot .occ-pipeline span,#pageRoot .occ-pipeline b,#pageRoot .occ-pipeline small{font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif!important;text-rendering:optimizeLegibility!important}
+      @media(max-width:860px){.ota-toolbar{flex-wrap:wrap!important;padding-bottom:6px!important}.ota-toolbar>input,.ota-toolbar .ota-search-host{order:1!important;flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:none!important;margin-left:0!important}.ota-actions{order:2!important;margin-left:auto!important}#pageRoot .v815head,#pageRoot .occ-head{padding-top:2px!important}}
     `;
   }
 
@@ -88,48 +36,67 @@
 
   function normalizeToolbar(){
     const input=findSearch();if(!input)return;
-    input.type='search';input.setAttribute('aria-label','全局搜索');
+    input.type='search';
+    input.setAttribute('aria-label',en()?'Global search':'全局搜索');
+    const zhPlaceholder='搜索项目、任务、集数、合同或结算单';
+    const enPlaceholder='Search projects, tasks, episodes, contracts, or settlements';
+    if(input.placeholder===zhPlaceholder||input.placeholder===enPlaceholder)input.placeholder=en()?enPlaceholder:zhPlaceholder;
     input.closest('.ota-toolbar')?.classList.add('osa-right-search');
   }
 
   const PIPELINE={
-    title:'\u53d1\u884c\u6d41\u7a0b\u8fdb\u5ea6',
-    description:'\u70b9\u51fb\u9636\u6bb5\u76f4\u63a5\u8fdb\u5165\u5bf9\u5e94\u5de5\u4f5c\u53f0\uff0c\u91cd\u70b9\u5173\u6ce8\u9ec4\u8272\u9636\u6bb5\u3002',
-    link:'\u67e5\u770b\u5168\u90e8\u4efb\u52a1',
-    stages:[
-      ['\u9009\u54c1\u9636\u6bb5','\u5b8c\u6210 78%','18','\u5019\u9009\u53d1\u884c\u9879\u76ee','3 \u90e8\u5f85\u51b3\u7b56'],
-      ['\u5185\u5bb9\u52a0\u5de5','\u5b8c\u6210 64%','12','\u751f\u4ea7\u5904\u7406\u4e2d','5 \u4e2a\u4efb\u52a1\u6709\u963b\u585e'],
-      ['\u7269\u6599\u5236\u4f5c','\u5b8c\u6210 72%','24','\u5f85\u751f\u6210\u6216\u5ba1\u6838','6 \u7ec4\u7b49\u5f85\u5ba1\u6838'],
-      ['\u6e20\u9053\u5206\u53d1','\u5b8c\u6210 84%','19','\u5f85\u5206\u53d1\u4efb\u52a1','2 \u4e2a\u9891\u9053\u9650\u6d41'],
-      ['\u76d1\u63a7\u8fed\u4ee3','\u5065\u5eb7 91%','42','\u4e0a\u7ebf\u5267\u96c6','4 \u90e8\u9700\u8981\u4f18\u5316']
-    ]
+    zh:{
+      title:'发行流程进度',description:'点击阶段直接进入对应工作台，重点关注黄色阶段。',link:'查看全部任务',
+      stages:[
+        ['选品阶段','完成 78%','18','候选发行项目','3 部待决策'],
+        ['内容加工','完成 64%','12','生产处理中','5 个任务有阻塞'],
+        ['物料制作','完成 72%','24','待生成或审核','6 组等待审核'],
+        ['渠道分发','完成 84%','19','待分发任务','2 个频道限流'],
+        ['监控迭代','健康 91%','42','上线剧集','4 部需要优化']
+      ]
+    },
+    en:{
+      title:'Release Pipeline',description:'Open each stage directly and focus on stages that need attention.',link:'View all tasks',
+      stages:[
+        ['Selection','78% complete','18','Distribution candidates','3 awaiting decision'],
+        ['Processing','64% complete','12','In production','5 blocked tasks'],
+        ['Creative','72% complete','24','Pending generation or review','6 sets awaiting review'],
+        ['Distribution','84% complete','19','Pending distribution','2 channels rate-limited'],
+        ['Monitoring','91% healthy','42','Live series','4 need optimization']
+      ]
+    }
   };
 
   function repairPipeline(){
     if(route()!=='overview')return;
     const pipeline=document.querySelector('#pageRoot .occ-pipeline');if(!pipeline)return;
+    const data=en()?PIPELINE.en:PIPELINE.zh;
     const heading=pipeline.querySelector('.occ-section-title h2');
     const description=pipeline.querySelector('.occ-section-title p');
     const link=pipeline.querySelector('.occ-section-title .occ-link');
-    if(heading)heading.textContent=PIPELINE.title;
-    if(description)description.textContent=PIPELINE.description;
-    if(link)link.textContent=PIPELINE.link;
+    if(heading)heading.textContent=data.title;
+    if(description)description.textContent=data.description;
+    if(link)link.textContent=data.link;
     pipeline.querySelectorAll('.occ-stage').forEach((stage,index)=>{
-      const values=PIPELINE.stages[index];if(!values)return;
+      const values=data.stages[index];if(!values)return;
       const top=stage.querySelectorAll('.occ-stage-top span');
       if(top[0])top[0].textContent=values[0];if(top[1])top[1].textContent=values[1];
       const strong=stage.querySelector('strong'),label=stage.querySelector('b'),note=stage.querySelector('small');
       if(strong)strong.textContent=values[2];if(label)label.textContent=values[3];if(note)note.textContent=values[4];
-      stage.setAttribute('lang','zh-CN');
     });
-    pipeline.setAttribute('lang','zh-CN');pipeline.dataset.encodingRepaired='1';
+    pipeline.setAttribute('lang',en()?'en':'zh-CN');
+    pipeline.dataset.encodingRepaired='1';
   }
 
   let pending=false;
   function apply(){pending=false;installStyle();removeDuplicateSettings();normalizeToolbar();repairPipeline()}
   function schedule(){if(pending)return;pending=true;requestAnimationFrame(apply)}
-  window.addEventListener('hashchange',schedule);window.addEventListener('resize',schedule);
-  new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+
+  window.addEventListener('hashchange',schedule);
+  window.addEventListener('resize',schedule);
+  window.addEventListener('octopus-language-change',schedule);
+  window.addEventListener('storage',e=>{if(e.key===LANG_KEY)schedule()});
+  new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['lang']});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
   setTimeout(schedule,350);setTimeout(schedule,1000);setTimeout(schedule,1900);
 })();
