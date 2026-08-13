@@ -3,248 +3,290 @@
 
   const STYLE_ID='octopus-light-theme-layer';
   const THEME_KEY='octopus-v7-theme';
+  let scheduled=false;
 
   function installStyle(){
     let style=document.getElementById(STYLE_ID);
-    if(!style){
-      style=document.createElement('style');
-      style.id=STYLE_ID;
-      document.head.appendChild(style);
-    }
+    if(!style){style=document.createElement('style');style.id=STYLE_ID;document.head.appendChild(style)}
     style.textContent=`
       html.octopus-light,
       html.octopus-light body,
       body.light{
         color-scheme:light!important;
-        --bg:#f4f5f7!important;
-        --panel:#ffffff!important;
-        --panel2:#f7f8fa!important;
-        --text:#1c1d21!important;
-        --soft:#6f737b!important;
-        --line:#e3e5e8!important;
-        --muted:#9aa0a8!important;
-        --shadow:0 1px 2px rgba(16,24,40,.035),0 8px 24px rgba(16,24,40,.035)!important;
-        background:#f4f5f7!important;
-        color:#1c1d21!important
+        --bg:#edf1f4!important;
+        --bg2:#e8edf1!important;
+        --panel:#f7f8f9!important;
+        --panel2:#eef2f5!important;
+        --text:#24282e!important;
+        --soft:#69717c!important;
+        --line:#d8dee4!important;
+        --line2:#e3e7eb!important;
+        --muted:#929aa5!important;
+        --shadow:0 1px 2px rgba(25,34,45,.025),0 8px 22px rgba(25,34,45,.035)!important;
+        background:#edf1f4!important;
+        color:#24282e!important
       }
 
       html.octopus-light body,
       html.octopus-light #app,
       html.octopus-light #shell,
+      html.octopus-light #appShell,
       html.octopus-light #v80shell,
       html.octopus-light #pageRoot,
       html.octopus-light .v815main,
       html.octopus-light .v815content{
-        background:#f4f5f7!important;
-        color:#1c1d21!important
+        background:#edf1f4!important;
+        color:#24282e!important
       }
 
+      /* Sidebar becomes one continuous light surface instead of navy + a white slab. */
       html.octopus-light #v80nav,
-      html.octopus-light .v815side{
-        background:#f9fafb!important;
-        color:#1c1d21!important;
-        border-color:#e5e7eb!important;
-        box-shadow:inset -1px 0 0 rgba(17,24,39,.025)!important
+      html.octopus-light .v815side,
+      html.octopus-light .oct-light-nav-shell{
+        background:#e8edf1!important;
+        color:#24282e!important;
+        border-color:#d5dce3!important;
+        box-shadow:none!important
+      }
+      html.octopus-light #v80nav>*{background:transparent!important}
+      html.octopus-light #v80nav .v815g,
+      html.octopus-light #v80nav .v815gh{background:transparent!important}
+      html.octopus-light .oct-light-dark-surface{
+        background:#dde5eb!important;
+        color:#29333e!important;
+        border-color:#ccd6df!important;
+        box-shadow:none!important
+      }
+      html.octopus-light .oct-light-dark-surface *{color:inherit}
+
+      /* Large pure-white containers are softened so the page has layers rather than white walls. */
+      html.octopus-light .oct-light-large-surface{
+        background:#f5f7f8!important;
+        border-color:#dbe1e6!important;
+        box-shadow:0 1px 2px rgba(25,34,45,.018)!important
       }
 
       html.octopus-light :is(.ota-toolbar,.v815top,.v815header){
-        background:rgba(255,255,255,.94)!important;
-        color:#1c1d21!important;
-        border-color:#e5e7eb!important;
-        box-shadow:0 1px 0 rgba(17,24,39,.025)!important;
-        backdrop-filter:blur(14px)!important
+        background:#f6f8f9!important;
+        color:#24282e!important;
+        border-color:#dbe1e6!important;
+        box-shadow:0 1px 0 rgba(25,34,45,.025)!important;
+        backdrop-filter:none!important
       }
 
       html.octopus-light :is(
-        .v815card,.v815kpi,.v815tw,.v815flow,
+        .v815card,.v815kpi,.v815tw,.v815flow,.v815mod,
         .orw-card,.orw-kpi,.orw-shell,
         .cad-data-section,.cad-insight-card,
         .occ-card,.oge-card,.gml-data-section,.ol2-data-section,
         .otp-list-card,.pcw-card,.rvw-card,.dpw-card,.loc-card,
-        #octopusRowEditor .ore-panel,#apfModal .apf-modal
+        .atw-card,.atw-flow-card,
+        .gw3-card,.gw3-panel,.gw3-context,
+        #octopusRowEditor .ore-panel,#apfModal .apf-modal,
+        .business-modal
       ){
-        background:#ffffff!important;
-        color:#1c1d21!important;
-        border-color:#e3e5e8!important;
-        box-shadow:0 1px 2px rgba(16,24,40,.025),0 6px 18px rgba(16,24,40,.025)!important
+        background:#f7f8f9!important;
+        color:#24282e!important;
+        border-color:#d9dfe5!important;
+        box-shadow:0 1px 2px rgba(25,34,45,.02),0 5px 16px rgba(25,34,45,.022)!important
       }
 
       html.octopus-light :is(
-        .v815table th,.orw-table th,
+        .v815table th,.orw-table th,.atw-table th,.gw3-table th,
         .v815ct,.cad-data-head,.orw-head,
-        .ore-head,.ore-foot,.apf-modal-head,.apf-modal-foot
+        .ore-head,.ore-foot,.apf-modal-head,.apf-modal-foot,
+        .atw-head,.atw-modal-head,.atw-modal-foot,
+        .gw3-panel-head,.gw3-modal-head,.gw3-modal-foot,
+        .business-modal-head,.business-modal .modal-actions
       ){
-        background:#f8f9fa!important;
-        color:#34373d!important;
-        border-color:#e7e9ec!important
+        background:#eef2f5!important;
+        color:#3a4048!important;
+        border-color:#dce2e7!important
       }
 
-      html.octopus-light .v815toolbar{
-        background:transparent!important;
-        border-color:transparent!important;
-        box-shadow:none!important
-      }
+      html.octopus-light :is(.business-form,.business-aside,.gw3-modal-body,.atw-form){background:#f7f8f9!important}
+      html.octopus-light .business-aside{background:#edf1f4!important;border-color:#d8dee4!important}
+      html.octopus-light .aside-block,
+      html.octopus-light .choice,
+      html.octopus-light .choice-grid{background:#f2f5f7!important;border-color:#d9e0e6!important}
 
-      html.octopus-light :is(.v815table td,.orw-table td){
+      html.octopus-light .v815toolbar{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+
+      html.octopus-light :is(.v815table td,.orw-table td,.atw-table td,.gw3-table td){
+        background:#f7f8f9!important;
+        color:#2a2f35!important;
+        border-color:#e1e5e9!important
+      }
+      html.octopus-light :is(.v815table tbody tr:hover td,.orw-table tbody tr:hover td,.atw-table tbody tr:hover td,.gw3-table tbody tr:hover td){background:#f0f3f5!important}
+
+      /* White is reserved for editable controls and small active surfaces. */
+      html.octopus-light :is(input,select,textarea,.v815input,.v815select,.ore-value,.gw3-title-input){
         background:#ffffff!important;
-        color:#25272b!important;
-        border-color:#eceef0!important
+        color:#252a30!important;
+        border-color:#cfd7df!important;
+        box-shadow:0 1px 1px rgba(25,34,45,.018)!important
       }
-      html.octopus-light :is(.v815table tbody tr:hover td,.orw-table tbody tr:hover td){background:#fafbfc!important}
-
-      html.octopus-light :is(
-        input,select,textarea,
-        .v815input,.v815select,
-        .ore-value,.cad-data-meta
-      ){
-        background:#ffffff!important;
-        color:#25272b!important;
-        border-color:#d9dde2!important;
-        box-shadow:0 1px 1px rgba(16,24,40,.02)!important
-      }
-      html.octopus-light :is(input,select,textarea):focus{
+      html.octopus-light :is(input,select,textarea):focus,
+      html.octopus-light .gw3-title-input:focus{
         outline:none!important;
-        border-color:#aab5df!important;
-        box-shadow:0 0 0 3px rgba(83,104,198,.09)!important
-      }
-      html.octopus-light :is(input,textarea)::placeholder{color:#a2a7af!important}
-      html.octopus-light select option{background:#ffffff!important;color:#25272b!important}
-
-      html.octopus-light :is(
-        .v815ghost,.orw-btn:not(.primary),.ore-btn:not(.primary),
-        .apf-modal-btn:not(.primary),.apf-export
-      ){
         background:#ffffff!important;
-        color:#4f555f!important;
-        border-color:#dfe2e6!important;
-        box-shadow:0 1px 1px rgba(16,24,40,.02)!important
+        border-color:#96a6d9!important;
+        box-shadow:0 0 0 3px rgba(83,104,198,.075)!important
+      }
+      html.octopus-light :is(input,textarea)::placeholder{color:#9ba3ad!important}
+      html.octopus-light select option{background:#ffffff!important;color:#252a30!important}
+
+      html.octopus-light :is(
+        .v815ghost,.orw-btn:not(.primary),.ore-btn:not(.primary),
+        .apf-modal-btn:not(.primary),.apf-export,.atw-btn:not(.primary):not(.active),
+        .gw3-secondary,.gw3-modal-close
+      ){
+        background:#f3f5f7!important;
+        color:#505862!important;
+        border-color:#d5dce3!important;
+        box-shadow:none!important
       }
       html.octopus-light :is(
         .v815ghost,.orw-btn:not(.primary),.ore-btn:not(.primary),
-        .apf-modal-btn:not(.primary),.apf-export
+        .apf-modal-btn:not(.primary),.apf-export,.atw-btn:not(.primary):not(.active),
+        .gw3-secondary,.gw3-modal-close
       ):hover{
-        background:#f7f8fa!important;
-        color:#23262b!important;
-        border-color:#d4d8de!important
+        background:#e9edf1!important;
+        color:#252a30!important;
+        border-color:#cbd4dc!important
       }
 
-      html.octopus-light :is(.v815act,.orw-unified-action){
+      html.octopus-light :is(.v815act,.orw-unified-action,.gw3-row-action.v815act){
         background:transparent!important;
-        color:#636a74!important;
+        color:#5d6670!important;
         border-color:transparent!important;
         box-shadow:none!important
       }
-      html.octopus-light :is(.v815act,.orw-unified-action):first-child{
-        color:#556bc8!important;
-        border-color:#d7dcf1!important;
-        background:#fafbff!important
+      html.octopus-light :is(.v815act,.orw-unified-action,.gw3-row-action.v815act):first-child{
+        color:#5065b8!important;
+        border-color:#d0d8ec!important;
+        background:#f1f3f9!important
       }
-      html.octopus-light :is(.v815act,.orw-unified-action):hover{
-        background:#f1f3f6!important;
-        color:#25272b!important;
-        border-color:#e5e7eb!important
+      html.octopus-light :is(.v815act,.orw-unified-action,.gw3-row-action.v815act):hover{
+        background:#e9edf1!important;
+        color:#252a30!important;
+        border-color:#d7dde3!important
       }
 
       html.octopus-light #v80nav button{
         background:transparent!important;
         border-color:transparent!important;
-        color:#737983!important;
+        color:#6d7580!important;
         box-shadow:none!important
       }
-      html.octopus-light #v80nav button:hover{
-        background:#f0f2f4!important;
-        color:#25272b!important
-      }
+      html.octopus-light #v80nav button:hover{background:#dde4ea!important;color:#262c33!important}
       html.octopus-light #v80nav button.active,
       html.octopus-light #v80nav .v815item.active{
-        background:#eef1fa!important;
+        background:#dfe5f1!important;
         border-color:transparent!important;
-        color:#27345f!important;
+        color:#2c3b68!important;
         box-shadow:inset 2px 0 #6074c7!important
       }
-      html.octopus-light #v80nav .v815no{
-        background:#eef0f3!important;
-        color:#6b717a!important
-      }
-      html.octopus-light #v80nav .v815gh{color:#41454d!important}
+      html.octopus-light #v80nav .v815no{background:#dce3e9!important;color:#68717b!important}
+      html.octopus-light #v80nav .v815gh{color:#383e46!important}
 
-      html.octopus-light .v815step{
-        background:#fafbfc!important;
-        color:#6b717a!important;
-        border-color:#e7e9ec!important;
-        box-shadow:none!important
-      }
-      html.octopus-light .v815step:hover{background:#f5f6f8!important;color:#34373d!important}
-      html.octopus-light .v815step.active{
-        background:#f0f2fa!important;
-        color:#28345f!important;
-        border-color:#d5daf0!important;
-        box-shadow:inset 0 0 0 1px rgba(96,116,199,.04)!important
-      }
+      html.octopus-light .v815step{background:#eef2f5!important;color:#68717b!important;border-color:#dce2e7!important;box-shadow:none!important}
+      html.octopus-light .v815step:hover{background:#e8edf1!important;color:#353b42!important}
+      html.octopus-light .v815step.active{background:#e4e8f3!important;color:#2d3963!important;border-color:#cbd4eb!important;box-shadow:none!important}
 
       html.octopus-light :is(
-        .primary,.apf-primary,.v815primary,
-        .orw-btn.primary,.ore-btn.primary,.apf-modal-btn.primary
+        .primary,.apf-primary,.v815primary,.gw3-primary,
+        .orw-btn.primary,.ore-btn.primary,.apf-modal-btn.primary,.atw-btn.primary,.atw-btn.active
       ){
         background:#586dc5!important;
         color:#ffffff!important;
         border-color:#586dc5!important;
-        box-shadow:0 1px 2px rgba(46,58,110,.14)!important
+        box-shadow:0 1px 2px rgba(46,58,110,.12)!important
       }
       html.octopus-light :is(
-        .primary,.apf-primary,.v815primary,
-        .orw-btn.primary,.ore-btn.primary,.apf-modal-btn.primary
-      ):hover{
-        background:#4f63b6!important;
-        border-color:#4f63b6!important
-      }
+        .primary,.apf-primary,.v815primary,.gw3-primary,
+        .orw-btn.primary,.ore-btn.primary,.apf-modal-btn.primary,.atw-btn.primary,.atw-btn.active
+      ):hover{background:#4f63b6!important;border-color:#4f63b6!important}
 
       html.octopus-light :is(
         .v815item,.v815gh small,.v815ct span,.v815head p,.orw-head p,
         .orw-note,.orw-foot,.ore-head p,.ore-note,.apf-modal-head p,
-        .cad-data-head p,.cad-data-meta,.v815foot
-      ){color:#747a84!important}
+        .cad-data-head p,.cad-data-meta,.v815foot,.atw-head p,.atw-foot,
+        .gw3-panel-head p,.gw3-modal-head p,.gw3-meta,.business-modal-head p
+      ){color:#737c87!important}
 
-      html.octopus-light .orw-note{
-        background:#f8f9fc!important;
-        color:#6b717a!important;
-        border-color:#e7e9ef!important
-      }
-      html.octopus-light .orw-source,
-      html.octopus-light .cad-tag-chip{
-        background:#f2f4fb!important;
-        color:#4e61ad!important;
-        border-color:#d9def1!important
-      }
+      html.octopus-light :is(.orw-note,.gw3-note){background:#eef2f6!important;color:#69727d!important;border-color:#d9e0e8!important}
+      html.octopus-light :is(.orw-source,.cad-tag-chip,.gw3-chip){background:#e8ecf5!important;color:#5264a8!important;border-color:#d1d9eb!important}
+      html.octopus-light :is(.gw3-title-card,.gw3-option){background:#f0f3f5!important;border-color:#d9e0e6!important;color:#606974!important}
+      html.octopus-light .gw3-title-card.selected{background:#e8ecf6!important;border-color:#9eaddb!important;box-shadow:0 0 0 2px rgba(83,104,198,.05)!important}
+      html.octopus-light .gw3-meta span{background:#e9edf1!important}
 
-      html.octopus-light :is(.orw-modal,#octopusRowEditor,#apfModal,#v815modal){
-        background:rgba(29,33,41,.20)!important;
-        backdrop-filter:blur(3px)!important
+      html.octopus-light :is(.orw-modal,#octopusRowEditor,#apfModal,#v815modal,.atw-modal,.gw3-modal){
+        background:rgba(34,42,52,.16)!important;
+        backdrop-filter:blur(5px)!important
       }
-      html.octopus-light #octopusRowEditor .ore-backdrop{background:rgba(29,33,41,.20)!important}
+      html.octopus-light #octopusRowEditor .ore-backdrop{background:rgba(34,42,52,.16)!important}
+      html.octopus-light :is(.atw-shell,.gw3-modal-shell,.v815mc){background:#f7f8f9!important;border-color:#d7dee5!important;box-shadow:0 22px 64px rgba(34,42,52,.14)!important}
 
       html.octopus-light hr,
       html.octopus-light [class*="divider"],
-      html.octopus-light [class*="border"]{border-color:#e3e5e8!important}
-
-      html.octopus-light *{scrollbar-color:#c9cdd3 #f4f5f7}
+      html.octopus-light [class*="border"]{border-color:#d9dfe5!important}
+      html.octopus-light *{scrollbar-color:#bec7cf #edf1f4}
     `;
   }
 
+  function rgb(color){
+    const m=String(color||'').match(/rgba?\((\d+)[, ]+(\d+)[, ]+(\d+)/i);
+    return m?[+m[1],+m[2],+m[3]]:null;
+  }
+  function isDark(color){const c=rgb(color);return c&&((c[0]*.2126+c[1]*.7152+c[2]*.0722)<95)}
+  function isNearWhite(color){const c=rgb(color);return c&&c[0]>244&&c[1]>244&&c[2]>244}
+
+  function markStructure(light){
+    document.querySelectorAll('.oct-light-nav-shell,.oct-light-dark-surface,.oct-light-large-surface').forEach(el=>el.classList.remove('oct-light-nav-shell','oct-light-dark-surface','oct-light-large-surface'));
+    if(!light)return;
+
+    const nav=document.getElementById('v80nav');
+    if(nav){
+      const nr=nav.getBoundingClientRect();
+      let p=nav.parentElement;
+      while(p&&p!==document.body){
+        const r=p.getBoundingClientRect();
+        if(r.width&&nr.width&&r.width<=nr.width+90){p.classList.add('oct-light-nav-shell');p=p.parentElement}else break;
+      }
+      const shell=nav.closest('.oct-light-nav-shell')||nav.parentElement||nav;
+      shell.querySelectorAll('div,section,article,footer').forEach(el=>{
+        const r=el.getBoundingClientRect();
+        if(r.width>Math.max(180,nr.width*.55)&&r.height>42&&isDark(getComputedStyle(el).backgroundColor))el.classList.add('oct-light-dark-surface');
+      });
+    }
+
+    document.querySelectorAll('#pageRoot div,#pageRoot section,#pageRoot article,#pageRoot header,#pageRoot footer,#appShell main').forEach(el=>{
+      if(el.matches('table,thead,tbody,tr,td,th,form'))return;
+      const r=el.getBoundingClientRect();
+      if(r.width>420&&r.height>150&&r.width*r.height>100000&&isNearWhite(getComputedStyle(el).backgroundColor))el.classList.add('oct-light-large-surface');
+    });
+  }
+
   function sync(){
+    scheduled=false;
+    installStyle();
     const light=localStorage.getItem(THEME_KEY)==='light';
     document.documentElement.classList.toggle('octopus-light',light);
     document.body?.classList.toggle('light',light);
     document.documentElement.style.colorScheme=light?'light':'dark';
     document.body?.setAttribute('data-theme-mode',light?'light':'dark');
+    requestAnimationFrame(()=>markStructure(light));
   }
+  function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(sync)}
 
   installStyle();
   sync();
-  window.addEventListener('storage',e=>{if(e.key===THEME_KEY)sync()});
-  window.addEventListener('hashchange',sync);
-  const observer=new MutationObserver(()=>requestAnimationFrame(sync));
+  window.addEventListener('storage',e=>{if(e.key===THEME_KEY)schedule()});
+  window.addEventListener('hashchange',schedule);
+  window.addEventListener('resize',schedule);
+  const observer=new MutationObserver(schedule);
   observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','data-theme-mode']});
-  setTimeout(sync,250);
-  setTimeout(sync,900);
+  setTimeout(schedule,250);
+  setTimeout(schedule,900);
 })();
