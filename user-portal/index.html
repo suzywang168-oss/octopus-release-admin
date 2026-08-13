@@ -36,6 +36,10 @@ const files=[
   {src:'ui-global-controls-fix.js?v=202608131920'},
   {src:'demo-fallback-v714.js?v=202608071348'},
   {src:'ui-qa-fix-v813.js?v=202608071348'},
+
+  /* Runtime coordinator loads before legacy architecture so owned routes never flash through old pages. */
+  {src:'ui-runtime-stability-v2.js?v=202608131523'},
+
   {src:'portal-architecture-v815.js?v=202608071348'},
   {src:'ui-navigation-action-cleanup.js?v=202608130040'},
   {src:'ui-interaction-fix-v816.js?v=202608131442'},
@@ -91,12 +95,12 @@ const files=[
   {src:'ui-route-ownership-lock.js?v=202608131442'},
 
   /* Absolute last: one visible page title in the top toolbar. */
-  {src:'ui-title-single-source.js?v=202608131506'}
+  {src:'ui-title-single-source.js?v=202608131523'}
 ];
 function preloadScripts(){
   files.forEach((file,index)=>{
     const link=document.createElement('link');link.rel='preload';link.as='script';link.href=file.src;
-    if('fetchPriority' in link)link.fetchPriority=index<14?'high':'auto';document.head.appendChild(link);
+    if('fetchPriority' in link)link.fetchPriority=index<15?'high':'auto';document.head.appendChild(link);
   });
 }
 preloadScripts();
