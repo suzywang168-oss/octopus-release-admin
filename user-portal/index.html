@@ -38,7 +38,7 @@ const files=[
   {src:'ui-qa-fix-v813.js?v=202608071348'},
   {src:'portal-architecture-v815.js?v=202608071348'},
   {src:'ui-navigation-action-cleanup.js?v=202608130040'},
-  {src:'ui-interaction-fix-v816.js?v=202608131441'},
+  {src:'ui-interaction-fix-v816.js?v=202608131442'},
   {src:'ui-action-pages-v817.js?v=202608130810'},
   {src:'ui-overview-command-center.js?v=202608071348'},
   {src:'ui-topbar-actions.js?v=202608071348'},
@@ -74,17 +74,17 @@ const files=[
   {src:'ui-assets-template-workspace.js?v=202608131125'},
   {src:'ui-assets-business-actions.js?v=202608131125'},
 
-  /* Registry pauses while any editor/form is active. */
-  {src:'ui-stable-action-registry-v3.js?v=202608131441'},
+  /* Registry pauses while a visible editor or focused form control is active. */
+  {src:'ui-stable-action-registry-v3.js?v=202608131442'},
 
   /* Integrity recovery also pauses while editing. */
-  {src:'ui-critical-pages-final.js?v=202608131441'},
+  {src:'ui-critical-pages-final.js?v=202608131442'},
 
   /* Single owner for dashboard actions plus Channel Accounts / Async Tasks. */
   {src:'ui-dashboard-system-action-owner.js?v=202608131322'},
 
   /* Absolute last: only block confirmed legacy v815 page rewrites. */
-  {src:'ui-route-ownership-lock.js?v=202608131441'}
+  {src:'ui-route-ownership-lock.js?v=202608131442'}
 ];
 function preloadScripts(){
   files.forEach((file,index)=>{
