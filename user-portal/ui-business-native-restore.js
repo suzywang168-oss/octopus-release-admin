@@ -14,7 +14,6 @@ function installCss(){let s=document.getElementById('octopus-business-native-res
 #${ROOT} .rvw-btn.primary,#${ROOT} .rvw-row-review{border-color:#6683df!important;background:#6683df!important;color:#fff!important}
 #${ROOT} .dpw-table .dpw-btn,#${ROOT} .dpw-head .dpw-btn,#${ROOT} .dpw-modal .dpw-btn{height:36px!important;min-height:36px!important;max-height:36px!important;padding:0 13px!important;border-radius:9px!important;font-size:9px!important;font-weight:700!important}
 #${ROOT} .dpw-btn.primary{border-color:#6683df!important;background:#6683df!important;color:#fff!important}
-/* Preserve the latest generation workspace row actions from global list styling. */
 #${ROOT} .gw3-row-action.v815act{width:auto!important;min-width:92px!important;height:31px!important;padding:0 12px!important;border:1px solid #6683df!important;border-radius:8px!important;background:transparent!important;color:#a9bbff!important;font-size:8px!important;font-weight:750!important}
 `}
 }
@@ -30,6 +29,7 @@ function cleanupNativeButtons(){
  if(SELF_METRIC_ROUTES.has(r)){
   root.querySelectorAll('.oct-contract-kpis-generated,.oct-ai-strip').forEach(x=>x.remove());
   root.querySelectorAll('.oct-legacy-ai-insight').forEach(x=>x.classList.remove('oct-legacy-ai-insight'));
+  root.querySelectorAll('.gw3-kpis.oct-contract-kpis').forEach(x=>x.classList.remove('oct-contract-kpis'));
   root.querySelector(':scope>.gw3-page,:scope>.atw-page')?.removeAttribute('data-metrics-insight');
  }
 }
@@ -62,5 +62,5 @@ window.addEventListener('pageshow',()=>setTimeout(apply,100));
 window.addEventListener('octopus-language-change',()=>setTimeout(apply,120));
 document.addEventListener('focusout',()=>setTimeout(apply,160),true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(apply,150),{once:true});else setTimeout(apply,40);
-window.OctopusBusinessNativeRestore={apply,version:'1.1'};
+window.OctopusBusinessNativeRestore={apply,version:'1.2'};
 })();
