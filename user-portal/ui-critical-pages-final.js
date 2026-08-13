@@ -39,8 +39,9 @@ function check(){css();const r=route(),root=document.getElementById(ROOT);if(!ro
    showButtons(page,'.rvw-btn');return
  }
  if(r==='release.distribution'){
-   const page=root.querySelector('.dpw-page');if(!page||!page.querySelector('.dpw-card')){recover('distribution workspace/card missing');return}
-   showButtons(page,'.dpw-btn');return
+   window.OctopusDistributionPlanner?.ensure?.();
+   const page=root.querySelector('.dpw-page');if(page)showButtons(page,'.dpw-btn');
+   return
  }
  if(/^dashboard\./.test(r)){
    const page=root.querySelector('.daw-page');if(!page||!page.querySelector('.daw-table-card')){recover('dashboard workspace/card missing');return}
@@ -49,7 +50,7 @@ function check(){css();const r=route(),root=document.getElementById(ROOT);if(!ro
  const manifest={'production.content':'.pcw-page','production.localization':'.loc-page','release.titles':'.gw3-page','release.covers':'.gw3-page','operations.channel-analysis':'.orw-page','operations.ad-intelligence':'.orw-page'};
  if(manifest[r]&&!root.querySelector(manifest[r]))recover(`workspace ${manifest[r]} missing`)
 }
-window.OctopusIntegrityGuard={check,version:'4.2'};
+window.OctopusIntegrityGuard={check,version:'4.3'};
 window.addEventListener('hashchange',()=>{lastRoute=route();routeChangedAt=Date.now();setTimeout(check,GRACE+40);setTimeout(check,1100)});
 window.addEventListener('pageshow',()=>setTimeout(check,600));window.addEventListener('octopus-language-change',()=>setTimeout(check,650));document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(check,600)});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(check,650),{once:true});else setTimeout(check,650);
