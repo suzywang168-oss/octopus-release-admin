@@ -27,6 +27,7 @@ function cleanupNativeButtons(){
  const r=route(),root=document.getElementById(ROOT);if(!root)return;
  if(NATIVE_BUTTON_ROUTES.has(r))root.querySelectorAll('table[data-oct-actions]').forEach(t=>{t.removeAttribute('data-oct-actions');t.style.removeProperty('--oct-action-width')});
  if(SELF_METRIC_ROUTES.has(r)){
+  /* Generation/template workspaces own their KPI + insight blocks. Remove only global-contract copies. */
   root.querySelectorAll('.oct-contract-kpis-generated,.oct-ai-strip').forEach(x=>x.remove());
   root.querySelectorAll('.oct-legacy-ai-insight').forEach(x=>x.classList.remove('oct-legacy-ai-insight'));
   root.querySelectorAll('.gw3-kpis.oct-contract-kpis').forEach(x=>x.classList.remove('oct-contract-kpis'));
@@ -34,11 +35,12 @@ function cleanupNativeButtons(){
  }
 }
 function apply(){installCss();releaseContracts();cleanupNativeButtons()}
-window.addEventListener('hashchange',()=>{setTimeout(apply,20);setTimeout(apply,180)});
-window.addEventListener('octopus-owned-route-change',()=>setTimeout(apply,40));
-window.addEventListener('pageshow',()=>setTimeout(apply,100));
-window.addEventListener('octopus-language-change',()=>setTimeout(apply,120));
-document.addEventListener('focusout',()=>setTimeout(apply,160),true);
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(apply,150),{once:true});else setTimeout(apply,40);
-window.OctopusBusinessNativeRestore={apply,version:'1.3'};
+window.addEventListener('hashchange',()=>{apply();setTimeout(apply,120)});
+window.addEventListener('octopus-owned-route-change',()=>{apply();setTimeout(apply,80)});
+window.addEventListener('pageshow',()=>setTimeout(apply,60));
+window.addEventListener('octopus-language-change',()=>setTimeout(apply,80));
+document.addEventListener('focusout',()=>setTimeout(apply,120),true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
+setTimeout(apply,120);
+window.OctopusBusinessNativeRestore={apply,version:'1.4'};
 })();
