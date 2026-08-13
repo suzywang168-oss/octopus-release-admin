@@ -78,7 +78,10 @@ const files=[
   {src:'ui-critical-pages-final.js?v=202608131426'},
 
   /* Single owner for dashboard actions plus Channel Accounts / Async Tasks. */
-  {src:'ui-dashboard-system-action-owner.js?v=202608131322'}
+  {src:'ui-dashboard-system-action-owner.js?v=202608131322'},
+
+  /* Absolute last: block generic pageRoot rewrites on business-owned routes. */
+  {src:'ui-route-ownership-lock.js?v=202608131435'}
 ];
 function preloadScripts(){
   files.forEach((file,index)=>{
