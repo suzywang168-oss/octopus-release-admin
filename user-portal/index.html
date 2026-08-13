@@ -38,7 +38,7 @@ const files=[
   {src:'ui-qa-fix-v813.js?v=202608071348'},
 
   /* Runtime coordinator loads before legacy architecture so owned routes never flash through old pages. */
-  {src:'ui-runtime-stability-v2.js?v=202608131536'},
+  {src:'ui-runtime-stability-v2.js?v=202608131548'},
 
   {src:'portal-architecture-v815.js?v=202608071348'},
   {src:'ui-navigation-action-cleanup.js?v=202608130040'},
@@ -51,7 +51,10 @@ const files=[
   {src:'ui-global-module-layout.js?v=202608071348'},
   {src:'ui-layout-v2.js?v=202608071348'},
   {src:'ui-layout-spacing-fix.js?v=202608071348'},
-  /* AI title / cover generation uses the original v815 list + popup flow again. */
+
+  /* Latest AI title / cover workspace owns list, KPI, insights and editor overlays. */
+  {src:'ui-generation-workspace-v3.js?v=202608131548'},
+
   {src:'ui-title-layout-stability.js?v=202608130610'},
   {src:'ui-localization-workspace-v818.js?v=202608130242'},
   {src:'ui-route-title-normalizer.js?v=202608130810'},
@@ -83,22 +86,22 @@ const files=[
   {src:'ui-stable-action-registry-v3.js?v=202608131442'},
 
   /* Integrity recovery also pauses while editing. */
-  {src:'ui-critical-pages-final.js?v=202608131536'},
+  {src:'ui-critical-pages-final.js?v=202608131548'},
 
   /* Visual and presence contracts only. Never replaces business-owned editors. */
   {src:'ui-list-action-contracts-v2.js?v=202608131506'},
 
-  /* Keep the first KPI row visible and standardize AI insight strips on every route. */
+  /* Keep KPI rows and AI insight strips on routes that do not own their own version. */
   {src:'ui-metrics-insight-contract.js?v=202608131512'},
 
   /* Block confirmed legacy v815 page rewrites on owned routes. */
-  {src:'ui-route-ownership-lock.js?v=202608131536'},
+  {src:'ui-route-ownership-lock.js?v=202608131548'},
 
   /* One visible page title in the top toolbar. */
-  {src:'ui-title-single-source.js?v=202608131523'},
+  {src:'ui-title-single-source.js?v=202608131548'},
 
-  /* Absolute last: restore native business popups and page-owned button designs. */
-  {src:'ui-business-native-restore.js?v=202608131536'}
+  /* Absolute last: preserve business-owned controls and remove duplicate global contracts. */
+  {src:'ui-business-native-restore.js?v=202608131548'}
 ];
 function preloadScripts(){
   files.forEach((file,index)=>{
