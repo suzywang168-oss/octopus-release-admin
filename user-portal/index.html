@@ -94,14 +94,14 @@ const files=[
   /* Keep KPI rows and AI insight strips on routes that do not own their own version. */
   {src:'ui-metrics-insight-contract.js?v=202608131512'},
 
+  /* Generation/template workspaces immediately opt out of global KPI/insight injection. */
+  {src:'ui-business-native-restore.js?v=202608131950'},
+
   /* Block confirmed legacy v815 page rewrites on owned routes. */
   {src:'ui-route-ownership-lock.js?v=202608131548'},
 
   /* Fixed shell title only; global search and floating title are removed. */
   {src:'ui-title-single-source.js?v=202608131945'},
-
-  /* Preserve business-owned controls and remove duplicate global contracts. */
-  {src:'ui-business-native-restore.js?v=202608131750'},
 
   /* Complete, dedicated dialogs for channel accounts, API credentials and async task recovery. */
   {src:'ui-system-management-dialogs-v3.js?v=202608131750'}
