@@ -3,41 +3,38 @@
 const THEME_KEY='octopus-v7-theme',STYLE='octopus-light-shell-contrast-fix';
 const light=()=>localStorage.getItem(THEME_KEY)==='light'||document.documentElement.classList.contains('octopus-light')||document.body?.classList.contains('light');
 function css(){let s=document.getElementById(STYLE);if(!s){s=document.createElement('style');s.id=STYLE;document.head.appendChild(s)}s.textContent=`
-html.octopus-light #v80nav,body.light #v80nav{background:#e9eef2!important;color:#27313b!important;border-color:#d4dde5!important}
-html.octopus-light #v80nav button,body.light #v80nav button{color:#56616f!important;opacity:1!important}
-html.octopus-light #v80nav button *,body.light #v80nav button *{opacity:1!important}
-html.octopus-light #v80nav button:hover,body.light #v80nav button:hover{background:#e0e7ed!important;color:#2d3742!important}
-html.octopus-light #v80nav button.active,html.octopus-light #v80nav .v815item.active,body.light #v80nav button.active,body.light #v80nav .v815item.active{background:#dce4f2!important;color:#2e406e!important;border-color:transparent!important;box-shadow:inset 3px 0 #6683df!important}
-html.octopus-light #v80nav .v815gh,body.light #v80nav .v815gh{color:#37424e!important;opacity:1!important}
-html.octopus-light #v80nav .v815gh small,body.light #v80nav .v815gh small{color:#7e8996!important;opacity:1!important}
-html.octopus-light #v80nav .v815no,body.light #v80nav .v815no{background:#dbe3ea!important;color:#788492!important}
-html.octopus-light #v80nav .oct-l-brand-title,body.light #v80nav .oct-l-brand-title{color:#28323d!important;opacity:1!important;text-shadow:none!important}
-html.octopus-light #v80nav .oct-l-brand-sub,body.light #v80nav .oct-l-brand-sub{color:#8290a0!important;opacity:1!important}
-html.octopus-light #v80nav .oct-l-brand-mark,body.light #v80nav .oct-l-brand-mark{background:#5f7cf0!important;color:#fff!important;border-color:#5f7cf0!important;box-shadow:none!important;opacity:1!important}
-html.octopus-light #v80nav .oct-l-tenant-card,body.light #v80nav .oct-l-tenant-card{background:#f2f5f7!important;border-color:#d8e0e7!important;color:#34404c!important;box-shadow:0 1px 2px rgba(35,47,61,.025)!important;opacity:1!important}
-html.octopus-light #v80nav .oct-l-tenant-card *,body.light #v80nav .oct-l-tenant-card *{opacity:1!important}
-html.octopus-light #v80nav .oct-l-tenant-name,body.light #v80nav .oct-l-tenant-name{color:#394653!important}
-html.octopus-light #v80nav .oct-l-tenant-sub,body.light #v80nav .oct-l-tenant-sub{color:#8693a0!important}
-html.octopus-light #v80nav .oct-l-tenant-mark,body.light #v80nav .oct-l-tenant-mark{background:#e1e8ee!important;color:#536577!important;border-color:#d9e2e9!important;box-shadow:none!important}
-html.octopus-light #v80nav .oct-l-user-card,body.light #v80nav .oct-l-user-card{background:#e3e9ee!important;border-color:#cbd6df!important;color:#29343f!important;box-shadow:none!important;opacity:1!important}
-html.octopus-light #v80nav .oct-l-user-card *,body.light #v80nav .oct-l-user-card *{opacity:1!important}
-html.octopus-light #v80nav .oct-l-user-name,body.light #v80nav .oct-l-user-name{color:#26313c!important}
-html.octopus-light #v80nav .oct-l-user-sub,body.light #v80nav .oct-l-user-sub{color:#84919e!important}
-html.octopus-light #v80nav .oct-l-user-mark,body.light #v80nav .oct-l-user-mark{background:#356b96!important;color:#fff!important;border-color:#356b96!important;box-shadow:none!important}
-html.octopus-light #v80nav .oct-l-user-more,body.light #v80nav .oct-l-user-more{color:#93a2b2!important}
+html.octopus-light #v80nav,body.light #v80nav{background:#e9eef2!important;color:#2b3540!important;border-color:#d5dee6!important}
+html.octopus-light #v80nav button,body.light #v80nav button{color:#66717d!important;opacity:1!important;text-shadow:none!important}
+html.octopus-light #v80nav button:hover,body.light #v80nav button:hover{background:#e1e7ec!important;color:#33404c!important}
+html.octopus-light #v80nav button.active,html.octopus-light #v80nav .v815item.active,body.light #v80nav button.active,body.light #v80nav .v815item.active{background:#dce4f2!important;color:#314b82!important;border-color:#b9c9ea!important;box-shadow:inset 3px 0 #6683df!important}
+html.octopus-light #v80nav .v815gh,body.light #v80nav .v815gh{color:#3c4753!important;opacity:1!important}
+html.octopus-light #v80nav .v815gh small,body.light #v80nav .v815gh small{color:#8995a1!important;opacity:1!important}
+html.octopus-light #v80nav .v815no,body.light #v80nav .v815no{background:#dce4ea!important;color:#7b8794!important}
+html.octopus-light #v80nav .oct-l-brand-title,body.light #v80nav .oct-l-brand-title{color:#27323d!important;opacity:1!important;text-shadow:none!important}
+html.octopus-light #v80nav .oct-l-brand-sub,body.light #v80nav .oct-l-brand-sub{color:#8190a0!important;opacity:1!important;text-shadow:none!important}
+html.octopus-light #v80nav .oct-l-brand-mark,body.light #v80nav .oct-l-brand-mark{background:#dfe6ff!important;color:#4967c9!important;border:1px solid #c9d5ff!important;box-shadow:none!important;opacity:1!important}
+html.octopus-light #v80nav .oct-l-tenant-card,body.light #v80nav .oct-l-tenant-card{background:#f2f5f7!important;border:1px solid #d7e0e7!important;color:#35414d!important;box-shadow:none!important;opacity:1!important}
+html.octopus-light #v80nav .oct-l-tenant-name,body.light #v80nav .oct-l-tenant-name{color:#394653!important;opacity:1!important;text-shadow:none!important}
+html.octopus-light #v80nav .oct-l-tenant-sub,body.light #v80nav .oct-l-tenant-sub{color:#8895a2!important;opacity:1!important;text-shadow:none!important}
+html.octopus-light #v80nav .oct-l-tenant-mark,body.light #v80nav .oct-l-tenant-mark{background:#e4eaf0!important;color:#5a6a78!important;border:1px solid #d8e1e8!important;box-shadow:none!important;opacity:1!important}
+html.octopus-light #v80nav .oct-l-user-card,body.light #v80nav .oct-l-user-card{background:#e3e9ee!important;border:1px solid #cad5de!important;color:#29343f!important;box-shadow:none!important;opacity:1!important}
+html.octopus-light #v80nav .oct-l-user-name,body.light #v80nav .oct-l-user-name{color:#27323d!important;opacity:1!important;text-shadow:none!important}
+html.octopus-light #v80nav .oct-l-user-sub,body.light #v80nav .oct-l-user-sub{color:#83919e!important;opacity:1!important;text-shadow:none!important}
+html.octopus-light #v80nav .oct-l-user-mark,body.light #v80nav .oct-l-user-mark{background:#dbe7f2!important;color:#355d82!important;border:1px solid #c9d9e6!important;box-shadow:none!important;opacity:1!important}
+html.octopus-light #v80nav .oct-l-user-more,body.light #v80nav .oct-l-user-more{color:#96a5b4!important;opacity:1!important}
 `}
 function leaves(root){return [...root.querySelectorAll('*')].filter(el=>!el.children.length&&el.textContent.trim())}
-function textLeaf(root,re){return leaves(root).find(el=>re.test(el.textContent.trim()))||null}
-function cardFor(el,minH=58,maxH=150){const nav=document.getElementById('v80nav');if(!el||!nav)return null;let p=el.parentElement,best=null;while(p&&p!==nav){const r=p.getBoundingClientRect();if(r.width>180&&r.height>=minH&&r.height<=maxH)best=p;p=p.parentElement}return best}
-function squareIn(card){if(!card)return null;const all=[...card.querySelectorAll('div,span')];return all.find(el=>{const r=el.getBoundingClientRect();return r.width>=32&&r.width<=90&&r.height>=32&&r.height<=90&&Math.abs(r.width-r.height)<12})||null}
-function clear(nav){nav.querySelectorAll('.oct-l-brand-title,.oct-l-brand-sub,.oct-l-brand-mark,.oct-l-tenant-card,.oct-l-tenant-name,.oct-l-tenant-sub,.oct-l-tenant-mark,.oct-l-user-card,.oct-l-user-name,.oct-l-user-sub,.oct-l-user-mark,.oct-l-user-more').forEach(el=>el.classList.remove('oct-l-brand-title','oct-l-brand-sub','oct-l-brand-mark','oct-l-tenant-card','oct-l-tenant-name','oct-l-tenant-sub','oct-l-tenant-mark','oct-l-user-card','oct-l-user-name','oct-l-user-sub','oct-l-user-mark','oct-l-user-more'))}
-function mark(){css();const nav=document.getElementById('v80nav');if(!nav)return;clear(nav);if(!light())return;
- const brand=textLeaf(nav,/^Octopus$/i);if(brand){brand.classList.add('oct-l-brand-title');const sub=textLeaf(nav,/Release User Portal/i);sub?.classList.add('oct-l-brand-sub');const block=cardFor(brand,52,125)||brand.parentElement?.parentElement;const markEl=squareIn(block);markEl?.classList.add('oct-l-brand-mark')}
- const tenantSub=textLeaf(nav,/Partner Plan|内容制作方|Content Partner/i),tenantName=tenantSub?textLeaf(nav,/影业|传媒|内容|Studio|Media|Pictures/i):null;const tenantCard=cardFor(tenantSub||tenantName,70,150);if(tenantCard){tenantCard.classList.add('oct-l-tenant-card');tenantName?.classList.add('oct-l-tenant-name');tenantSub?.classList.add('oct-l-tenant-sub');squareIn(tenantCard)?.classList.add('oct-l-tenant-mark')}
- const userName=textLeaf(nav,/^Suzy Wang$/i),userCard=cardFor(userName,70,145);if(userCard){userCard.classList.add('oct-l-user-card');userName?.classList.add('oct-l-user-name');const userLeaves=leaves(userCard);userLeaves.find(x=>/制作方管理员|全部项目|Administrator|All projects/i.test(x.textContent.trim()))?.classList.add('oct-l-user-sub');squareIn(userCard)?.classList.add('oct-l-user-mark');userLeaves.find(x=>/^\.\.\.$/.test(x.textContent.trim())||x.textContent.trim()==='•••')?.classList.add('oct-l-user-more')}
+function leaf(root,re){return leaves(root).find(el=>re.test(el.textContent.trim()))||null}
+function cardFor(el,minH,maxH){const nav=document.getElementById('v80nav');if(!el||!nav)return null;let p=el.parentElement,best=null;while(p&&p!==nav){const r=p.getBoundingClientRect();if(r.width>190&&r.height>=minH&&r.height<=maxH)best=p;p=p.parentElement}return best}
+function square(card){if(!card)return null;return [...card.querySelectorAll('div,span,button')].find(el=>{const r=el.getBoundingClientRect();return r.width>=34&&r.width<=92&&r.height>=34&&r.height<=92&&Math.abs(r.width-r.height)<10})||null}
+function clear(nav){const classes=['oct-l-brand-title','oct-l-brand-sub','oct-l-brand-mark','oct-l-tenant-card','oct-l-tenant-name','oct-l-tenant-sub','oct-l-tenant-mark','oct-l-user-card','oct-l-user-name','oct-l-user-sub','oct-l-user-mark','oct-l-user-more'];nav.querySelectorAll('.'+classes.join(',.')).forEach(el=>classes.forEach(c=>el.classList.remove(c)))}
+function apply(){css();const nav=document.getElementById('v80nav');if(!nav)return;clear(nav);if(!light())return;
+ const brand=leaf(nav,/^Octopus$/i),brandSub=leaf(nav,/Release User Portal/i);if(brand){brand.classList.add('oct-l-brand-title');brandSub?.classList.add('oct-l-brand-sub');square(cardFor(brand,50,130))?.classList.add('oct-l-brand-mark')}
+ const tenantSub=leaf(nav,/Partner Plan|内容制作方|Content Partner/i),tenantCard=cardFor(tenantSub,68,155);if(tenantCard){tenantCard.classList.add('oct-l-tenant-card');tenantSub?.classList.add('oct-l-tenant-sub');const tenantLeaves=leaves(tenantCard),name=tenantLeaves.find(x=>x!==tenantSub&&/影业|传媒|Studio|Media|Pictures|Company/i.test(x.textContent.trim()));name?.classList.add('oct-l-tenant-name');square(tenantCard)?.classList.add('oct-l-tenant-mark')}
+ const user=leaf(nav,/^Suzy Wang$/i),userCard=cardFor(user,68,150);if(userCard){userCard.classList.add('oct-l-user-card');user?.classList.add('oct-l-user-name');const ls=leaves(userCard);ls.find(x=>/制作方管理员|全部项目|Administrator|All projects/i.test(x.textContent.trim()))?.classList.add('oct-l-user-sub');ls.find(x=>/^\.\.\.$|^•••$/.test(x.textContent.trim()))?.classList.add('oct-l-user-more');square(userCard)?.classList.add('oct-l-user-mark')}
 }
-let pending=false;function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;mark()})}
-window.addEventListener('hashchange',schedule);window.addEventListener('pageshow',schedule);window.addEventListener('resize',schedule);window.addEventListener('octopus-language-change',()=>setTimeout(schedule,80));window.addEventListener('storage',e=>{if(e.key===THEME_KEY)schedule()});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(schedule,120),{once:true});else setTimeout(schedule,120);setTimeout(schedule,650);
-window.OctopusLightShellContrast={apply:mark,version:'1.0'};
+let pending=false;function schedule(delay=0){setTimeout(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;apply()})},delay)}
+window.addEventListener('hashchange',()=>schedule(70));window.addEventListener('pageshow',()=>schedule(80));window.addEventListener('resize',()=>schedule(80));window.addEventListener('octopus-language-change',()=>schedule(100));window.addEventListener('storage',e=>{if(e.key===THEME_KEY)schedule(60)});document.addEventListener('click',e=>{if(e.target instanceof Element&&e.target.closest('[data-theme]')){schedule(0);schedule(80);schedule(260)}},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>schedule(140),{once:true});else schedule(140);setTimeout(()=>schedule(),700);
+window.OctopusLightShellContrast={apply,version:'2.0'};
 })();
