@@ -26,7 +26,8 @@ const META={
 const isEn=()=>localStorage.getItem(LANG)==='en'||String(document.documentElement.lang||'').toLowerCase().startsWith('en');
 const route=()=>{const raw=location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';return ALIAS[raw]||raw};
 function css(){
- let s=document.getElementById(STYLE);if(!s){s=document.createElement('style');s.id=STYLE;document.head.appendChild(s)}
+ if(document.getElementById(STYLE))return;
+ const s=document.createElement('style');s.id=STYLE;
  s.textContent=`
 html body .workspace.oct-fixed-title-owner{display:block!important;visibility:visible!important;opacity:1!important;width:auto!important;min-width:0!important;max-width:none!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;overflow:visible!important;position:relative!important;inset:auto!important;transform:none!important;text-align:left!important}
 html body .workspace.oct-fixed-title-owner>b{display:block!important;margin:0!important;color:var(--text)!important;font-size:16px!important;line-height:1.25!important;font-weight:760!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-align:left!important}
@@ -38,6 +39,7 @@ html body .ota-toolbar>#octopusGlobalActionHost{margin-left:auto!important;flex:
 html body .ota-toolbar>.ota-actions{flex:0 0 auto!important;margin-left:auto!important}
 #pageRoot>.v815page>.v815head,#pageRoot>.occ-page>.occ-head,#pageRoot>.oge-page>.oge-head,#pageRoot>.gw3-page>.v815head{display:none!important}
 `;
+ document.head.appendChild(s);
 }
 function removeSearch(){
  const bar=document.querySelector('.ota-toolbar');if(!bar)return;
@@ -52,9 +54,13 @@ let writing=false,fixedObserver=null,toolbarObserver=null,observedFixed=null,obs
 function write(){
  css();removeSearch();document.getElementById(FLOAT)?.remove();
  const r=route(),m=META[r];if(!m)return;const w=fixed();if(!w)return;const en=isEn(),title=en?m[1]:m[0],desc=en?m[3]:m[2];
- writing=true;
- w.replaceChildren(Object.assign(document.createElement('b'),{textContent:title}),Object.assign(document.createElement('small'),{textContent:desc}));
- w.dataset.routeTitle=r;document.title=`Octopus · ${title}`;writing=false;
+ const currentTitle=w.querySelector(':scope>b'),currentDescription=w.querySelector(':scope>small');
+ if(w.dataset.routeTitle!==r||currentTitle?.textContent!==title||currentDescription?.textContent!==desc){
+  writing=true;
+  w.replaceChildren(Object.assign(document.createElement('b'),{textContent:title}),Object.assign(document.createElement('small'),{textContent:desc}));
+  w.dataset.routeTitle=r;writing=false;
+ }
+ document.title=`Octopus · ${title}`;
  if(observedFixed!==w){fixedObserver?.disconnect();fixedObserver=new MutationObserver(()=>{if(!writing)requestAnimationFrame(write)});fixedObserver.observe(w,{childList:true,subtree:true,characterData:true});observedFixed=w}
  const bar=document.querySelector('.ota-toolbar');if(bar&&observedToolbar!==bar){toolbarObserver?.disconnect();toolbarObserver=new MutationObserver(()=>requestAnimationFrame(removeSearch));toolbarObserver.observe(bar,{childList:true});observedToolbar=bar}
 }
