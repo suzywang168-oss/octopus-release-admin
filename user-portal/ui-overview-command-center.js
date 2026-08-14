@@ -20,7 +20,14 @@
       document.head.appendChild(style);
     }
     style.textContent=`
-      #${ROOT} .occ-page{max-width:1540px;margin:0 auto;padding:2px 2px 28px;color:var(--text)}
+      html.occ-overview-active #octopusGlobalActionHost{display:none!important}
+      #${ROOT} .occ-page{display:flex;flex-direction:column;max-width:1540px;margin:0 auto;padding:2px 2px 28px;color:var(--text)}
+      #${ROOT} .occ-head{display:none!important}
+      #${ROOT} .occ-kpis{order:1}
+      #${ROOT} .oct-ai-strip{order:2}
+      #${ROOT} .occ-top-grid{order:3}
+      #${ROOT} .occ-bottom-grid{order:4}
+      #${ROOT} .occ-projects{order:5}
       #${ROOT} .occ-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:18px}
       #${ROOT} .occ-eyebrow{display:inline-flex;align-items:center;gap:7px;margin-bottom:8px;color:#91a8ff;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
       #${ROOT} .occ-eyebrow:before{content:'';width:7px;height:7px;border-radius:50%;background:#6683df;box-shadow:0 0 0 4px color-mix(in srgb,#6683df 16%,transparent)}
@@ -245,6 +252,7 @@
 
   function renderOverview(force=false){
     if(route()!=='overview')return;
+    document.documentElement.classList.add('occ-overview-active');
     const root=document.getElementById(ROOT);
     if(!root)return;
     installStyle();
@@ -302,7 +310,7 @@
   }
 
   document.addEventListener('click',handleClick,true);
-  window.addEventListener('hashchange',()=>schedule(true));
+  window.addEventListener('hashchange',()=>{document.documentElement.classList.toggle('occ-overview-active',route()==='overview');schedule(true)});
   window.addEventListener('keydown',event=>{if(event.key==='Escape')ensureModal().classList.remove('open')});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>schedule(true),{once:true});else schedule(true);
   setTimeout(()=>schedule(false),500);
