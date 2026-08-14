@@ -6,6 +6,9 @@ const normalize=value=>{
 };
 let wanted='#/overview';
 try{wanted=normalize(window.parent.location.hash||location.hash||'#/overview')}catch{wanted=normalize(location.hash)}
+const syncRouteClass=()=>document.documentElement.classList.toggle('oct-overview-route',location.hash==='#/overview');
+syncRouteClass();
+window.addEventListener('hashchange',syncRouteClass,true);
 const started=performance.now(),lockMs=900;
 const locked=()=>performance.now()-started<lockMs;
 function enforce(){
@@ -24,6 +27,7 @@ function enforce(){
 });
 window.addEventListener('hashchange',enforce,true);
 if(location.hash!==wanted)history.replaceState(null,'',location.pathname+location.search+wanted);
+syncRouteClass();
 if(wanted==='#/overview'){
  try{window.OctopusOverviewCommandCenter?.render?.()}catch{}
  requestAnimationFrame(()=>{try{window.OctopusOverviewCommandCenter?.ensure?.()}catch{}});
