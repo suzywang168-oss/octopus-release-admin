@@ -11,7 +11,7 @@ const groups=[
 const en=()=>localStorage.getItem(LANG)==='en'||document.documentElement.lang?.toLowerCase().startsWith('en');
 const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
 function markup(){const r=route(),english=en();return `<button class="${r==='overview'?'active':''}" data-r="overview"><span>◈</span><b>${english?'Business Overview':'业务总览'}</b></button>`+groups.map((g,gi)=>`<div class="v815g"><div class="v815gh"><span class="v815no">${gi+1}</span><div><b>${english?g[1]:g[0]}</b><small>${g[2]}</small></div></div>${g[3].map((x,i)=>`<button class="v815item ${r===x[0]?'active':''}" data-r="${x[0]}"><span>${gi+1}.${i+1}</span><b>${english?x[2]:x[1]}</b></button>`).join('')}</div>`).join('')}
-function apply(){const nav=document.getElementById(NAV);if(!nav)return;const html=markup();if(nav.dataset.sidebarOwner!==html){nav.innerHTML=html;nav.dataset.sidebarOwner=html}}
+function apply(){const nav=document.getElementById(NAV);if(!nav)return;const html=markup();if(nav.innerHTML!==html)nav.innerHTML=html;nav.dataset.sidebarOwner=route()+'|'+(en()?'en':'zh')}
 let pending=false;function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;apply()})}
 window.addEventListener('hashchange',schedule);window.addEventListener('pageshow',schedule);window.addEventListener('octopus-language-change',schedule);new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});apply();
 })();
