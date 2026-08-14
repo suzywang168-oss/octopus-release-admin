@@ -21,6 +21,15 @@ html.octopus-light :is(.loc-dialog-shell,.rvw-dialog-shell,.loc-panel,.rvw-edito
 html.octopus-light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell),body.light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell){color:#27313b!important}
 html.octopus-light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell) :is(h1,h2,h3,h4,label,p),body.light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell) :is(h1,h2,h3,h4,label,p){color:#27313b!important;text-shadow:none!important}
 html.octopus-light #v80nav :is(.oct-l-brand-mark,.oct-l-tenant-mark,.oct-l-user-mark),body.light #v80nav :is(.oct-l-brand-mark,.oct-l-tenant-mark,.oct-l-user-mark){background:#e6ebf2!important;color:#526170!important;border-color:#d2dae3!important}
+html.octopus-light .sidebar .brand h1,body.light .sidebar .brand h1{color:#27323d!important;text-shadow:none!important}
+html.octopus-light .sidebar .brand small,body.light .sidebar .brand small{color:#687582!important;text-shadow:none!important}
+html.octopus-light .sidebar .brand-mark,body.light .sidebar .brand-mark{background:#e3e9ef!important;color:#526170!important;border:1px solid #d1d9e1!important;box-shadow:none!important}
+html.octopus-light .sidebar .tenant,html.octopus-light .sidebar .user-card,body.light .sidebar .tenant,body.light .sidebar .user-card{background:#f7f9fb!important;color:#2d3843!important;border:1px solid #d7e0e7!important;box-shadow:none!important}
+html.octopus-light .sidebar .tenant b,html.octopus-light .sidebar .user-card b,body.light .sidebar .tenant b,body.light .sidebar .user-card b{color:#2d3843!important;text-shadow:none!important}
+html.octopus-light .sidebar .tenant small,html.octopus-light .sidebar .user-card small,body.light .sidebar .tenant small,body.light .sidebar .user-card small{color:#667481!important;text-shadow:none!important}
+html.octopus-light .sidebar .tenant>i,html.octopus-light .sidebar .avatar,body.light .sidebar .tenant>i,body.light .sidebar .avatar{background:#e3e9ef!important;color:#526170!important;border:1px solid #d1d9e1!important;box-shadow:none!important}
+html.octopus-light .sidebar .user-card>button,body.light .sidebar .user-card>button{color:#687582!important}
+html.octopus-light #v80nav .v815gh small,body.light #v80nav .v815gh small{color:#687582!important}
 `;
 document.head.appendChild(s);
 })();
