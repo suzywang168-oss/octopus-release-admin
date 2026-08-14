@@ -37,6 +37,7 @@ function style(){let s=document.getElementById(STYLE);if(!s){s=document.createEl
 html.octopus-light #${ROOT}{background:rgba(25,34,45,.22)}html.octopus-light #${ROOT} .smd-shell{box-shadow:0 28px 90px rgba(31,41,55,.18)}
 @media(max-width:820px){#${ROOT}{padding:10px}#${ROOT} .smd-summary,#${ROOT} .smd-grid,#${ROOT} .smd-grid.three,#${ROOT} .smd-checks{grid-template-columns:1fr}#${ROOT} .smd-field.full{grid-column:auto}#${ROOT} .smd-foot{align-items:stretch;flex-direction:column}#${ROOT} .smd-foot-left,#${ROOT} .smd-foot-right{width:100%}#${ROOT} .smd-btn{flex:1}}
 `}
+}
 function rowInfo(button){
  const tr=button?.closest?.('tr'),table=tr?.closest?.('table');
  const headers=table?[...table.querySelectorAll('thead th')].map(x=>clean(x.textContent)):[];

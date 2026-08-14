@@ -15,6 +15,7 @@
     permissions:['*'],
     demo:true
   };
+  let activating=false;
 
   window.__OCTOPUS_DISABLE_DEMO__=false;
   document.getElementById('octopus-disable-demo-style')?.remove();
@@ -36,6 +37,8 @@
   }
 
   function activateDemo(){
+    if(activating)return true;
+    activating=true;
     try{localStorage.setItem(DEMO_KEY,'1')}catch{}
     try{localStorage.removeItem(TOKEN_KEY)}catch{}
     try{localStorage.removeItem(PROFILE_KEY)}catch{}
@@ -57,14 +60,15 @@
     if(location.hash!==target)history.replaceState(null,'',location.pathname+location.search+target);
     try{window.dispatchEvent(new Event('hashchange'))}catch{}
     requestAnimationFrame(()=>{
-      try{window.dispatchEvent(new Event('hashchange'))}catch{}
       window.toast?.(document.documentElement.lang==='en'?'Demo workspace opened':'已进入演示工作区');
+      setTimeout(()=>{activating=false},240);
     });
 
     return entered||!!appShell;
   }
 
   function consume(entry,e){
+    if(activating){e.preventDefault();e.stopImmediatePropagation();return}
     e.preventDefault();
     e.stopImmediatePropagation();
     activateDemo();

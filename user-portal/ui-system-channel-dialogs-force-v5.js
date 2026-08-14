@@ -21,6 +21,7 @@ function style(){let s=document.getElementById(STYLE);if(!s){s=document.createEl
 #${ROOT}.scv5 .sv-foot{display:flex;justify-content:space-between;gap:10px;padding:11px 18px;border-top:1px solid var(--line);background:var(--panel)}.sv-actions{display:flex;gap:8px}.sv-btn{height:34px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);font-size:8px;font-weight:750;cursor:pointer}.sv-btn.primary{border-color:#6683df;background:#6683df;color:#fff}
 @media(max-width:880px){#${ROOT}.scv5{padding:8px}#${ROOT}.scv5 .sv-shell{width:calc(100vw - 16px);max-height:calc(100vh - 16px)}#${ROOT}.scv5 .sv-summary,#${ROOT}.scv5 .sv-grid,#${ROOT}.scv5 .sv-grid.two,#${ROOT}.scv5 .sv-checks{grid-template-columns:1fr}.sv-field.full{grid-column:auto}}
 `}
+}
 function info(btn){const tr=btn?.closest?.('tr'),table=tr?.closest?.('table'),hs=table?[...table.querySelectorAll('thead th')].map(x=>clean(x.textContent)):[],vs=tr?[...tr.cells].map(x=>clean(x.textContent)):[];const p={};hs.forEach((h,i)=>p[h]=vs[i]||'');return{p,key:vs[0]||tx('频道账号','Channel account')}}
 function pick(i,rx,fb){const k=Object.keys(i.p).find(x=>rx.test(x));return k?i.p[k]||fb:fb}
 function load(key){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return{}}}

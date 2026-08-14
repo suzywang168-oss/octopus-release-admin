@@ -2,6 +2,7 @@
 'use strict';
 const STYLE='octopus-runtime-stability-v2';
 const OWNED=new Set([
+ 'overview',
  'operations.channel-analysis','operations.ad-intelligence',
  'production.content','production.localization',
  'release.titles','release.covers','release.review','release.distribution',
@@ -93,7 +94,8 @@ function layoutOnly(){
 function pokeOwners(){
  const r=route();
  try{
-  if(r==='production.content')window.OctopusContentWorkspace?.ensure?.();
+  if(r==='overview')window.OctopusOverviewCommandCenter?.ensure?.();
+  else if(r==='production.content')window.OctopusContentWorkspace?.ensure?.();
   else if(r==='release.distribution')window.OctopusDistributionPlanner?.ensure?.();
   else if(/^dashboard\./.test(r))window.OctopusDashboardWorkspace?.ensure?.();
   else if(r==='system.assets')window.OctopusAssetsBusinessActions?.check?.();

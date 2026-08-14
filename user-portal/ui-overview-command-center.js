@@ -256,6 +256,12 @@
     document.title='Octopus · 业务总览';
   }
 
+  window.OctopusOverviewCommandCenter={
+    ensure(){renderOverview(false)},
+    render(){renderOverview(true)},
+    version:'2.0'
+  };
+
   function handleClick(event){
     const target=event.target instanceof Element?event.target:null;
     if(!target)return;

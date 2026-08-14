@@ -1,10 +1,10 @@
 (()=>{
 'use strict';
 const ROOT='pageRoot',STYLE='octopus-route-ownership-lock';
-const OWNED={'release.review':'.rvw-page','release.distribution':'.dpw-page','release.titles':'.gw3-page','release.covers':'.gw3-page','dashboard.series':'.daw-page','dashboard.channels':'.daw-page','dashboard.external':'.daw-page','dashboard.risk':'.daw-page','system.assets':'.atw-page','system.templates':'.atw-page','system.roles':'.prw-page','production.content':'.pcw-page','production.localization':'.loc-page','operations.channel-analysis':'.orw-page','operations.ad-intelligence':'.orw-page'};
+const OWNED={'overview':'.occ-page','release.review':'.rvw-page','release.distribution':'.dpw-page','release.titles':'.gw3-page','release.covers':'.gw3-page','dashboard.series':'.daw-page','dashboard.channels':'.daw-page','dashboard.external':'.daw-page','dashboard.risk':'.daw-page','system.assets':'.atw-page','system.templates':'.atw-page','system.roles':'.prw-page','production.content':'.pcw-page','production.localization':'.loc-page','operations.channel-analysis':'.orw-page','operations.ad-intelligence':'.orw-page'};
 const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview',selector=r=>OWNED[r]||'',isOwned=r=>!!selector(r);
 function css(){let s=document.getElementById(STYLE);if(!s){s=document.createElement('style');s.id=STYLE;document.head.appendChild(s)}s.textContent=`#${ROOT}[data-route-owner]{contain:layout style}`}
-function ownerAPI(r){if(r==='release.distribution')return window.OctopusDistributionPlanner;if(/^dashboard\./.test(r))return window.OctopusDashboardWorkspace||window.OctopusDashboardAnalysis;return null}
+function ownerAPI(r){if(r==='overview')return window.OctopusOverviewCommandCenter;if(r==='release.distribution')return window.OctopusDistributionPlanner;if(/^dashboard\./.test(r))return window.OctopusDashboardWorkspace||window.OctopusDashboardAnalysis;return null}
 function ownerPresent(root,r){try{return !!root?.querySelector(selector(r))}catch{return false}}
 function wakeOwner(reason){const r=route();if(!isOwned(r))return;requestAnimationFrame(()=>{const root=document.getElementById(ROOT),api=ownerAPI(r);try{api?.ensure?.()}catch{}if(!ownerPresent(root,r)){try{api?.render?.()}catch{}try{window.dispatchEvent(new Event('hashchange'))}catch{}}try{window.dispatchEvent(new CustomEvent('octopus-owned-route-change',{detail:{route:r,reason}}))}catch{}})}
 function markOwner(){const root=document.getElementById(ROOT),r=route();if(!root)return;if(isOwned(r))root.dataset.routeOwner=r;else delete root.dataset.routeOwner}
