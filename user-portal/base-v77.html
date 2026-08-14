@@ -69,6 +69,11 @@ body{margin:0;background:#07111f;color:#fff;font:14px system-ui;display:grid;pla
       enforce();setTimeout(enforce,80);setTimeout(enforce,240);
     })();<\/script>`;
     let patched=h;
+    const initialLight=localStorage.getItem('octopus-v7-theme')==='light';
+    if(initialLight){
+      patched=patched.replace(/<html([^>]*)>/i,(m,a)=>`<html${a} class="${((a.match(/class=["']([^"']*)["']/i)||[])[1]||'')} octopus-light">`).replace(/class=["'][^"']*["']\s+class=/i,'class=');
+      patched=patched.replace(/<body([^>]*)>/i,(m,a)=>`<body${a} class="${((a.match(/class=["']([^"']*)["']/i)||[])[1]||'')} light">`).replace(/class=["'][^"']*["']\s+class=/i,'class=');
+    }
     if(/<\/head>/i.test(patched))patched=patched.replace(/<\/head>/i,shellStyle+'</head>');else patched=shellStyle+patched;
     if(/<\/body>/i.test(patched))patched=patched.replace(/<\/body>/i,shellScript+'</body>');else patched+=shellScript;
     console.info(`[Octopus] base shell ready in ${Math.round(performance.now()-started)}ms`);
