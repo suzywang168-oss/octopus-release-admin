@@ -3,6 +3,8 @@
 const s=document.createElement('style');
 s.id='octopus-light-theme-consistency';
 s.textContent=`
+html.oct-overview-route #octopusGlobalActionHost,html.oct-overview-route .ota-toolbar>.v815primary,html.oct-overview-route #pageRoot>.v815page:not(.occ-page){display:none!important}
+html.octopus-light :is(.ota-toolbar,.v815top,.v815header),body.light :is(.ota-toolbar,.v815top,.v815header){background:#f7f9fb!important;color:#27313b!important;border-color:#d8e0e7!important;box-shadow:none!important}
 html.octopus-light #v80nav,body.light #v80nav{background:#f1f4f7!important;color:#27313b!important;border-color:#d8e0e7!important;box-shadow:none!important}
 html.octopus-light #v80nav>*,body.light #v80nav>*{background:transparent!important}
 html.octopus-light #v80nav :is(.oct-light-dark-surface,.oct-l-tenant-card,.oct-l-user-card),body.light #v80nav :is(.oct-light-dark-surface,.oct-l-tenant-card,.oct-l-user-card){background:#f7f9fb!important;color:#2d3843!important;border:1px solid #d9e1e8!important;box-shadow:none!important}
