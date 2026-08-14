@@ -59,8 +59,15 @@ body{margin:0;background:#07111f;color:#fff;font:14px system-ui;display:grid;pla
       function enforce(){if(busy)return;busy=true;
         document.querySelectorAll('.ota-toolbar>input,.ota-toolbar>.ota-search-host,.ota-toolbar input[type="search"]').forEach(x=>x.remove());
         document.getElementById('octopusGlobalTitleSlot')?.remove();
-        const m=META[route()];let w=document.querySelector('.workspace');
-        if(m&&w){w.classList.add('oct-shell-title-owner');w.classList.remove('oct-shell-legacy-title','oct-title-duplicate');w.replaceChildren(Object.assign(document.createElement('b'),{textContent:m[0]}),Object.assign(document.createElement('small'),{textContent:m[1]}));w.dataset.routeTitle=route()}
+        const currentRoute=route(),m=META[currentRoute];let w=document.querySelector('.workspace');
+        if(m&&w){
+          w.classList.add('oct-shell-title-owner');w.classList.remove('oct-shell-legacy-title','oct-title-duplicate');
+          const title=w.querySelector(':scope>b'),description=w.querySelector(':scope>small');
+          if(w.dataset.routeTitle!==currentRoute||title?.textContent!==m[0]||description?.textContent!==m[1]){
+            w.replaceChildren(Object.assign(document.createElement('b'),{textContent:m[0]}),Object.assign(document.createElement('small'),{textContent:m[1]}));
+            w.dataset.routeTitle=currentRoute;
+          }
+        }
         busy=false;
       }
       let t=0;const schedule=()=>{clearTimeout(t);t=setTimeout(enforce,0)};

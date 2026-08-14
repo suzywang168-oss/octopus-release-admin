@@ -13,6 +13,7 @@ const demoProfile={
 };
 function t(cn,en){return typeof currentLang!=='undefined'&&currentLang==='en'?en:cn}
 function enterDemo(){
+  const requestedHash=location.hash||'#/overview';
   localStorage.setItem(DEMO_KEY,'1');
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(PROFILE_KEY);
@@ -20,7 +21,10 @@ function enterDemo(){
   if(typeof window.enter==='function'){
     window.enter(demoProfile);
     setTimeout(()=>{
-      try{typeof window.route==='function'&&window.route('overview')}catch{}
+      try{
+        if(location.hash!==requestedHash)history.replaceState(null,'',location.pathname+location.search+requestedHash);
+        window.dispatchEvent(new Event('hashchange'));
+      }catch{}
       try{typeof window.toast==='function'&&window.toast(t('已进入演示空间，数据保存在当前浏览器','Demo workspace opened. Data is stored in this browser.'))}catch{}
     },120);
   }

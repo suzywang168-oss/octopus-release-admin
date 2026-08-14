@@ -2,15 +2,6 @@
 'use strict';
 const ROOT='pageRoot',STYLE='octopus-editor-control-fix';
 const modalSelector='.loc-dialog-layer,.rvw-dialog-layer,.gw3-modal[data-gw3-modal]';
-function insideControl(target){
- if(!(target instanceof Element)||!target.closest(modalSelector))return false;
- return !!target.closest('select,input,textarea,label,.gw3-option,.rvw-choice,[data-gw3-candidate]');
-}
-function shield(event){
- if(!insideControl(event.target))return;
- /* Keep legacy page-level handlers from swallowing native form interaction. */
- event.stopPropagation();
-}
 function css(){
  let s=document.getElementById(STYLE);
  if(!s){s=document.createElement('style');s.id=STYLE;document.head.appendChild(s)}
@@ -20,7 +11,8 @@ function css(){
  #${ROOT} :is(.loc-dialog-layer,.rvw-dialog-layer,.gw3-modal[data-gw3-modal]) :is(input[type="radio"],input[type="checkbox"]){cursor:pointer!important;accent-color:#6683df!important}
  `;
 }
-['pointerdown','mousedown','click'].forEach(type=>window.addEventListener(type,shield,true));
+/* Native form controls must receive pointer and click events at the target.
+   Capture-phase shielding here made every select/radio/checkbox inert. */
 window.addEventListener('change',event=>{
  const t=event.target;
  if(!(t instanceof HTMLInputElement||t instanceof HTMLSelectElement)||!t.closest(modalSelector))return;

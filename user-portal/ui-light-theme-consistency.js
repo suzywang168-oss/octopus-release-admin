@@ -18,6 +18,9 @@ html.octopus-light #v80nav button.active,html.octopus-light #v80nav .v815item.ac
 html.octopus-light #v80nav :is(.v815no,.v815item>span),body.light #v80nav :is(.v815no,.v815item>span){color:#8794a1!important}
 html.octopus-light #v80nav .v815item.active>span,body.light #v80nav .v815item.active>span{color:#6683df!important}
 html.octopus-light :is(.loc-dialog-shell,.rvw-dialog-shell,.loc-panel,.rvw-editor-card),body.light :is(.loc-dialog-shell,.rvw-dialog-shell,.loc-panel,.rvw-editor-card){background:#f7f9fb!important;color:#27313b!important;border-color:#d8e0e7!important}
+html.octopus-light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell),body.light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell){color:#27313b!important}
+html.octopus-light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell) :is(h1,h2,h3,h4,label,p),body.light #pageRoot :is(.loc-dialog-shell,.rvw-dialog-shell,.gw3-modal-shell,.business-modal,.ore-panel,.atw-modal-shell) :is(h1,h2,h3,h4,label,p){color:#27313b!important;text-shadow:none!important}
+html.octopus-light #v80nav :is(.oct-l-brand-mark,.oct-l-tenant-mark,.oct-l-user-mark),body.light #v80nav :is(.oct-l-brand-mark,.oct-l-tenant-mark,.oct-l-user-mark){background:#e6ebf2!important;color:#526170!important;border-color:#d2dae3!important}
 `;
 document.head.appendChild(s);
 })();
