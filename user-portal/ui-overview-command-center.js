@@ -91,6 +91,19 @@
       #${ROOT} .occ-health-track i{display:block;height:100%;border-radius:inherit;background:#6683df}
       #${ROOT} .occ-health-row small{display:block;margin-top:7px;color:var(--soft);font-size:8px;line-height:1.45}
 
+      #${ROOT} .occ-projects{margin-top:14px}
+      #${ROOT} .occ-project-table{width:100%;border-collapse:collapse;table-layout:fixed}
+      #${ROOT} .occ-project-table th{padding:11px 16px;border-bottom:1px solid var(--line);color:var(--soft);font-size:8px;font-weight:750;text-align:left}
+      #${ROOT} .occ-project-table td{padding:13px 16px;border-bottom:1px solid var(--line);color:var(--text);font-size:9px;vertical-align:middle}
+      #${ROOT} .occ-project-table tbody tr:last-child td{border-bottom:0}
+      #${ROOT} .occ-project-table tbody tr:hover{background:color-mix(in srgb,#6683df 4%,transparent)}
+      #${ROOT} .occ-project-name b{display:block;font-size:10px}
+      #${ROOT} .occ-project-name small{display:block;margin-top:4px;color:var(--soft);font-size:8px}
+      #${ROOT} .occ-status{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:99px;background:rgba(73,210,167,.10);color:#65d6b2;font-size:8px;font-weight:750}
+      #${ROOT} .occ-status.warn{background:rgba(255,190,105,.10);color:#ffbe69}
+      #${ROOT} .occ-status.bad{background:rgba(255,111,132,.10);color:#ff8da2}
+      #${ROOT} .occ-row-action{height:30px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);font-size:8px;font-weight:750;cursor:pointer}
+
       #${MODAL_ID}{position:fixed;inset:0;z-index:22000;display:none;place-items:center;padding:20px;background:rgba(2,8,18,.68);backdrop-filter:blur(4px)}
       #${MODAL_ID}.open{display:grid}
       #${MODAL_ID} .ocm-dialog{width:min(620px,94vw);border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:0 28px 90px rgba(0,0,0,.45)}
@@ -192,6 +205,21 @@
           </div>
         </article>
       </section>
+
+      <section class="occ-card occ-projects">
+        <div class="occ-card-head"><div><h2>重点发行项目</h2><p>按上线时间与风险优先级排序，集中查看当前阶段、负责人和下一步动作。</p></div><button class="occ-link" type="button" data-occ-route="dashboard.series">查看全部剧集</button></div>
+        <div style="overflow:auto">
+          <table class="occ-project-table">
+            <thead><tr><th style="width:25%">项目 / 版本</th><th>当前阶段</th><th>目标频道</th><th>上线时间</th><th>负责人</th><th>状态</th><th style="width:90px">操作</th></tr></thead>
+            <tbody>
+              <tr><td class="occ-project-name"><b>逆光心动</b><small>英语版 · 30 集</small></td><td>物料审核</td><td>TikTok US</td><td>08-15 18:00</td><td>Mia Chen</td><td><span class="occ-status warn">待处理 2 项</span></td><td><button class="occ-row-action" data-occ-route="release.review">去处理</button></td></tr>
+              <tr><td class="occ-project-name"><b>契约婚姻</b><small>西语版 · 42 集</small></td><td>频道分发</td><td>Facebook LATAM</td><td>08-16 12:00</td><td>Leo Meyer</td><td><span class="occ-status">上传中 76%</span></td><td><button class="occ-row-action" data-occ-route="release.distribution">查看进度</button></td></tr>
+              <tr><td class="occ-project-name"><b>王妃归来</b><small>英语版 · 36 集</small></td><td>监控迭代</td><td>YouTube US</td><td>已上线</td><td>Suzy Wang</td><td><span class="occ-status bad">CTR 低于目标</span></td><td><button class="occ-row-action" data-occ-route="dashboard.series">看数据</button></td></tr>
+              <tr><td class="occ-project-name"><b>风暴之后</b><small>德语版 · 28 集</small></td><td>内容加工</td><td>TikTok DE</td><td>08-18 20:00</td><td>Nora Li</td><td><span class="occ-status">正常推进</span></td><td><button class="occ-row-action" data-occ-route="production.localization">查看任务</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>`;
   }
 
@@ -270,8 +298,6 @@
   document.addEventListener('click',handleClick,true);
   window.addEventListener('hashchange',()=>schedule(true));
   window.addEventListener('keydown',event=>{if(event.key==='Escape')ensureModal().classList.remove('open')});
-  new MutationObserver(()=>{if(route()==='overview'&&!document.querySelector(`#${ROOT} .occ-page`))schedule(true)}).observe(document.documentElement,{childList:true,subtree:true});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>schedule(true),{once:true});else schedule(true);
-  setTimeout(()=>schedule(true),500);
-  setTimeout(()=>schedule(true),1400);
+  setTimeout(()=>schedule(false),500);
 })();

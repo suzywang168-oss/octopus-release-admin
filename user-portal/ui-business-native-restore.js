@@ -46,7 +46,6 @@ html.gw3-active #${ROOT} .gw3-title-card{padding:10px!important}
 html.gw3-active #${ROOT} .gw3-title-input{min-height:58px!important}
 @media(max-width:900px){html.gw3-active #${ROOT} .gw3-modal{padding:10px!important}html.gw3-active #${ROOT} .gw3-modal-shell{width:calc(100vw - 20px)!important;height:calc(100vh - 20px)!important;max-height:calc(100vh - 20px)!important}html.gw3-active #${ROOT} .gw3-editor-grid{grid-template-columns:1fr!important}html.gw3-active #${ROOT} .gw3-cover-grid{grid-template-columns:repeat(3,minmax(170px,1fr))!important;overflow-x:auto!important;padding-bottom:4px!important}}
 `}
-}
 function releaseContracts(){
  const qa=window.OctopusListActionQA;
  if(qa?.routes)NATIVE_BUTTON_ROUTES.forEach(r=>removeFrom(qa.routes,r));
