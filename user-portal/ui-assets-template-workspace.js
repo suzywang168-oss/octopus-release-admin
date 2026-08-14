@@ -1,6 +1,6 @@
 (()=>{
 'use strict';window.OctopusAssetTemplateWorkspace=true;
-const ROOT='pageRoot',route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.'),active=()=>['system.assets','system.templates'].includes(route());
+const ROOT='pageRoot',route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.'),active=()=>route()==='system.templates'||(route()==='system.assets'&&!window.OctopusAssetLibraryV3);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let assetTab='materials',templateTab='all',editing=null,scheduled=false;
 const materials=[
