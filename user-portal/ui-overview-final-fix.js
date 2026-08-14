@@ -23,5 +23,5 @@ window.addEventListener('click',event=>{
 },true);
 let pending=false;function apply(){pending=false;style();title()}function schedule(){if(pending)return;pending=true;requestAnimationFrame(apply)}
 window.addEventListener('hashchange',()=>{schedule();setTimeout(schedule,80);setTimeout(schedule,240)});
-new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});schedule();setTimeout(schedule,600);setTimeout(schedule,1600);
+schedule();setTimeout(schedule,600);
 })();
