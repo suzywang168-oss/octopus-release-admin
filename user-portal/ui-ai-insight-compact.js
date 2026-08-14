@@ -3,6 +3,12 @@
 const STYLE='octopus-ai-insight-compact';
 function css(){let s=document.getElementById(STYLE);if(!s){s=document.createElement('style');s.id=STYLE;document.head.appendChild(s)}s.textContent=`
 /* One compact AI insight rail across every module main page. */
+#pageRoot:has(>.occ-page)>.oct-contract-kpis{display:none!important}
+#pageRoot>.occ-page{display:flex!important;flex-direction:column!important}
+#pageRoot>.occ-page>.occ-kpis{order:1!important}
+#pageRoot>.occ-page>.occ-top-grid{order:2!important}
+#pageRoot>.occ-page>.occ-bottom-grid{order:3!important}
+#pageRoot>.occ-page>.occ-projects{order:4!important}
 #pageRoot .oct-ai-strip{grid-template-columns:minmax(170px,.58fr) repeat(3,minmax(0,1fr))!important;min-height:52px!important;margin-bottom:12px!important;border-radius:12px!important}
 #pageRoot .oct-ai-strip .oct-ai-head,#pageRoot .oct-ai-strip .oct-ai-item{min-height:52px!important;padding:9px 16px!important}
 #pageRoot .oct-ai-strip .oct-ai-head{justify-content:center!important}
