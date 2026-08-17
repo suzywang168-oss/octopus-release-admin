@@ -4,14 +4,15 @@
 html,body{margin:0;min-height:100%;background:transparent;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{overflow:auto}#pageRoot{min-height:100vh}.wm8-toast{position:fixed;left:50%;bottom:28px;z-index:120000;transform:translateX(-50%);padding:10px 14px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);font-size:11px;box-shadow:0 14px 40px rgba(0,0,0,.28)}
 </style></head><body><div id="pageRoot"></div><script>
 (()=>{'use strict';
-if(!location.hash)history.replaceState(null,'','#/release/watermark');
+const HOME='#/release/watermark';
+if(!location.hash)history.replaceState(null,'',HOME);
+function relay(){const h=location.hash||HOME;if(h===HOME)return;try{parent.postMessage({type:'octopus-watermark-route',hash:h},location.origin)}catch{}}
+const nativePush=history.pushState.bind(history),nativeReplace=history.replaceState.bind(history);
+history.pushState=function(...args){const out=nativePush(...args);queueMicrotask(relay);return out};
+history.replaceState=function(...args){const out=nativeReplace(...args);queueMicrotask(relay);return out};
+addEventListener('hashchange',relay);addEventListener('popstate',relay);
 function syncTheme(){try{const p=parent.document,light=p.documentElement.classList.contains('octopus-light')||p.body.classList.contains('light');document.documentElement.classList.toggle('light',light)}catch{}}
 syncTheme();setInterval(syncTheme,500);
 window.toast=m=>{document.querySelector('.wm8-toast')?.remove();const n=document.createElement('div');n.className='wm8-toast';n.textContent=m;document.body.appendChild(n);setTimeout(()=>n.remove(),1800)};
 })();
-</script><script src="ui-watermark-single-workspace-v7.js?v=202608171801"></script><script>
-(()=>{'use strict';
-const HOME='#/release/watermark';
-addEventListener('hashchange',()=>{const h=location.hash||HOME;if(h===HOME)return;try{parent.postMessage({type:'octopus-watermark-route',hash:h},location.origin)}catch{}});
-})();
-</script></body></html>
+</script><script src="ui-watermark-single-workspace-v7.js?v=202608171801"></script></body></html>
