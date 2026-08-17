@@ -5,7 +5,7 @@ const OWNED=new Set([
  'overview',
  'operations.channel-analysis','operations.ad-intelligence',
  'production.content','production.localization',
- 'release.titles','release.covers','release.review','release.distribution',
+ 'release.watermark','release.titles','release.covers','release.review','release.distribution',
  'dashboard.series','dashboard.channels','dashboard.external','dashboard.risk',
  'system.assets','system.templates','system.roles'
 ]);
@@ -96,6 +96,8 @@ function pokeOwners(){
  try{
   if(r==='overview')window.OctopusOverviewCommandCenter?.ensure?.();
   else if(r==='production.content')window.OctopusContentWorkspace?.ensure?.();
+  else if(r==='production.localization')window.OctopusLocalizationWorkspace?.ensure?.();
+  else if(r==='release.watermark')window.OctopusWatermarkSingleWorkspace?.ensure?.();
   else if(r==='release.distribution')window.OctopusDistributionPlanner?.ensure?.();
   else if(/^dashboard\./.test(r))window.OctopusDashboardWorkspace?.ensure?.();
   else if(r==='system.assets')window.OctopusAssetsBusinessActions?.check?.();
@@ -140,5 +142,5 @@ nativeAdd('popstate',()=>{
  requestAnimationFrame(pokeOwners);
 });
 nativeAdd('pageshow',()=>{syncNav();requestAnimationFrame(pokeOwners)});
-window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.4'};
+window.OctopusRuntimeStability={owned:OWNED,syncNav,pokeOwners,layoutOnly,version:'2.5'};
 })();
