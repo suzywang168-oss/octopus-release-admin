@@ -4,7 +4,7 @@ const NAV='v80nav',LANG='octopus-user-v7-language';
 const groups=[
  ['运营导向','Operations','运营决策与风险处理',[['operations.channel-analysis','频道数据分析','Channel Analytics'],['operations.ad-intelligence','大数据投流抓取分析','Ad Intelligence'],['operations.unblock','解禁链接反馈管理','Unblock Management']]],
  ['内容生产','Content Production','素材入库与 AI 内容加工',[['production.content','剧集上传与 AI 标签','Upload & AI Tags'],['production.localization','多语种译配处理','Localization']]],
- ['发行流程','Release Workflow','物料生成与渠道分发',[['release.titles','AI 标题生成','AI Title Generation'],['release.covers','AI 封面生成','AI Cover Generation'],['release.review','物料审核','Creative Review'],['release.distribution','上传频道分发','Channel Distribution']]],
+ ['发行流程','Release Workflow','物料生成与渠道分发',[['release.watermark','频道水印处理','Channel Watermarking'],['release.titles','AI 标题生成','AI Title Generation'],['release.covers','AI 封面生成','AI Cover Generation'],['release.review','物料审核','Creative Review'],['release.distribution','上传频道分发','Channel Distribution']]],
  ['数据看板','Dashboards','效果监控与风险复盘',[['dashboard.series','剧集维度看板','Series Dashboard'],['dashboard.channels','频道账号看板','Channel Dashboard'],['dashboard.external','外部投流对标看板','External Benchmark'],['dashboard.risk','风险禁播看板','Risk Dashboard']]],
  ['系统管理','System','平台底层支撑',[['system.channels','频道账号管理','Channel Accounts'],['system.assets','素材与片方库','Assets & Partners'],['system.templates','AI 模板配置','AI Templates'],['system.roles','权限角色管理','Roles & Permissions'],['system.tasks','异步任务中心','Async Task Center']]]
 ];
