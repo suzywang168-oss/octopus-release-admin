@@ -1,0 +1,102 @@
+(()=>{
+'use strict';
+const ASSET_ROUTE='system.assets',REVIEW_ROUTE='release.review';
+const PROMO_KEY='octopus-assets-promo-table-v3',VIDEO_KEY='octopus-watermark-videos-v3';
+const MEDIA='https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const classify=r=>r.materialKind||(String(r.type||'').includes('标题')?'标题':(/封面|海报/.test(String(r.type||''))?'封面':(/视频/.test(String(r.type||''))?'视频':'其他')));
+const filterKey=k=>k==='标题'?'__promo_title__':k==='封面'?'__promo_cover__':k==='视频'?'__promo_video__':'';
+const promoVideos=[
+{id:'PRM-V101',seriesId:'SER-001',series:'逆光心动',partnerId:'PTN-001',type:'宣传视频',materialKind:'视频',channel:'TK-US Drama',version:'V2',format:'1080×1920 MP4 · 00:30',fileName:'逆光心动_TKUS_promo_V2.mp4',fileUrl:MEDIA,status:'待处理',watermarkRequired:true,watermarkStatus:'待加水印'},
+{id:'PRM-V102',seriesId:'SER-002',series:'契约之后',partnerId:'PTN-002',type:'宣传视频',materialKind:'视频',channel:'FB-Latina',version:'V3',format:'1080×1350 MP4 · 00:25',fileName:'契约之后_FB_promo_V3.mp4',fileUrl:MEDIA,status:'待处理',watermarkRequired:true,watermarkStatus:'待加水印'},
+{id:'PRM-V103',seriesId:'SER-003',series:'她从雨夜归来',partnerId:'PTN-003',type:'宣传视频',materialKind:'视频',channel:'YT-English',version:'V2',format:'1920×1080 MP4 · 00:45',fileName:'她从雨夜归来_YT_promo_V2.mp4',fileUrl:MEDIA,status:'已处理',watermarkRequired:true,watermarkStatus:'已加水印'},
+{id:'PRM-V104',seriesId:'SER-004',series:'炽热边界',partnerId:'PTN-004',type:'宣传视频',materialKind:'视频',channel:'TK-US Drama',version:'V1',format:'1080×1920 MP4 · 00:28',fileName:'炽热边界_TKUS_promo_V1.mp4',fileUrl:MEDIA,status:'待处理',watermarkRequired:true,watermarkStatus:'待加水印'},
+{id:'PRM-V105',seriesId:'SER-005',series:'重启心跳',partnerId:'PTN-005',type:'宣传视频',materialKind:'视频',channel:'FB-Latina',version:'V2',format:'1080×1350 MP4 · 00:32',fileName:'重启心跳_FB_promo_V2.mp4',fileUrl:MEDIA,status:'已处理',watermarkRequired:true,watermarkStatus:'已加水印'},
+{id:'PRM-V106',seriesId:'SER-006',series:'错位千金',partnerId:'PTN-006',type:'宣传视频',materialKind:'视频',channel:'YT-English',version:'V1',format:'1920×1080 MP4 · 00:40',fileName:'错位千金_YT_promo_V1.mp4',fileUrl:MEDIA,status:'待处理',watermarkRequired:true,watermarkStatus:'待加水印'}
+];
+function seedPromo(){
+ let a=[];try{a=JSON.parse(localStorage.getItem(PROMO_KEY)||'[]');if(!Array.isArray(a))a=[]}catch{a=[]}
+ const ids=new Set(a.map(x=>x.id));
+ a=a.map(r=>{const kind=classify(r);return {...r,materialKind:kind,promoFilterKey:filterKey(kind),watermarkRequired:kind==='视频'?r.watermarkRequired!==false:false,watermarkStatus:kind==='视频'?(r.watermarkStatus||'待加水印'):'不适用'}});
+ promoVideos.slice().reverse().forEach(r=>{if(!ids.has(r.id))a.unshift({...r,promoFilterKey:filterKey('视频')})});
+ localStorage.setItem(PROMO_KEY,JSON.stringify(a));
+}
+function style(){
+ let s=document.getElementById('promo-watermark-review-bridge-style');if(s)return;
+ s=document.createElement('style');s.id='promo-watermark-review-bridge-style';s.textContent=`
+ .promo-filter-select{box-sizing:border-box;height:38px;min-width:150px;padding:0 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);font-size:9px}
+ .promo-watermark-cell{white-space:nowrap}.promo-watermark-chip{display:inline-flex;align-items:center;height:24px;padding:0 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--soft);font-size:8px}.promo-watermark-chip.ok{border-color:#315f4b;color:#67d6a8;background:rgba(47,128,89,.12)}
+ .promo-watermark-go{height:30px;padding:0 10px;border:1px solid #426ca6;border-radius:8px;background:transparent;color:#7fa6ff;font-size:8px;font-weight:700;cursor:pointer}.promo-watermark-go:hover{background:rgba(66,108,166,.10)}
+ .al3-media-trigger.promo-video:after{content:'▶'}.al3-media-trigger.promo-video video{width:100%;height:100%;object-fit:cover}
+ .rvw-watermarked-wrap{position:relative;display:inline-block;overflow:hidden;border-radius:8px;line-height:0}.rvw-watermarked-wrap .rvw-video{margin:0}.rvw-watermark-mark{position:absolute;right:5px;top:5px;z-index:2;padding:2px 4px;border:1px solid rgba(255,255,255,.6);border-radius:3px;background:rgba(4,9,18,.38);color:#fff;font-size:6px;line-height:1.2;letter-spacing:.04em}.rvw-watermark-ok{position:absolute;left:5px;bottom:5px;z-index:2;padding:3px 5px;border-radius:999px;background:rgba(4,20,15,.78);color:#7ce1b4;font-size:6px;line-height:1.2}
+ .rvw-dialog-layer .rvw-watermarked-wrap{display:block;width:100%}.rvw-dialog-layer .rvw-watermarked-wrap video{width:100%!important}.rvw-watermark-rule{margin-top:8px;padding:8px 10px;border:1px solid color-mix(in srgb,#4fbf91 35%,var(--line));border-radius:8px;background:color-mix(in srgb,#4fbf91 7%,var(--panel2));color:var(--soft);font-size:8px;line-height:1.5}.rvw-watermark-rule b{color:#67d6a8}
+ `;document.head.appendChild(s);
+}
+function promoData(){try{const a=JSON.parse(localStorage.getItem(PROMO_KEY)||'[]');return Array.isArray(a)?a:[]}catch{return []}}
+function assetPatch(){
+ if(route()!==ASSET_ROUTE)return;
+ const root=document.getElementById('pageRoot'),card=root?.querySelector('.al3-card');if(!card)return;
+ const promoTab=card.querySelector('[data-al3-tab="promo"].active');if(!promoTab)return;
+ const toolbar=card.querySelector('.al3-toolbar'),proxy=toolbar?.querySelector('[data-al3-search]');if(toolbar&&proxy&&!toolbar.querySelector('[data-promo-kind-filter]')){
+  const current=String(proxy.value||''),keys={'__promo_title__':'title','__promo_cover__':'cover','__promo_video__':'video'};
+  proxy.style.display='none';
+  const visible=document.createElement('input');visible.type='search';visible.dataset.promoVisibleSearch='';visible.placeholder='搜索宣传素材 ID、剧集、频道或文件';visible.value=keys[current]?'':current;
+  const sel=document.createElement('select');sel.className='promo-filter-select';sel.dataset.promoKindFilter='';sel.innerHTML='<option value="all">全部类型</option><option value="title">标题</option><option value="cover">封面</option><option value="video">视频</option>';sel.value=keys[current]||'all';
+  toolbar.insertBefore(visible,proxy);toolbar.insertBefore(sel,proxy);toolbar.style.gridTemplateColumns='minmax(260px,1fr) 150px auto';
+ }
+ const table=card.querySelector('.al3-table-wrap table');if(!table)return;
+ const hr=table.tHead?.rows?.[0];if(hr&&!table.dataset.promoWatermark){table.dataset.promoWatermark='1';const statusHead=[...hr.cells].find(c=>c.textContent.trim()==='状态'),th=document.createElement('th');th.textContent='水印要求';hr.insertBefore(th,statusHead||hr.cells[hr.cells.length-1]);}
+ const map=new Map(promoData().map(r=>[r.id,r]));
+ table.tBodies[0]?.querySelectorAll('tr').forEach(tr=>{
+  const id=tr.cells[0]?.textContent.trim(),r=map.get(id);if(!r)return;
+  const kind=classify(r),mediaCell=tr.cells[1];
+  if(kind==='视频'&&mediaCell&&!mediaCell.querySelector('video'))mediaCell.innerHTML=`<button type="button" class="al3-media-trigger promo-video" data-al3-view="${esc(r.id)}" aria-label="点击预览视频"><video muted preload="metadata" src="${esc(r.fileUrl||MEDIA)}"></video></button>`;
+  if(tr.querySelector('[data-promo-watermark-cell]'))return;
+  const td=document.createElement('td');td.dataset.promoWatermarkCell='';td.className='promo-watermark-cell';
+  if(kind!=='视频')td.innerHTML='<span class="promo-watermark-chip">不适用</span>';
+  else if(r.watermarkStatus==='已加水印')td.innerHTML='<span class="promo-watermark-chip ok">已加水印</span>';
+  else td.innerHTML=`<button type="button" class="promo-watermark-go" data-promo-to-watermark="${esc(r.id)}">去加水印</button>`;
+  const statusCell=[...tr.cells].find(c=>c.textContent.trim()===String(r.status||''));tr.insertBefore(td,statusCell||tr.cells[tr.cells.length-1]);
+ });
+}
+function sendPromoToWatermark(id){
+ const r=promoData().find(x=>x.id===id);if(!r)return;
+ let a=[];try{a=JSON.parse(localStorage.getItem(VIDEO_KEY)||'[]');if(!Array.isArray(a))a=[]}catch{a=[]}
+ if(!a.some(x=>x.id===r.id))a.unshift({id:r.id,series:r.series,version:`宣传视频 · ${r.version}`,lang:'宣传素材',duration:(String(r.format).match(/\d\d:\d\d/)||['00:30'])[0],source:'宣传内容',channel:r.channel,fileName:r.fileName,fileUrl:r.fileUrl});
+ localStorage.setItem(VIDEO_KEY,JSON.stringify(a));
+ localStorage.setItem('octopus-watermark-promo-pending-v1',JSON.stringify({id:r.id,series:r.series,channel:r.channel,version:r.version,from:'system.assets',createdAt:Date.now()}));
+ history.pushState(null,'','#/release/watermark');
+}
+function wrapWatermarked(video,large=false){
+ if(!video||video.dataset.reviewWatermarked)return;video.dataset.reviewWatermarked='1';
+ const wrap=document.createElement('span');wrap.className='rvw-watermarked-wrap';if(large)wrap.style.maxHeight='300px';
+ video.parentNode.insertBefore(wrap,video);wrap.appendChild(video);
+ const mark=document.createElement('span');mark.className='rvw-watermark-mark';mark.textContent='OCTOPUS';wrap.appendChild(mark);
+ const ok=document.createElement('span');ok.className='rvw-watermark-ok';ok.textContent='水印已压制';wrap.appendChild(ok);
+}
+function reviewPatch(){
+ if(route()!==REVIEW_ROUTE)return;
+ const root=document.getElementById('pageRoot'),page=root?.querySelector('.rvw-page');if(!page)return;
+ const desc=page.querySelector('.rvw-head p');if(desc)desc.textContent='统一审核已加水印视频、封面图片和发行标题；只有水印质检通过的视频才进入物料审核。';
+ const table=page.querySelector('.rvw-table');if(table){const hs=[...table.querySelectorAll('thead th')];const vh=hs.find(x=>/视频预览|Video/.test(x.textContent));if(vh)vh.textContent='水印成片';table.querySelectorAll('video.rvw-video').forEach(v=>wrapWatermarked(v,false));}
+ const dialog=page.querySelector('.rvw-dialog-layer');if(dialog){
+  const section=[...dialog.querySelectorAll('.rvw-section')].find(s=>s.querySelector('video'));if(section){const v=section.querySelector('video');wrapWatermarked(v,true);const b=section.querySelector('.rvw-section-title b');if(b)b.textContent='水印成片预览';if(!section.querySelector('.rvw-watermark-rule'))section.insertAdjacentHTML('beforeend','<div class="rvw-watermark-rule"><b>水印质检通过</b> · 已检查频道模板、位置、安全区与透明度后进入物料审核。</div>');}
+  const decision=dialog.querySelector('[data-rvw-video-review]');if(decision){const b=decision.querySelector('.rvw-section-title b'),s=decision.querySelector('.rvw-section-title span');if(b)b.textContent='水印视频审核';if(s)s.textContent='检查水印位置、安全区、透明度、画面、配音、字幕同步与音画质量';}
+ }
+}
+function patch(){style();assetPatch();reviewPatch()}
+seedPromo();style();
+document.addEventListener('change',e=>{
+ if(route()!==ASSET_ROUTE)return;const t=e.target;
+ if(t.matches?.('[data-promo-kind-filter]')){e.stopImmediatePropagation();const proxy=document.querySelector('.al3-toolbar [data-al3-search]'),token=t.value==='title'?'__promo_title__':t.value==='cover'?'__promo_cover__':t.value==='video'?'__promo_video__':'';if(proxy){proxy.value=token;proxy.dispatchEvent(new Event('input',{bubbles:true}))}return;}
+},true);
+document.addEventListener('input',e=>{
+ if(route()!==ASSET_ROUTE)return;const t=e.target;if(!t.matches?.('[data-promo-visible-search]'))return;e.stopImmediatePropagation();const sel=document.querySelector('[data-promo-kind-filter]'),proxy=document.querySelector('.al3-toolbar [data-al3-search]');if(sel)sel.value='all';if(proxy){proxy.value=t.value;proxy.dispatchEvent(new Event('input',{bubbles:true}))}
+},true);
+document.addEventListener('click',e=>{const t=e.target instanceof Element?e.target.closest('[data-promo-to-watermark]'):null;if(!t)return;e.preventDefault();e.stopImmediatePropagation();sendPromoToWatermark(t.dataset.promoToWatermark)},true);
+let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;patch()})}).observe(document.documentElement,{subtree:true,childList:true});
+window.addEventListener('hashchange',()=>setTimeout(patch,80));
+setTimeout(patch,0);
+window.OctopusPromoWatermarkReviewBridge={patch,version:'1.0'};
+})();
