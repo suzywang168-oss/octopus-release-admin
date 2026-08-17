@@ -1,37 +1,31 @@
 (()=>{
 'use strict';
-const ROUTE='system.assets';
+const ROUTE='system.assets',KEY='octopus-assets-promo-table-v3',MEDIA='https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+let queued=false,kind='all',query='',page=1;
 const route=()=>location.hash.replace(/^#\/?/,'').replaceAll('/','.')||'overview';
 const activePromo=()=>route()===ROUTE&&!!document.querySelector('#pageRoot .al3-card [data-al3-tab="promo"].active');
-let queued=false;
-function ensure(){
-  queued=false;
-  if(!activePromo())return;
-  try{window.OctopusPromoWatermarkReviewBridge?.patch?.()}catch(err){console.warn('[PromoFilterStability]',err)}
-}
-function schedule(){
-  if(queued)return;
-  queued=true;
-  queueMicrotask(()=>requestAnimationFrame(ensure));
-}
-function installObserver(){
-  const root=document.getElementById('pageRoot');
-  if(!root||root.dataset.promoStableObserver==='1')return;
-  root.dataset.promoStableObserver='1';
-  let Observer=window.MutationObserver;
-  try{if(parent&&parent!==window&&parent.MutationObserver)Observer=parent.MutationObserver}catch{}
-  const ob=new Observer(()=>schedule());
-  ob.observe(root,{childList:true,subtree:true});
-  window.__octopusPromoStableObserver=ob;
-}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const classify=r=>r?.materialKind||(String(r?.type||'').includes('标题')?'标题':(/封面|海报/.test(String(r?.type||''))?'封面':(/视频/.test(String(r?.type||''))?'视频':'其他')));
+function data(){try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a:[]}catch{return []}}
+function filtered(){const q=query.trim().toLowerCase();return data().filter(r=>{const k=classify(r),ok=kind==='all'||(kind==='title'&&k==='标题')||(kind==='cover'&&k==='封面')||(kind==='video'&&k==='视频');if(!ok)return false;if(!q)return true;return Object.values(r).some(v=>String(v??'').toLowerCase().includes(q))})}
+function watermark(r,k){if(k!=='视频')return '<span class="promo-watermark-chip">不适用</span>';if(r.watermarkStatus==='已加水印')return '<span class="promo-watermark-chip ok">已加水印</span>';return `<button type="button" class="promo-watermark-go" data-promo-to-watermark="${esc(r.id)}">去加水印</button>`}
+function preview(r,k){if(k==='标题'||r.content)return `<button type="button" class="al3-title-trigger" data-al3-view="${esc(r.id)}"><span class="al3-title-preview">${esc(r.content||r.fileName)}</span></button>`;if(k==='视频')return `<button type="button" class="al3-media-trigger promo-video" data-al3-view="${esc(r.id)}" aria-label="点击预览视频"><video class="al3-media" muted preload="metadata" src="${esc(r.fileUrl||MEDIA)}"></video></button>`;return `<button type="button" class="al3-media-trigger" data-al3-view="${esc(r.id)}" aria-label="点击放大图片"><img class="al3-media" src="${esc(r.fileUrl||'')}" alt="${esc(r.type||'宣传素材')}"></button>`}
+function row(r){const k=classify(r);return `<tr data-promo-local-row="${esc(r.id)}"><td><span class="al3-link">${esc(r.id)}</span></td><td>${preview(r,k)}</td><td><b>${esc(r.series)}</b><br><small>${esc(r.seriesId)} · ${esc(r.partnerId)}</small></td><td>${esc(r.type)}</td><td><span class="al3-file">${esc(r.content||r.fileName)}</span></td><td>${esc(r.channel)}</td><td><b>${esc(r.version)}</b><br><small>${esc(r.format)}</small></td><td data-promo-watermark-cell class="promo-watermark-cell">${watermark(r,k)}</td><td>${esc(r.status)}</td><td><div class="al3-actions"><button type="button" class="al3-btn" data-al3-download="${esc(r.id)}">下载</button></div></td></tr>`}
+function renderLocal(){if(!activePromo())return;const card=document.querySelector('#pageRoot .al3-card'),table=card?.querySelector('.al3-table-wrap table'),body=table?.tBodies?.[0],foot=card?.querySelector('.al3-foot');if(!table||!body)return;const all=filtered(),pages=Math.max(1,Math.ceil(all.length/8));page=Math.min(Math.max(1,page),pages);const rows=all.slice((page-1)*8,page*8);body.innerHTML=rows.map(row).join('')||'<tr><td colspan="10" style="padding:32px;text-align:center;color:var(--soft)">没有符合条件的宣传内容</td></tr>';if(foot){const count=foot.querySelector('span');if(count)count.textContent=`共 ${all.length} 条，每页 8 条`;const nav=foot.querySelector('.al3-pages');if(nav)nav.innerHTML=`<button class="al3-btn al3-page-btn" data-promo-local-page="${page-1}" ${page===1?'disabled':''}>‹</button>${Array.from({length:pages},(_,i)=>`<button class="al3-btn al3-page-btn ${page===i+1?'active':''}" data-promo-local-page="${i+1}">${i+1}</button>`).join('')}<button class="al3-btn al3-page-btn" data-promo-local-page="${page+1}" ${page===pages?'disabled':''}>›</button>`}try{window.OctopusPromoWatermarkReviewBridge?.patch?.()}catch{}syncControls()}
+function syncControls(){if(!activePromo())return;const sel=document.querySelector('[data-promo-kind-filter]'),search=document.querySelector('[data-promo-visible-search]');if(sel&&sel.value!==kind)sel.value=kind;if(search&&search.value!==query)search.value=query}
+function ensure(){queued=false;if(!activePromo())return;try{window.OctopusPromoWatermarkReviewBridge?.patch?.()}catch(err){console.warn('[PromoFilterStability]',err)}syncControls()}
+function schedule(){if(queued)return;queued=true;queueMicrotask(()=>requestAnimationFrame(ensure))}
+function installObserver(){const root=document.getElementById('pageRoot');if(!root||root.dataset.promoStableObserver==='1')return;root.dataset.promoStableObserver='1';let Observer=window.MutationObserver;try{if(parent&&parent!==window&&parent.MutationObserver)Observer=parent.MutationObserver}catch{}const ob=new Observer(()=>schedule());ob.observe(root,{childList:true,subtree:true});window.__octopusPromoStableObserver=ob}
 function boot(){installObserver();schedule()}
-window.addEventListener('hashchange',()=>{setTimeout(boot,0);setTimeout(schedule,80)},true);
+// Window capture owns filtering before the legacy document-level handlers can trigger a full page render.
+window.addEventListener('change',e=>{if(!activePromo())return;const t=e.target;if(t?.matches?.('[data-promo-kind-filter]')){e.preventDefault();e.stopImmediatePropagation();kind=t.value||'all';page=1;renderLocal()}},true);
+window.addEventListener('input',e=>{if(!activePromo())return;const t=e.target;if(t?.matches?.('[data-promo-visible-search]')){e.stopImmediatePropagation();query=t.value||'';page=1;renderLocal()}},true);
+window.addEventListener('click',e=>{if(!activePromo())return;const t=e.target instanceof Element?e.target.closest('[data-promo-local-page]'):null;if(!t||t.disabled)return;e.preventDefault();e.stopImmediatePropagation();page=Math.max(1,+t.dataset.promoLocalPage||1);renderLocal()},true);
+window.addEventListener('hashchange',()=>{kind='all';query='';page=1;setTimeout(boot,0);setTimeout(schedule,80)},true);
 window.addEventListener('octopus-owned-route-change',()=>{setTimeout(boot,0);setTimeout(schedule,80)},true);
 window.addEventListener('pageshow',()=>setTimeout(boot,40),true);
 document.addEventListener('click',e=>{if(!activePromo()&&!e.target.closest?.('[data-al3-tab="promo"]'))return;setTimeout(schedule,0);setTimeout(schedule,60)},true);
-document.addEventListener('change',e=>{if(!activePromo())return;if(e.target.matches?.('[data-promo-kind-filter],[data-al3-search],select')){queueMicrotask(schedule);setTimeout(schedule,20)}},true);
-document.addEventListener('input',e=>{if(!activePromo())return;if(e.target.matches?.('[data-promo-visible-search],[data-al3-search]')){queueMicrotask(schedule);setTimeout(schedule,20)}},true);
 setInterval(()=>{if(activePromo())schedule()},900);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.OctopusPromoFilterStability={ensure,schedule,version:'1.0'};
+window.OctopusPromoFilterStability={ensure,schedule,render:renderLocal,state:()=>({kind,query,page}),version:'2.0-local'};
 })();
