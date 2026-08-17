@@ -17,11 +17,12 @@ window.addEventListener('change',event=>{
  const t=event.target;
  if(!(t instanceof HTMLInputElement||t instanceof HTMLSelectElement)||!t.closest(modalSelector))return;
  t.dataset.octEditorSelected='1';
- if(t.matches('input[name="single-title"],input[name="single-cover"]')){
+ if(t.matches('input[name="single-video"],input[name="single-title"],input[name="single-cover"]')){
+  const video=document.querySelector('input[name="single-video"]:checked')?.value;
   const title=document.querySelector('input[name="single-title"]:checked')?.value;
   const cover=document.querySelector('input[name="single-cover"]:checked')?.value;
   const result=document.querySelector('[data-rvw-result]');
-  if(result)result.textContent=title==='标题通过'&&cover==='封面通过'?'通过并进入分发':'退回修改';
+  if(result)result.textContent=video==='视频通过'&&title==='标题通过'&&cover==='封面通过'?'通过并进入分发':'退回修改';
  }
 },true);
 css();
