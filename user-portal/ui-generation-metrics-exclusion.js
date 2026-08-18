@@ -21,16 +21,20 @@ function cleanup(){
   root.querySelectorAll('.gw3-kpis.oct-contract-kpis').forEach(el=>el.classList.remove('oct-contract-kpis'));
   root.querySelectorAll('.gw3-page').forEach(el=>el.removeAttribute('data-metrics-insight'));
 }
+function loadListI18n(){
+  if(window.OctopusI18nListFields||document.querySelector('script[data-oct-i18n-list-fields]'))return;
+  const s=document.createElement('script');s.dataset.octI18nListFields='1';s.src='ui-i18n-list-fields-v1.js?v=202608181223';document.body.appendChild(s);
+}
 function schedule(){
   requestAnimationFrame(cleanup);
   setTimeout(cleanup,40);
   setTimeout(cleanup,180);
 }
-cleanup();
+cleanup();loadListI18n();
 window.addEventListener('hashchange',schedule);
 window.addEventListener('popstate',schedule);
 window.addEventListener('octopus-owned-route-change',schedule);
 window.addEventListener('pageshow',schedule);
 window.addEventListener('octopus-language-change',schedule);
-window.OctopusGenerationMetricsExclusion={apply:cleanup,routes:[...OWNED],version:'1.0'};
+window.OctopusGenerationMetricsExclusion={apply:cleanup,routes:[...OWNED],version:'1.1-i18n-list-loader'};
 })();
